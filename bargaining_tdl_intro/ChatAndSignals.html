@@ -1,4 +1,4 @@
-{{ block title }}Chat and Signals{{ endblock }}
+{{ block title }}Chat and Intentions{{ endblock }}
 {{ block content }}
 
 <style>
@@ -42,11 +42,20 @@
     .form-check {
         margin-bottom: 5px;
     }
+    .message-hint {
+        font-size: 0.9em;
+        color: #555;
+        margin-bottom: 8px;
+        margin-top: 5px;
+    }
+    textarea.form-control::placeholder {
+        color: #999;
+        font-style: italic;
+    }
 </style>
 
 <p>
-    Please select a signal and write a message for each of your partners.
-    You must complete this within the time limit.
+    Please select an intention and <strong>write a message in the text box below</strong> for each of your partners.
 </p>
 
 <div class="container-columns">
@@ -54,12 +63,13 @@
     <div class="column">
         <h4>Partner Left</h4>
         
-        <div class="section-title">Select Signal</div>
+        <div class="section-title">Select Intention</div>
         <div class="signal-box">
             {{ formfield player.signal_left label="" }}
         </div>
 
-        <div class="section-title">Message</div>
+        <div class="section-title">Write Your Message</div>
+        <p class="message-hint"><em>Please write your message in the text box below:</em></p>
         {{ formfield player.draft_history_left }}
     </div>
 
@@ -67,12 +77,13 @@
     <div class="column">
         <h4>Partner Right</h4>
         
-        <div class="section-title">Select Signal</div>
+        <div class="section-title">Select Intention</div>
         <div class="signal-box">
             {{ formfield player.signal_right label="" }}
         </div>
 
-        <div class="section-title">Message</div>
+        <div class="section-title">Write Your Message</div>
+        <p class="message-hint"><em>Please write your message in the text box below:</em></p>
         {{ formfield player.draft_history_right }}
     </div>
 </div>
@@ -81,6 +92,21 @@
 {{ next_button }}
 
 <script>
+    // Add placeholders to textareas when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        var leftTextarea = document.getElementById('id_draft_history_left') || 
+                          document.querySelector('textarea[name="draft_history_left"]');
+        var rightTextarea = document.getElementById('id_draft_history_right') || 
+                           document.querySelector('textarea[name="draft_history_right"]');
+        
+        if (leftTextarea) {
+            leftTextarea.placeholder = "Type your message here for Partner Left...";
+        }
+        if (rightTextarea) {
+            rightTextarea.placeholder = "Type your message here for Partner Right...";
+        }
+    });
+    
     // Use capture phase to intercept before oTree's handler
     document.addEventListener('click', function(e) {
         var target = e.target;
