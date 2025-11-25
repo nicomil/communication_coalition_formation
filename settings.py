@@ -21,7 +21,7 @@ SESSION_CONFIGS = [
         name='bargaining_tdl',
         display_name="Bargaining Game (TDL + Async)",
         app_sequence=['bargaining_tdl_intro', 'bargaining_tdl_main'],
-        num_demo_participants=3,
+        num_demo_participants=6,
     ),
 ]
 

@@ -1,0 +1,115 @@
+{{ block title }}Chat and Signals{{ endblock }}
+{{ block content }}
+
+<style>
+    .container-columns {
+        display: flex;
+        justify_content: space-between;
+        gap: 20px;
+    }
+    .column {
+        width: 48%;
+        border: 1px solid #ccc;
+        padding: 15px;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+    .column h4 {
+        text-align: center;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+    }
+    .section-title {
+        font-weight: bold;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        text-decoration: underline;
+    }
+    textarea.form-control {
+        height: 200px; /* Large textarea */
+        resize: vertical;
+        width: 100%;
+    }
+    .signal-box {
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        border-radius: 4px;
+        background: white;
+        margin-bottom: 15px;
+    }
+    /* Custom styling for radio inputs to make them cleaner */
+    .form-check {
+        margin-bottom: 5px;
+    }
+</style>
+
+<p>
+    Please select a signal and write a message for each of your partners.
+    You must complete this within the time limit.
+</p>
+
+<div class="container-columns">
+    <!-- Left Partner Column -->
+    <div class="column">
+        <h4>Partner Left</h4>
+        
+        <div class="section-title">Select Signal</div>
+        <div class="signal-box">
+            {{ formfield player.signal_left label="" }}
+        </div>
+
+        <div class="section-title">Message</div>
+        {{ formfield player.draft_history_left }}
+    </div>
+
+    <!-- Right Partner Column -->
+    <div class="column">
+        <h4>Partner Right</h4>
+        
+        <div class="section-title">Select Signal</div>
+        <div class="signal-box">
+            {{ formfield player.signal_right label="" }}
+        </div>
+
+        <div class="section-title">Message</div>
+        {{ formfield player.draft_history_right }}
+    </div>
+</div>
+
+<br>
+{{ next_button }}
+
+<script>
+    // Use capture phase to intercept before oTree's handler
+    document.addEventListener('click', function(e) {
+        var target = e.target;
+        // Check if the clicked element is the next button or is inside it
+        if (target && (target.classList.contains('otree-btn-next') || target.closest('.otree-btn-next'))) {
+            // Try multiple ways to find the textareas
+            var leftTextarea = document.getElementById('id_draft_history_left') || 
+                              document.querySelector('textarea[name="draft_history_left"]');
+            var rightTextarea = document.getElementById('id_draft_history_right') || 
+                               document.querySelector('textarea[name="draft_history_right"]');
+            
+            if (leftTextarea && rightTextarea) {
+                var leftText = leftTextarea.value.trim();
+                var rightText = rightTextarea.value.trim();
+                
+                if (leftText === "" || rightText === "") {
+                    var proceed = confirm("Warning: One or both of your messages are empty.\n\nClick OK to proceed anyway, or Cancel to go back and write your messages.");
+                    if (!proceed) {
+                        // User clicked Cancel - prevent the form submission
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        return false;
+                    }
+                    // User clicked OK - allow the click to proceed
+                }
+            }
+        }
+    }, true); // true = use capture phase
+</script>
+
+{{ endblock }}

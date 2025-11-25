@@ -2,7 +2,7 @@ from otree.api import *
 
 doc = """
 Bargaining Game (Part 1: Individual Tasks)
-Instructions -> Simulated Chat -> Signals
+Instructions -> Chat and Signals
 Data is saved to participant.vars for the next app.
 """
 
@@ -53,15 +53,11 @@ class Welcome(Page):
 class InstructionsPart1(Page):
     pass
 
-class SimulatedChat(Page):
+class ChatAndSignals(Page):
     form_model = 'player'
-    form_fields = ['draft_history_left', 'draft_history_right']
+    form_fields = ['signal_left', 'signal_right', 'draft_history_left', 'draft_history_right']
     timer_text = "Time remaining to write messages:"
     timeout_seconds = C.TIMER_CHAT
-
-class SignalInput(Page):
-    form_model = 'player'
-    form_fields = ['signal_left', 'signal_right']
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
@@ -74,6 +70,5 @@ class SignalInput(Page):
 page_sequence = [
     Welcome,
     InstructionsPart1,
-    SimulatedChat,
-    SignalInput
+    ChatAndSignals
 ]
