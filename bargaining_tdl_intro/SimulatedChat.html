@@ -1,0 +1,125 @@
+{{ block title }}Chat Phase{{ endblock }}
+{{ block content }}
+
+<style>
+    .chat-container {
+        display: flex;
+        justify_content: space-between;
+        gap: 20px;
+    }
+    .chat-column {
+        width: 48%;
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    .chat-history {
+        height: 300px;
+        overflow-y: scroll;
+        border: 1px solid #eee;
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: #f9f9f9;
+    }
+    .chat-message {
+        background-color: #e1ffc7;
+        padding: 5px 10px;
+        border-radius: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+        max-width: 80%;
+        word-wrap: break-word;
+    }
+    .chat-input-area {
+        display: flex;
+    }
+    .chat-input-area input {
+        flex-grow: 1;
+        margin-right: 5px;
+    }
+</style>
+
+<p>
+    You have 6 minutes to write messages to your future partners. 
+    You can write different messages to the different group members.
+    Currently, you are writing your messages. You will see their messages in the next stage.
+</p>
+
+<!-- Hidden fields to store the actual data -->
+<input type="hidden" name="draft_history_left" id="id_draft_history_left">
+<input type="hidden" name="draft_history_right" id="id_draft_history_right">
+
+<div class="chat-container">
+    <!-- Left Partner Chat -->
+    <div class="chat-column">
+        <h4>Message to Left Partner</h4>
+        <div id="history-left" class="chat-history"></div>
+        <div class="chat-input-area">
+            <input type="text" id="input-left" class="form-control" placeholder="Type a message...">
+            <button type="button" onclick="sendMessage('left')" class="btn btn-primary btn-sm">Send</button>
+        </div>
+    </div>
+
+    <!-- Right Partner Chat -->
+    <div class="chat-column">
+        <h4>Message to Right Partner</h4>
+        <div id="history-right" class="chat-history"></div>
+        <div class="chat-input-area">
+            <input type="text" id="input-right" class="form-control" placeholder="Type a message...">
+            <button type="button" onclick="sendMessage('right')" class="btn btn-primary btn-sm">Send</button>
+        </div>
+    </div>
+</div>
+
+<br>
+{{ next_button }}
+
+<script>
+    let historyLeft = [];
+    let historyRight = [];
+
+    function updateHiddenInput(side) {
+        const history = side === 'left' ? historyLeft : historyRight;
+        const text = history.join('\n');
+        document.getElementById(`id_draft_history_${side}`).value = text;
+    }
+
+    function renderMessage(side, text) {
+        const container = document.getElementById(`history-${side}`);
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'chat-message';
+        msgDiv.textContent = "You: " + text;
+        const wrapper = document.createElement('div');
+        wrapper.style.textAlign = 'right'; 
+        wrapper.appendChild(msgDiv);
+        container.appendChild(wrapper);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function sendMessage(side) {
+        const input = document.getElementById(`input-${side}`);
+        const text = input.value.trim();
+        if (text === "") return;
+
+        if (side === 'left') {
+            historyLeft.push(text);
+        } else {
+            historyRight.push(text);
+        }
+
+        renderMessage(side, text);
+        updateHiddenInput(side);
+        input.value = "";
+    }
+
+    document.getElementById('input-left').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') sendMessage('left');
+    });
+    document.getElementById('input-right').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') sendMessage('right');
+    });
+
+</script>
+
+{{ endblock }}
+

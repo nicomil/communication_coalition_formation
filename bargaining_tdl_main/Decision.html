@@ -1,0 +1,91 @@
+{{ block title }}Your Decision{{ endblock }}
+{{ block content }}
+
+<style>
+    .message-box {
+        border: 1px solid #ddd;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        white-space: pre-line; /* Preserves newlines */
+        font-family: monospace;
+    }
+    .signal-box {
+        font-weight: bold;
+        color: #0056b3;
+        margin-bottom: 10px;
+        padding: 5px;
+        background-color: #e7f1ff;
+        border-radius: 4px;
+    }
+</style>
+
+<p>
+    Here are the messages and signals sent to you by the other participants.
+    Based on this information, please make your decision.
+</p>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                From <strong>Left</strong> Participant
+            </div>
+            <div class="card-body">
+                <div class="signal-box">
+                    Signal: {{ player.received_signal_left }}
+                </div>
+                <h6>Message Log:</h6>
+                <div class="message-box">
+                    {% if player.received_history_left %}
+                        {{ player.received_history_left }}
+                    {% else %}
+                        (No messages)
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                From <strong>Right</strong> Participant
+            </div>
+            <div class="card-body">
+                <div class="signal-box">
+                    Signal: {{ player.received_signal_right }}
+                </div>
+                <h6>Message Log:</h6>
+                <div class="message-box">
+                    {% if player.received_history_right %}
+                        {{ player.received_history_right }}
+                    {% else %}
+                        (No messages)
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<div class="card border-primary">
+    <div class="card-header bg-primary text-white">
+        <h4>Your Choice</h4>
+    </div>
+    <div class="card-body">
+        <p>
+            Please choose how you would like to divide the £12.
+        </p>
+        {{ formfield player.decision_choice }}
+    </div>
+</div>
+<br>
+
+{{ next_button }}
+
+{{ endblock }}
+

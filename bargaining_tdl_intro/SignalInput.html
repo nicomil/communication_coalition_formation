@@ -1,0 +1,27 @@
+{{ block title }}Signal Selection{{ endblock }}
+{{ block content }}
+    <p>
+        Please select a formal signal to send to each of your partners.
+    </p>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            Signal for <strong>Left</strong> Participant
+        </div>
+        <div class="card-body">
+            {{ formfield player.signal_left }}
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            Signal for <strong>Right</strong> Participant
+        </div>
+        <div class="card-body">
+            {{ formfield player.signal_right }}
+        </div>
+    </div>
+
+    {{ next_button }}
+{{ endblock }}
+

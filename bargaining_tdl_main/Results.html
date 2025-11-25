@@ -1,0 +1,22 @@
+{{ block title }}Results{{ endblock }}
+{{ block content }}
+    <div class="card">
+        <div class="card-body">
+            <p>
+                You chose: <strong>{{ player.decision_choice }}</strong>
+            </p>
+
+            <p class="lead">
+                Your payoff for this part is: <strong>{{ player.payoff }}</strong>
+            </p>
+            
+            <hr>
+            <p class="text-muted">
+                <em>(Note: The experiment consists of multiple parts. Only one part will be selected for payment.)</em>
+            </p>
+        </div>
+    </div>
+
+    {{ next_button }}
+{{ endblock }}
+
