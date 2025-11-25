@@ -35,10 +35,35 @@ class Player(BasePlayer):
 
 # PAGES
 
+class ExperimentTerminated(Page):
+    """Pagina mostrata se il partecipante ha fallito le control questions."""
+    
+    @staticmethod
+    def is_displayed(player):
+        """Mostra questa pagina solo se il partecipante ha fallito le control questions."""
+        return player.participant.vars.get('failed_control_questions', False)
+    
+    @staticmethod
+    def app_after_this_page(player, upcoming_apps):
+        """Termina l'esperimento dopo questa pagina."""
+        return []
+
 class GroupingWaitPage(WaitPage):
     group_by_arrival_time = True
     title_text = "Please wait for other participants"
     body_text = "Waiting for other participants to finish the initial phase."
+
+    @staticmethod
+    def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        return not player.participant.vars.get('failed_control_questions', False)
+    
+    @staticmethod
+    def app_after_this_page(player, upcoming_apps):
+        """Termina l'esperimento se il partecipante ha fallito le control questions."""
+        if player.participant.vars.get('failed_control_questions', False):
+            return []
+        return upcoming_apps
 
     @staticmethod
     def after_all_players_arrive(group: Group):
@@ -87,7 +112,17 @@ class Decision(Page):
     form_model = 'player'
     form_fields = ['decision_choice']
 
+    @staticmethod
+    def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        return not player.participant.vars.get('failed_control_questions', False)
+
 class ResultsWaitPage(WaitPage):
+    @staticmethod
+    def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        return not player.participant.vars.get('failed_control_questions', False)
+    
     @staticmethod
     def after_all_players_arrive(group: Group):
         p1 = group.get_player_by_id(1)
@@ -137,9 +172,13 @@ class ResultsWaitPage(WaitPage):
         # Else remains 0 (Disagreement)
 
 class Results(Page):
-    pass
+    @staticmethod
+    def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        return not player.participant.vars.get('failed_control_questions', False)
 
 page_sequence = [
+    ExperimentTerminated,
     GroupingWaitPage,
     Decision,
     ResultsWaitPage,

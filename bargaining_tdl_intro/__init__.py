@@ -41,6 +41,139 @@ class Player(BasePlayer):
         widget=widgets.RadioSelect,
         label="Select intention for the participant on your RIGHT:"
     )
+    
+    # Control Questions - Example 1
+    example1_earnings_you = models.StringField(
+        choices=[
+            ['6', '£6'],  # Corretta
+            ['4', '£4'],  # Sbagliata 1
+            ['0', '£0'],  # Sbagliata 2
+        ],
+        widget=widgets.RadioSelect,
+        label="What would your earnings be for Part 1 in this case?"
+    )
+    example1_earnings_left = models.StringField(
+        choices=[
+            ['0', '£0'],  # Corretta
+            ['4', '£4'],  # Sbagliata 1
+            ['6', '£6'],  # Sbagliata 2
+        ],
+        widget=widgets.RadioSelect,
+        label="What would the earnings for the player on the left be for Part 1 in this case?"
+    )
+    example1_earnings_right = models.StringField(
+        choices=[
+            ['6', '£6'],  # Corretta
+            ['4', '£4'],  # Sbagliata 1
+            ['0', '£0'],  # Sbagliata 2
+        ],
+        widget=widgets.RadioSelect,
+        label="What would the earnings for the player on the right be for Part 1 in this case?"
+    )
+    
+    # Control Questions - Example 2
+    example2_earnings_you = models.StringField(
+        choices=[
+            ['4', '£4'],  # Corretta
+            ['6', '£6'],  # Sbagliata 1
+            ['0', '£0'],  # Sbagliata 2
+        ],
+        widget=widgets.RadioSelect,
+        label="What would your earnings be for Part 1 in this case?"
+    )
+    example2_earnings_left = models.StringField(
+        choices=[
+            ['4', '£4'],  # Corretta
+            ['6', '£6'],  # Sbagliata 1
+            ['0', '£0'],  # Sbagliata 2
+        ],
+        widget=widgets.RadioSelect,
+        label="What would the earnings for the player on the left be for Part 1 in this case?"
+    )
+    example2_earnings_right = models.StringField(
+        choices=[
+            ['4', '£4'],  # Corretta
+            ['6', '£6'],  # Sbagliata 1
+            ['0', '£0'],  # Sbagliata 2
+        ],
+        widget=widgets.RadioSelect,
+        label="What would the earnings for the player on the right be for Part 1 in this case?"
+    )
+    
+    # Control Questions - Example 3
+    example3_earnings_you = models.StringField(
+        choices=[
+            ['0', '£0'],  # Corretta
+            ['4', '£4'],  # Sbagliata 1
+            ['6', '£6'],  # Sbagliata 2
+        ],
+        widget=widgets.RadioSelect,
+        label="What would your earnings be for Part 1 in this case?"
+    )
+    example3_earnings_left = models.StringField(
+        choices=[
+            ['0', '£0'],  # Corretta
+            ['4', '£4'],  # Sbagliata 1
+            ['6', '£6'],  # Sbagliata 2
+        ],
+        widget=widgets.RadioSelect,
+        label="What would the earnings for the player on the left be for Part 1 in this case?"
+    )
+    example3_earnings_right = models.StringField(
+        choices=[
+            ['0', '£0'],  # Corretta
+            ['4', '£4'],  # Sbagliata 1
+            ['6', '£6'],  # Sbagliata 2
+        ],
+        widget=widgets.RadioSelect,
+        label="What would the earnings for the player on the right be for Part 1 in this case?"
+    )
+    
+    # Control Questions - Payoff determination
+    payoff_determination = models.StringField(
+        choices=[
+            ['I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3.', 
+             'I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3.'],  # Corretta
+            ['I will only get paid for one of the following parts: Part 1, Part 2, or Part 3.', 
+             'I will only get paid for one of the following parts: Part 1, Part 2, or Part 3.'],  # Sbagliata 1
+            ['I will be paid an amount equal to the sum of the earnings achieved in each part of the experiment.', 
+             'I will be paid an amount equal to the sum of the earnings achieved in each part of the experiment.'],  # Sbagliata 2
+            ["I don't know.", "I don't know."],  # Sbagliata 3
+        ],
+        widget=widgets.RadioSelect,
+        label="Excluding the participation fee of £2, how will your total payoff be determined in this experiment?"
+    )
+
+# HELPER FUNCTIONS
+
+def check_all_answers_correct(player):
+    """Verifica se tutte le risposte alle control questions sono corrette."""
+    # Verifica che tutti i campi siano stati compilati
+    if (not player.example1_earnings_you or 
+        not player.example1_earnings_left or 
+        not player.example1_earnings_right or
+        not player.example2_earnings_you or 
+        not player.example2_earnings_left or 
+        not player.example2_earnings_right or
+        not player.example3_earnings_you or 
+        not player.example3_earnings_left or 
+        not player.example3_earnings_right or
+        not player.payoff_determination):
+        return False
+    
+    correct = (
+        player.example1_earnings_you == "6" and
+        player.example1_earnings_left == "0" and
+        player.example1_earnings_right == "6" and
+        player.example2_earnings_you == "4" and
+        player.example2_earnings_left == "4" and
+        player.example2_earnings_right == "4" and
+        player.example3_earnings_you == "0" and
+        player.example3_earnings_left == "0" and
+        player.example3_earnings_right == "0" and
+        player.payoff_determination == "I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3."
+    )
+    return correct
 
 # PAGES
 
@@ -50,9 +183,71 @@ class Welcome(Page):
 class InstructionsPart1(Page):
     pass
 
+class ControlQuestions(Page):
+    form_model = 'player'
+    form_fields = [
+        'example1_earnings_you',
+        'example1_earnings_left',
+        'example1_earnings_right',
+        'example2_earnings_you',
+        'example2_earnings_left',
+        'example2_earnings_right',
+        'example3_earnings_you',
+        'example3_earnings_left',
+        'example3_earnings_right',
+        'payoff_determination'
+    ]
+
+    @staticmethod
+    def vars_for_template(player):
+        return {
+            'example1_scenario': "Imagine that you chose 'Share only with the player on the right', that the player on the left chose 'Share with both you and the player on the right', and that the player on the right chose 'Share only with you'.",
+            'example2_scenario': "Imagine that you chose 'Share with both the player on the left and the player on the right', that the player on the left chose 'Share only with the player on the right', and that the player on the right chose 'Share with both you and the player on the left'.",
+            'example3_scenario': "Imagine that you chose 'Share with both the player on the left and the player on the right', that the player on the left chose 'Share only with you', and that the player on the right chose 'Share only with the player on the left'.",
+        }
+
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        """Salva un flag se le risposte sono sbagliate."""
+        # Verifica le risposte e salva il flag
+        is_correct = check_all_answers_correct(player)
+        player.participant.vars['failed_control_questions'] = not is_correct
+
+class Goodbye(Page):
+    """Pagina di saluto che termina l'esperimento per il partecipante."""
+    
+    @staticmethod
+    def is_displayed(player):
+        """Mostra questa pagina solo se le risposte alle control questions erano sbagliate."""
+        # Usa il flag salvato in before_next_page invece di chiamare check_all_answers_correct
+        # perché is_displayed viene chiamato prima che i dati siano salvati
+        failed = player.participant.vars.get('failed_control_questions')
+        # Se il flag non è stato ancora impostato, non mostrare Goodbye
+        # (significa che siamo ancora prima di ControlQuestions o che le risposte sono corrette)
+        if failed is None:
+            return False
+        return failed
+    
+    @staticmethod
+    def app_after_this_page(player, upcoming_apps):
+        """Termina l'esperimento dopo questa pagina."""
+        return []
+
 class ChatAndSignals(Page):
     form_model = 'player'
     form_fields = ['signal_left', 'signal_right', 'draft_history_left', 'draft_history_right']
+
+    @staticmethod
+    def is_displayed(player):
+        """Mostra questa pagina solo se tutte le risposte alle control questions erano corrette."""
+        # Usa il flag salvato in before_next_page invece di chiamare check_all_answers_correct
+        # perché is_displayed viene chiamato prima che i dati siano salvati
+        failed = player.participant.vars.get('failed_control_questions')
+        # Se il flag non è stato ancora impostato, mostra la pagina (per retrocompatibilità)
+        # Altrimenti mostra solo se non ha fallito
+        if failed is None:
+            return True
+        return not failed
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
@@ -65,5 +260,7 @@ class ChatAndSignals(Page):
 page_sequence = [
     Welcome,
     InstructionsPart1,
+    ControlQuestions,
+    Goodbye,
     ChatAndSignals
 ]
