@@ -1,0 +1,302 @@
+{{ block title }}Question {{ question_num }}{% if question_type == 'single' %} (Single Event){% else %} (Composite Event){% endif %}{{ endblock }}
+{{ block content }}
+
+<style>
+    .mpl-container {
+        display: flex;
+        gap: 20px;
+        margin: 20px 0;
+    }
+    .option-panel {
+        flex: 1;
+        padding: 15px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+    }
+    .option-header {
+        font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 15px;
+        text-align: center;
+        padding: 10px;
+        background-color: #e9ecef;
+        border-radius: 3px;
+    }
+    .reminder-box {
+        margin-top: 15px;
+        padding: 10px;
+        background-color: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 4px;
+        font-size: 14px;
+        white-space: pre-line;
+    }
+    .probabilities-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .probabilities-table th {
+        padding: 10px;
+        text-align: center;
+        background-color: #e9ecef;
+        border: 1px solid #ddd;
+    }
+    .probabilities-table td {
+        padding: 8px;
+        text-align: center;
+        border: 1px solid #ddd;
+        cursor: pointer;
+    }
+    .probabilities-table td:hover {
+        background-color: #f0f0f0;
+    }
+    .probabilities-table td.selected-option1 {
+        background-color: #6c757d;
+        color: white;
+    }
+    .probabilities-table td.selected-option2 {
+        background-color: #6c757d;
+        color: white;
+    }
+    .ok-button {
+        background-color: #dc3545;
+        color: white;
+        padding: 10px 30px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        float: right;
+        margin-top: 20px;
+    }
+    .ok-button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+    .option-text {
+        font-size: 16px;
+        line-height: 1.6;
+    }
+</style>
+
+<div class="mpl-container">
+    <!-- Option 1 Panel -->
+    <div class="option-panel">
+        <div class="option-header">{{ UI_OPTION1_HEADER }}</div>
+        <div class="option-text">
+            {{ option1_text }}
+        </div>
+        <div class="reminder-box">
+            {{ reminder_text }}
+        </div>
+    </div>
+
+    <!-- Option 2 Panel -->
+    <div class="option-panel">
+        <div class="option-header">{{ UI_OPTION2_HEADER }}</div>
+        <div class="option-text" style="margin-bottom: 15px;">
+            {{ OPTION2_TEXT }}
+        </div>
+        <table class="probabilities-table">
+            <thead>
+                <tr>
+                    <th>Probability</th>
+                    <th>{{ UI_COLUMN1_LABEL }}</th>
+                    <th>{{ UI_COLUMN2_LABEL }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prob in probabilities %}
+                <tr>
+                    <td>{{ prob }}%</td>
+                    <td class="choice-cell" data-prob="{{ prob }}" data-option="1" onclick="handleChoice({{ prob }}, 1)"></td>
+                    <td class="choice-cell" data-prob="{{ prob }}" data-option="2" onclick="handleChoice({{ prob }}, 2)"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<form id="mpl-form" method="post">
+    {{ form.errors }}
+    <input type="hidden" id="switch_value_field" name="mpl_question_{{ question_num }}_switch_value">
+    <input type="hidden" id="choices_json_field" name="mpl_question_{{ question_num }}_choices">
+    <button id="ok-button" type="button" class="ok-button" onclick="submitChoices()" disabled>{{ UI_OK_BUTTON_TEXT }}</button>
+    <!-- Next button nascosto che verrà cliccato programmaticamente -->
+    <button type="submit" id="hidden-next-button" style="display: none;"></button>
+</form>
+
+<script>
+    let choices = {}; // {probability: option (1 or 2)}
+    const probabilities = {{ probabilities_json|safe }};
+
+    function handleChoice(prob, option) {
+        // Single switch logic
+        if (option === 2) {
+            // Click on Option 2: select Option 2 for this probability and all higher probabilities
+            // Select Option 1 for all lower probabilities
+            probabilities.forEach(p => {
+                if (p >= prob) {
+                    choices[p] = 2;
+                } else {
+                    choices[p] = 1;
+                }
+            });
+        } else {
+            // Click on Option 1: select Option 1 for this probability and all lower probabilities
+            // Select Option 2 for all higher probabilities
+            probabilities.forEach(p => {
+                if (p <= prob) {
+                    choices[p] = 1;
+                } else {
+                    choices[p] = 2;
+                }
+            });
+        }
+        
+        updateDisplay();
+        checkComplete();
+    }
+
+    function updateDisplay() {
+        // Update visual display
+        document.querySelectorAll('.choice-cell').forEach(cell => {
+            const prob = parseInt(cell.dataset.prob);
+            const option = parseInt(cell.dataset.option);
+            const choice = choices[prob];
+            
+            cell.classList.remove('selected-option1', 'selected-option2');
+            
+            if (choice === option) {
+                if (option === 1) {
+                    cell.classList.add('selected-option1');
+                    cell.textContent = '✓';
+                } else {
+                    cell.classList.add('selected-option2');
+                    cell.textContent = '✓';
+                }
+            } else {
+                cell.textContent = '';
+            }
+        });
+    }
+
+    function checkComplete() {
+        // Check if all probabilities have a choice
+        const allSelected = probabilities.every(p => choices.hasOwnProperty(p));
+        const okButton = document.getElementById('ok-button');
+        okButton.disabled = !allSelected;
+    }
+
+    function submitChoices() {
+        // Verifica che tutte le probabilità abbiano una scelta
+        const allSelected = probabilities.every(p => choices.hasOwnProperty(p));
+        if (!allSelected) {
+            alert('Please make a choice for all probabilities before proceeding.');
+            return;
+        }
+        
+        // Find the switch point (first probability where Option 2 is selected)
+        let switchValue = null;
+        for (let i = 0; i < probabilities.length; i++) {
+            if (choices[probabilities[i]] === 2) {
+                switchValue = probabilities[i];
+                break;
+            }
+        }
+        
+        // If no Option 2 selected, switch is at 100 (all Option 1)
+        if (switchValue === null) {
+            switchValue = 100;
+        }
+        
+        // Save choices as JSON
+        const choicesJson = JSON.stringify(choices);
+        
+        // Set hidden form fields
+        const switchField = document.getElementById('switch_value_field');
+        const choicesField = document.getElementById('choices_json_field');
+        
+        if (!switchField || !choicesField) {
+            console.error('Form fields not found!');
+            alert('Error: Form fields not found. Please refresh the page.');
+            return;
+        }
+        
+        // Imposta i valori nei campi hidden
+        switchField.value = switchValue;
+        choicesField.value = choicesJson;
+        
+        // Verifica che i valori siano stati impostati
+        console.log('Setting form values:', {
+            switch_value: switchValue,
+            choices_json: choicesJson,
+            switch_field_value: switchField.value,
+            choices_field_value: choicesField.value
+        });
+        
+        // Forza il browser a riconoscere i valori (trigger change event)
+        switchField.dispatchEvent(new Event('change', { bubbles: true }));
+        choicesField.dispatchEvent(new Event('change', { bubbles: true }));
+        
+        // Disabilita il bottone per evitare doppi submit
+        const okButton = document.getElementById('ok-button');
+        if (okButton) {
+            okButton.disabled = true;
+            okButton.textContent = 'Submitting...';
+        }
+        
+        // Piccolo delay per assicurarsi che i valori siano processati
+        setTimeout(function() {
+            // Submit form usando il bottone submit nascosto
+            // Questo garantisce che oTree riconosca correttamente il submit
+            const hiddenSubmitButton = document.getElementById('hidden-next-button');
+            if (hiddenSubmitButton) {
+                hiddenSubmitButton.click();
+            } else {
+                // Fallback: submit diretto del form
+                const form = document.getElementById('mpl-form');
+                if (form) {
+                    form.submit();
+                } else {
+                    console.error('Form not found!');
+                    alert('Error: Form not found. Please refresh the page.');
+                }
+            }
+        }, 100);
+    }
+    
+    // Assicurati che i valori siano impostati prima del submit del form
+    document.getElementById('mpl-form').addEventListener('submit', function(e) {
+        // Verifica che i campi siano popolati
+        const switchField = document.getElementById('switch_value_field');
+        const choicesField = document.getElementById('choices_json_field');
+        
+        if (!switchField.value || !choicesField.value) {
+            e.preventDefault();
+            e.stopPropagation();
+            alert('Please make your choices before submitting.');
+            return false;
+        }
+        
+        console.log('Form submitting with values:', {
+            switch_value: switchField.value,
+            choices: choicesField.value
+        });
+    });
+    
+    // Inizializza: verifica che le probabilità siano caricate
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!probabilities || probabilities.length === 0) {
+            console.error('Probabilities not loaded!');
+            alert('Error: Probabilities not loaded. Please refresh the page.');
+        } else {
+            console.log('Probabilities loaded:', probabilities);
+        }
+    });
+</script>
+
+{{ endblock }}

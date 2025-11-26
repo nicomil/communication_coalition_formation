@@ -205,15 +205,19 @@ You win €5 with the following probability (and nothing otherwise).
 
 ## 📄 7. Liste Probabilità - OBBLIGATORIE
 
-### Single Event (da screenshot `single_event.png`):
+### Single Event:
 ```
 0%, 1%, 2%, 5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%, 55%, 60%, 65%, 70%, 75%, 85%, 100%
 ```
 
 **Nota**: Notare il salto da 75% a 85% (mancano 76%-84%).
 
-### Composite Event (da screenshot `Composite_event.png`):
-**DA VERIFICARE**: Controllare lo screenshot esatto per la lista completa. Potrebbe essere diversa da Single Event.
+### Composite Event:
+```
+0%, 20%, 35%, 40%, 45%, 50%, 55%, 60%, 65%, 70%, 75%, 80%, 85%, 90%, 93%, 95%, 97%, 98%, 99%, 100%
+```
+
+**Nota**: La lista per Composite Event è diversa da Single Event, con valori più sparsi all'inizio (0%, 20%, 35%) e più densi verso la fine (93%, 95%, 97%, 98%, 99%, 100%).
 
 ---
 

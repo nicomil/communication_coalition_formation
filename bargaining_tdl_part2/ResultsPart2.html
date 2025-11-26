@@ -1,0 +1,38 @@
+{{ block title }}Part 2 Results{{ endblock }}
+{{ block content }}
+
+<div class="card bg-light m-3">
+    <div class="card-body">
+        <h3>Thank you for completing Part 2!</h3>
+        
+        <p>
+            You have completed all {{ num_questions }} questions in Part 2.
+        </p>
+        
+        <h4>Your Responses Summary</h4>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Question</th>
+                    <th>Switch Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for response in responses %}
+                <tr>
+                    <td>Question {{ response.question_num }}</td>
+                    <td>{{ response.switch_value }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <p>
+            Your responses have been recorded. Please wait for further instructions.
+        </p>
+    </div>
+</div>
+
+{{ next_button }}
+
+{{ endblock }}
