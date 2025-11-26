@@ -63,7 +63,10 @@ class GroupingWaitPage(WaitPage):
         """Termina l'esperimento se il partecipante ha fallito le control questions."""
         if player.participant.vars.get('failed_control_questions', False):
             return []
-        return upcoming_apps
+        # NON restituire nulla - lascia che oTree gestisca automaticamente il flusso
+        # Restituire upcoming_apps causa validazione prematura di tutte le app nella sequenza
+        # Se part2 non è ancora riconosciuta, fallisce
+        return None
 
     @staticmethod
     def after_all_players_arrive(group: Group):

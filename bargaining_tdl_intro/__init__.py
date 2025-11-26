@@ -256,11 +256,13 @@ class ChatAndSignals(Page):
         player.participant.vars['draft_history_right'] = player.draft_history_right
         player.participant.vars['signal_left'] = player.signal_left
         player.participant.vars['signal_right'] = player.signal_right
+        # TEMPORANEO: Imposta failed_control_questions = False per permettere il test senza control questions
+        player.participant.vars['failed_control_questions'] = False
 
 page_sequence = [
     Welcome,
     InstructionsPart1,
-    ControlQuestions,
-    Goodbye,
+    # ControlQuestions,  # TEMPORANEAMENTE DISABILITATO PER TEST
+    # Goodbye,  # TEMPORANEAMENTE DISABILITATO PER TEST
     ChatAndSignals
 ]
