@@ -3,6 +3,15 @@
 ## 📋 Overview
 Implementare la **Parte 2** dell'esperimento che genera 12 MPL questions per ogni partecipante basandosi sui dati della Parte 1 (bargaining game).
 
+## ⚠️ PRINCIPIO FONDAMENTALE: NON MODIFICARE INTRO E MAIN
+**IMPORTANTE**: Questo piano implementa una nuova app `bargaining_tdl_part2` che:
+- **LEGGE SOLO** i dati esistenti da `bargaining_tdl_intro` e `bargaining_tdl_main`
+- **NON MODIFICA** in alcun modo i file di `bargaining_tdl_intro` o `bargaining_tdl_main`
+- **NON SALVA** dati aggiuntivi nei modelli di intro/main
+- **NON RICHIEDE** modifiche al codice esistente di intro/main
+
+Se durante l'implementazione si ritiene necessario modificare qualcosa in `bargaining_tdl_intro` o `bargaining_tdl_main`, **CHIEDERE AUTORIZZAZIONE** prima di procedere.
+
 ---
 
 # ⚠️ SEZIONE CRITICA: TESTI ORIGINALI OBBLIGATORI
@@ -230,22 +239,121 @@ Per ogni partecipante (A, B, C), devono essere specificate **12 domande**, così
 }
 ```
 
-### Esempio Struttura (da completare):
+### Domande da inserire:
 
-**Participant A - 12 domande**:
-1. [DA SPECIFICARE]
-2. [DA SPECIFICARE]
-... (fino a 12)
+Participant A
+EB1 You win $ 5 if Participant B divide equally with Participant A only (single event)
 
-**Participant B - 12 domande**:
-1. [DA SPECIFICARE]
-2. [DA SPECIFICARE]
-... (fino a 12)
 
-**Participant C - 12 domande**:
-1. [DA SPECIFICARE]
-2. [DA SPECIFICARE]
-... (fino a 12)
+EC1 You win $ 5 if Participant C divide equally with Participant A only (single event)
+
+
+EB2 You win $ 5 if Participant B divide equally with Participant C only (single event)
+
+
+EC2 You win $ 5 if Participant C divide equally with Participant B only (single event)
+
+
+EB3 You win $ 5 if Participant B divide equally among all three participants (single event)
+
+
+EC3 You win $ 5 if Participant C divide equally among all three participants (single event)
+
+
+EB12 You win $ 5 if Participant B divide equally with Participant A only or Participant B divide equally with Participant C only (composite event)
+
+
+EC12 You win $ 5 if Participant C divide equally with Participant A only or Participant C divide equally with Participant B only (composite event)
+
+
+EB23 You win $ 5 if Participant B divide equally with Participant C only or Participant B divide equally among all three participants (composite event)
+
+
+EC23 You win $ 5 if Participant C divide equally with Participant B only or Participant C divide equally among all three participants (composite event)
+
+
+EB31 You win $ 5 if Participant B divide equally among all three participants or Participant B divide equally with Participant A only (composite event)
+
+
+EC31 You win $ 5 if Participant C divide equally among all three participants or Participant C divide equally with Participant A only (composite event)
+
+
+
+Participant B
+EA1 You win $ 5 if Participant A divide equally with Participant B only (single event)
+
+
+EC1 You win $ 5 if Participant C divide equally with Participant B only (single event)
+
+
+EA2 You win $ 5 if Participant A divide equally with Participant C only (single event)
+
+
+EC2 You win $ 5 if Participant C divide equally with Participant A only (single event)
+
+
+EA3 You win $ 5 if Participant A divide equally among all three participants (single event)
+
+
+EC3 You win $ 5 if Participant C divide equally among all three participants (single event)
+
+
+EA12 You win $ 5 if Participant A divide equally with Participant B only or Participant A divide equally with Participant C only (composite event)
+
+
+EC12 You win $ 5 if Participant C divide equally with Participant B only or Participant C divide equally with Participant A only (composite event)
+
+
+EA23 You win $ 5 if Participant A divide equally with Participant C only or Participant A divide equally among all three participants (composite event)
+
+
+EC23 You win $ 5 if Participant C divide equally with Participant A only or Participant C divide equally among all three participants (composite event)
+
+
+EA31 You win $ 5 if Participant A divide equally among all three participants or Participant A divide equally with Participant B only (composite event)
+
+
+EC31 You win $ 5 if Participant C divide equally among all three participants or Participant C divide equally with Participant B only (composite event)
+
+
+
+Participant C
+EA1 You win $ 5 if Participant A divide equally with Participant C only (single event)
+
+
+EB1 You win $ 5 if Participant B divide equally with Participant C only (single event)
+
+
+EA2 You win $ 5 if Participant A divide equally with Participant B only (single event)
+
+
+EB2 You win $ 5 if Participant B divide equally with Participant A only (single event)
+
+
+EA3 You win $ 5 if Participant A divide equally among all three participants (single event)
+
+
+EB3 You win $ 5 if Participant B divide equally among all three participants (single event)
+
+
+EA12 You win $ 5 if Participant A divide equally with Participant C only or Participant A divide equally with Participant B only (composite event)
+
+
+EB12 You win $ 5 if Participant B divide equally with Participant C only or Participant B divide equally with Participant A only (composite event)
+
+
+EA23 You win $ 5 if Participant A divide equally with Participant B only or Participant A divide equally among all three participants (composite event)
+
+
+EB23 You win $ 5 if Participant B divide equally with Participant A only or Participant B divide equally among all three participants (composite event)
+
+
+EA31 You win $ 5 if Participant A divide equally among all three participants or Participant A divide equally with Participant C only (composite event)
+
+
+EB31 You win $ 5 if Participant B divide equally among all three participants or Participant B divide equally with Participant C only (composite event)
+Le domande dovranno essere rappresentate come da immagini fornite, differendo a seconda del tipo di domanda (composite event o single event) tendendo conto dei differenti scaglioni di probabilita’ come vedi dalle immagini.
+
 
 **AZIONE RICHIESTA**: Fornire le specifiche complete delle 12 domande per A, B, C prima di procedere con l'implementazione.
 
@@ -579,12 +687,22 @@ EVENT_TO_TEXT = {
 ### Obiettivo
 Creare funzioni che caricano e preparano i dati della Parte 1 per essere mostrati nelle MPL questions.
 
+### ⚠️ VINCOLO CRITICO: SOLO LETTURA
+**IMPORTANTE**: Questo task richiede SOLO la lettura dei dati esistenti da `bargaining_tdl_intro` e `bargaining_tdl_main`. 
+**NON MODIFICARE** in alcun modo i file `bargaining_tdl_intro` o `bargaining_tdl_main`.
+**NON SALVARE** dati aggiuntivi in `participant.vars` o nei modelli di intro/main.
+
 ### Dati da Caricare
-Per ogni partecipante, recuperare:
-- **Intenzione dichiarata** (signal_left, signal_right)
-- **Messaggi scambiati** (draft_history_left, draft_history_right)
-- **Scelte finali** (decision_choice)
-- **Messaggi e segnali ricevuti** (received_history_left, received_signal_left, etc.)
+Per ogni partecipante, recuperare (SOLO LETTURA):
+- **Intenzione dichiarata** (signal_left, signal_right) - da `participant.vars` (salvati da intro)
+- **Messaggi scambiati** (draft_history_left, draft_history_right) - da `participant.vars` (salvati da intro)
+- **Scelte finali** (decision_choice) - dai campi Player del gruppo di main
+- **Messaggi e segnali ricevuti** (received_history_left, received_signal_left, etc.) - dai campi Player del gruppo di main
+
+### Note di Implementazione
+- I dati di intro sono accessibili tramite `player.participant.vars`
+- I dati di main sono accessibili tramite il gruppo di main (es. `player.in_round(1)` o tramite il gruppo della sessione)
+- Per accedere ai dati degli altri player nel gruppo di main, usare `group.get_player_by_id(id)` per ottenere i player target
 
 ### Funzioni da Creare
 ```python
@@ -876,6 +994,10 @@ Creare la pagina di riepilogo finale della Parte 2.
 
 ### Obiettivo
 Aggiungere la nuova app alla sequenza dell'esperimento.
+
+### ⚠️ NOTA: Solo Aggiunta, Non Modifica
+Questa modifica aggiunge solo `bargaining_tdl_part2` alla sequenza esistente. 
+**NON modifica** la configurazione di `bargaining_tdl_intro` o `bargaining_tdl_main`.
 
 ### Modifiche a `settings.py`
 ```python
