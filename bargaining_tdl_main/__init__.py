@@ -178,8 +178,8 @@ class Results(Page):
         return not player.participant.vars.get('failed_control_questions', False)
 
 page_sequence = [
-    ExperimentTerminated,
-    GroupingWaitPage,
+    GroupingWaitPage,  # Deve essere prima per group_by_arrival_time=True
+    ExperimentTerminated,  # Mostrata solo se failed_control_questions=True
     Decision,
     ResultsWaitPage,
     Results
