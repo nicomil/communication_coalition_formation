@@ -56,7 +56,11 @@ OPTION2_TEXT = "You win £5 with the following probability (and nothing otherwis
 
 # Testo Reminder Parte 1 (Sezione 📄 3)
 REMINDER_TEMPLATE = """We remind you of the following information regarding what you and {target_label} have declared to each other:
+<br>
+<br>
 You said: {you_said}
+<br>
+<br>
 {target_label} said: {target_said}"""
 
 # Testi UI (Sezione 📄 9)
@@ -119,6 +123,25 @@ class Player(BasePlayer):
     mpl_question_10_choices = models.LongStringField(blank=True)
     mpl_question_11_choices = models.LongStringField(blank=True)
     mpl_question_12_choices = models.LongStringField(blank=True)
+    
+    # Control Questions for Part 2
+    control_question_1 = models.StringField(
+        choices=[
+            ["nothing", "I don't win anything."],
+            ["5", "£5."],
+            ["dont_know", "I don't know."]
+        ],
+        label="Question 1: What would be the payment for Part 2?"
+    )
+    
+    control_question_2 = models.StringField(
+        choices=[
+            ["nothing", "I don't win anything."],
+            ["5", "£5."],
+            ["dont_know", "I don't know."]
+        ],
+        label="Question 2: What would be the payment for Part 2?"
+    )
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -567,12 +590,53 @@ def generate_mpl_questions(player: Player) -> list[dict]:
     
     return enriched_questions
 
+def check_control_questions_part2_correct(player: Player) -> bool:
+    """Verifica se entrambe le risposte alle control questions sono corrette."""
+    if not player.control_question_1 or not player.control_question_2:
+        return False
+    
+    # Entrambe le risposte corrette devono essere "5" (£5)
+    correct = (
+        player.control_question_1 == "5" and
+        player.control_question_2 == "5"
+    )
+    return correct
+
 # ============================================================================
 # PAGES
 # ============================================================================
 
 class InstructionsPart2(Page):
     pass
+
+class PaymentInstructionPart2(Page):
+    pass
+
+class ControlQuestionsPart2(Page):
+    form_model = 'player'
+    form_fields = ['control_question_1', 'control_question_2']
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        """Salva un flag se le risposte sono sbagliate."""
+        is_correct = check_control_questions_part2_correct(player)
+        player.participant.vars['failed_control_questions_part2'] = not is_correct
+
+class ThankYouPart2(Page):
+    """Pagina di saluto che termina l'esperimento per il partecipante."""
+    
+    @staticmethod
+    def is_displayed(player):
+        """Mostra questa pagina solo se le risposte alle control questions erano sbagliate."""
+        failed = player.participant.vars.get('failed_control_questions_part2')
+        if failed is None:
+            return False
+        return failed
+    
+    @staticmethod
+    def app_after_this_page(player, upcoming_apps):
+        """Termina l'esperimento dopo questa pagina."""
+        return []
 
 class MPLQuestion(Page):
     form_model = 'player'
@@ -654,6 +718,12 @@ class MPLQuestion(Page):
 
 class ResultsPart2(Page):
     @staticmethod
+    def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        return not failed
+    
+    @staticmethod
     def vars_for_template(player):
         """Mostra un riepilogo delle risposte."""
         # Raccogli tutte le risposte
@@ -678,6 +748,10 @@ class MPLQuestion1(MPLQuestion):
     form_fields = ['mpl_question_1_switch_value', 'mpl_question_1_choices']
     @staticmethod
     def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
         player.participant.vars['current_question_num'] = 1
         return True
 
@@ -686,6 +760,10 @@ class MPLQuestion2(MPLQuestion):
     form_fields = ['mpl_question_2_switch_value', 'mpl_question_2_choices']
     @staticmethod
     def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
         player.participant.vars['current_question_num'] = 2
         return True
 
@@ -694,6 +772,10 @@ class MPLQuestion3(MPLQuestion):
     form_fields = ['mpl_question_3_switch_value', 'mpl_question_3_choices']
     @staticmethod
     def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
         player.participant.vars['current_question_num'] = 3
         return True
 
@@ -702,6 +784,10 @@ class MPLQuestion4(MPLQuestion):
     form_fields = ['mpl_question_4_switch_value', 'mpl_question_4_choices']
     @staticmethod
     def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
         player.participant.vars['current_question_num'] = 4
         return True
 
@@ -710,6 +796,10 @@ class MPLQuestion5(MPLQuestion):
     form_fields = ['mpl_question_5_switch_value', 'mpl_question_5_choices']
     @staticmethod
     def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
         player.participant.vars['current_question_num'] = 5
         return True
 
@@ -718,6 +808,10 @@ class MPLQuestion6(MPLQuestion):
     form_fields = ['mpl_question_6_switch_value', 'mpl_question_6_choices']
     @staticmethod
     def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
         player.participant.vars['current_question_num'] = 6
         return True
 
@@ -726,6 +820,10 @@ class MPLQuestion7(MPLQuestion):
     form_fields = ['mpl_question_7_switch_value', 'mpl_question_7_choices']
     @staticmethod
     def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
         player.participant.vars['current_question_num'] = 7
         return True
 
@@ -734,6 +832,10 @@ class MPLQuestion8(MPLQuestion):
     form_fields = ['mpl_question_8_switch_value', 'mpl_question_8_choices']
     @staticmethod
     def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
         player.participant.vars['current_question_num'] = 8
         return True
 
@@ -742,6 +844,10 @@ class MPLQuestion9(MPLQuestion):
     form_fields = ['mpl_question_9_switch_value', 'mpl_question_9_choices']
     @staticmethod
     def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
         player.participant.vars['current_question_num'] = 9
         return True
 
@@ -750,6 +856,10 @@ class MPLQuestion10(MPLQuestion):
     form_fields = ['mpl_question_10_switch_value', 'mpl_question_10_choices']
     @staticmethod
     def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
         player.participant.vars['current_question_num'] = 10
         return True
 
@@ -758,6 +868,10 @@ class MPLQuestion11(MPLQuestion):
     form_fields = ['mpl_question_11_switch_value', 'mpl_question_11_choices']
     @staticmethod
     def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
         player.participant.vars['current_question_num'] = 11
         return True
 
@@ -766,11 +880,18 @@ class MPLQuestion12(MPLQuestion):
     form_fields = ['mpl_question_12_switch_value', 'mpl_question_12_choices']
     @staticmethod
     def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
         player.participant.vars['current_question_num'] = 12
         return True
 
 page_sequence = [
     InstructionsPart2,
+    PaymentInstructionPart2,
+    ControlQuestionsPart2,
+    ThankYouPart2,
     MPLQuestion1,
     MPLQuestion2,
     MPLQuestion3,

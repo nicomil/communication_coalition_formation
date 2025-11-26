@@ -23,15 +23,6 @@
         background-color: #e9ecef;
         border-radius: 3px;
     }
-    .reminder-box {
-        margin-top: 15px;
-        padding: 10px;
-        background-color: #fff3cd;
-        border: 1px solid #ffc107;
-        border-radius: 4px;
-        font-size: 14px;
-        white-space: pre-line;
-    }
     .probabilities-table {
         width: 100%;
         border-collapse: collapse;
@@ -77,7 +68,54 @@
     }
     .option-text {
         font-size: 16px;
-        line-height: 1.6;
+        line-height: 1.8;
+        padding: 15px;
+    }
+    .option-text p {
+        margin-bottom: 12px;
+    }
+    .option-text strong {
+        font-weight: 600;
+        color: #333;
+    }
+    .option-text .prize-amount {
+        font-weight: bold;
+        color: #28a745;
+        font-size: 18px;
+    }
+    .option-text .condition-text {
+        font-style: italic;
+        color: #555;
+        margin-top: 8px;
+        display: block;
+    }
+    .reminder-text {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-left: 4px solid #6c757d;
+        border-radius: 4px;
+        font-size: 14px;
+        line-height: 1.8;
+        color: #495057;
+    }
+    .reminder-text .reminder-intro {
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: #212529;
+    }
+    .reminder-text .reminder-item {
+        margin-bottom: 10px;
+        padding-left: 8px;
+    }
+    .reminder-text .reminder-label {
+        font-weight: 600;
+        color: #495057;
+        margin-right: 5px;
+    }
+    .reminder-text .reminder-value {
+        color: #212529;
+        font-style: italic;
     }
 </style>
 
@@ -85,12 +123,14 @@
     <!-- Option 1 Panel -->
     <div class="option-panel">
         <div class="option-header">{{ UI_OPTION1_HEADER }}</div>
-        <div class="option-text">
-            {{ option1_text }}
+        <div class="option-text" id="option1-text">
+            <p>{{ option1_text }}</p>
         </div>
-        <div class="reminder-box">
+        {% if reminder_text %}
+        <div class="reminder-text" id="reminder-text">
             {{ reminder_text }}
         </div>
+        {% endif %}
     </div>
 
     <!-- Option 2 Panel -->
@@ -121,7 +161,11 @@
 </div>
 
 <form id="mpl-form" method="post">
-    {{ form.errors }}
+    {% if form.errors %}
+    <div class="alert alert-danger">
+        {{ form.errors }}
+    </div>
+    {% endif %}
     <input type="hidden" id="switch_value_field" name="mpl_question_{{ question_num }}_switch_value">
     <input type="hidden" id="choices_json_field" name="mpl_question_{{ question_num }}_choices">
     <button id="ok-button" type="button" class="ok-button" onclick="submitChoices()" disabled>{{ UI_OK_BUTTON_TEXT }}</button>
@@ -288,7 +332,81 @@
         });
     });
     
-    // Inizializza: verifica che le probabilità siano caricate
+    // Formatta il testo di Option 1 per migliorare la leggibilità
+    function formatOption1Text() {
+        const option1TextDiv = document.getElementById('option1-text');
+        if (option1TextDiv) {
+            let text = option1TextDiv.textContent || option1TextDiv.innerText;
+            
+            // Evidenzia l'importo del premio (£5)
+            text = text.replace(/(£\d+)/g, '<strong class="prize-amount">$1</strong>');
+            
+            // Evidenzia le condizioni tra virgolette
+            text = text.replace(/"([^"]+)"/g, '<strong>"$1"</strong>');
+            
+            // Evidenzia "(and nothing otherwise)"
+            text = text.replace(/\(and nothing otherwise\)/g, '<span class="condition-text">(and nothing otherwise)</span>');
+            
+            // Sostituisci il contenuto con la versione formattata
+            option1TextDiv.innerHTML = '<p>' + text + '</p>';
+        }
+    }
+    
+    // Formatta il testo del reminder per migliorare la leggibilità
+    function formatReminderText() {
+        const reminderTextDiv = document.getElementById('reminder-text');
+        if (reminderTextDiv) {
+            let text = reminderTextDiv.textContent || reminderTextDiv.innerText;
+            
+            // Estrai l'introduzione (fino ai due punti)
+            const introMatch = text.match(/^([^:]+:)/);
+            let intro = '';
+            let rest = text;
+            
+            if (introMatch) {
+                intro = introMatch[1].trim();
+                rest = text.substring(introMatch[0].length).trim();
+            }
+            
+            // Formatta le dichiarazioni (You said: ... e target said: ...)
+            // Pattern: "You said: ..." o "the player on the left/right said: ..."
+            rest = rest.replace(/(You said:)([^]*?)(?=the player|$)/gi, function(match, label, value) {
+                return '<div class="reminder-item"><span class="reminder-label">' + label.trim() + '</span><span class="reminder-value">' + value.trim() + '</span></div>';
+            });
+            
+            rest = rest.replace(/(the player on the (?:left|right) said:)([^]*?)(?=You said|$)/gi, function(match, label, value) {
+                return '<div class="reminder-item"><span class="reminder-label">' + label.trim() + '</span><span class="reminder-value">' + value.trim() + '</span></div>';
+            });
+            
+            // Se non abbiamo trovato pattern, prova a separare manualmente
+            if (rest === text.substring(intro.length).trim() && rest.includes('You said:') && rest.includes('said:')) {
+                const parts = rest.split(/(You said:|the player on the (?:left|right) said:)/gi);
+                let formatted = '';
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i].trim();
+                    if (part.match(/^(You said:|the player on the (?:left|right) said:)$/i)) {
+                        formatted += '<div class="reminder-item"><span class="reminder-label">' + part + '</span>';
+                    } else if (part && i > 0) {
+                        formatted += '<span class="reminder-value">' + part + '</span></div>';
+                    }
+                }
+                if (formatted) {
+                    rest = formatted;
+                }
+            }
+            
+            // Costruisci il HTML finale
+            let html = '';
+            if (intro) {
+                html += '<div class="reminder-intro">' + intro + '</div>';
+            }
+            html += rest;
+            
+            reminderTextDiv.innerHTML = html;
+        }
+    }
+    
+    // Inizializza: verifica che le probabilità siano caricate e formatta Option 1 e Reminder
     document.addEventListener('DOMContentLoaded', function() {
         if (!probabilities || probabilities.length === 0) {
             console.error('Probabilities not loaded!');
@@ -296,6 +414,8 @@
         } else {
             console.log('Probabilities loaded:', probabilities);
         }
+        formatOption1Text();
+        formatReminderText();
     });
 </script>
 

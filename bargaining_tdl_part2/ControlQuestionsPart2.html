@@ -1,0 +1,97 @@
+{{ block title }}Control questions for Part 2{{ endblock }}
+{{ block content }}
+    <div class="card bg-light m-3">
+        <div class="card-body">
+            <p>
+                <strong>Please answer the following questions correctly to proceed with the experiment.</strong>
+                You must answer all questions correctly to continue. If you answer incorrectly, the experiment will end.
+            </p>
+
+            <!-- Example -->
+            <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
+                <h5>Example</h5>
+                <p class="mb-3">
+                    Imagine that the question where Option 1 is "You win £5 if the player on the
+                    left chose "Share only with the player on the right" or "Share with both you and
+                    the player on the right" (and nothing otherwise)" is selected. Imagine that you preferred
+                    Option 1 for p% less than or equal to 80% and Option 2 for p% greater than or equal to
+                    85%.
+                </p>
+            </div>
+
+            <!-- Question 1 -->
+            <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
+                <h5>Question 1</h5>
+                <p class="mb-3">
+                    Imagine that, at the end of the experiment, the question in the example is
+                    played for real money for p = 45%. The example indicates that, for p = 45%, Option 1 is
+                    preferred. You would therefore win £5 if the player on the left chose "Share only with the
+                    player on the right" or "Share with both you and the player on the right". Let assume that
+                    at the end of the experiment we found out that the player on the left chose "Share with both
+                    you and the player on the right". What would be the payment for Part 2? Please select an
+                    answer.
+                </p>
+                
+                <div class="mb-3">
+                    <label class="form-label">Question 1: What would be the payment for Part 2?</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="control_question_1" id="control_question_1_nothing" value="nothing" required>
+                        <label class="form-check-label" for="control_question_1_nothing">
+                            I don't win anything.
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="control_question_1" id="control_question_1_5" value="5" required>
+                        <label class="form-check-label" for="control_question_1_5">
+                            £5.
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="control_question_1" id="control_question_1_dont_know" value="dont_know" required>
+                        <label class="form-check-label" for="control_question_1_dont_know">
+                            I don't know.
+                        </label>
+                    </div>
+                    {{ formfield_errors 'control_question_1' }}
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
+                <h5>Question 2</h5>
+                <p class="mb-3">
+                    Imagine that, at the end of the experiment, the question in the example is
+                    played for real money for p = 93%. The example indicates that, for p = 93%, Option 2 is
+                    preferred. The computer randomly draws the number 57. What would be the payment for
+                    Part 2? Please select an answer.
+                </p>
+                
+                <div class="mb-3">
+                    <label class="form-label">Question 2: What would be the payment for Part 2?</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="control_question_2" id="control_question_2_nothing" value="nothing" required>
+                        <label class="form-check-label" for="control_question_2_nothing">
+                            I don't win anything.
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="control_question_2" id="control_question_2_5" value="5" required>
+                        <label class="form-check-label" for="control_question_2_5">
+                            £5.
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="control_question_2" id="control_question_2_dont_know" value="dont_know" required>
+                        <label class="form-check-label" for="control_question_2_dont_know">
+                            I don't know.
+                        </label>
+                    </div>
+                    {{ formfield_errors 'control_question_2' }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ next_button }}
+{{ endblock }}
+
