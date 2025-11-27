@@ -179,6 +179,11 @@ class Results(Page):
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         return not player.participant.vars.get('failed_control_questions', False)
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        """Salva il payoff della Part 1 in participant.vars per uso futuro."""
+        player.participant.vars['part1_payoff'] = player.payoff
 
 page_sequence = [
     GroupingWaitPage,  # Deve essere prima per group_by_arrival_time=True

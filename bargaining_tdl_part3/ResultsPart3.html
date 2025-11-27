@@ -1,0 +1,37 @@
+{{ block title }}Results{{ endblock }}
+{{ block content }}
+    <div class="card">
+        <div class="card-body">
+            <h4>Your Payoffs</h4>
+            
+            <p>
+                You chose: <strong>
+                {% if player.decision == 'share_left' %}
+                    Share only with the player on the left
+                {% elif player.decision == 'share_right' %}
+                    Share only with the player on the right
+                {% elif player.decision == 'share_both' %}
+                    Share with both the player on the left and the player on the right
+                {% endif %}
+                </strong>
+            </p>
+
+            <hr>
+
+            <p class="lead">
+                Your payoff for Part 1 is: <strong>{{ part1_payoff }}</strong>
+            </p>
+            
+            <p class="text-muted mt-3">
+                <em>Note: In the future, this page will show the complete payoff calculation for the entire experiment (Part 1 + Part 2 or Part 1 + Part 3). For now, only the Part 1 payoff is displayed.</em>
+            </p>
+
+            <hr>
+            <p class="text-muted">
+                <em>(Note: The experiment consists of multiple parts. Only one part will be selected for payment.)</em>
+            </p>
+        </div>
+    </div>
+
+    {{ next_button }}
+{{ endblock }}
