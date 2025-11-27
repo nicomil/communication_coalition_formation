@@ -577,6 +577,10 @@ def generate_mpl_questions(player: Player) -> list[dict]:
             you_said=part1_data['you_said'],
             target_said=part1_data['target_said']
         )
+        # Preparo anche le parti separate per inserirle nella tabella
+        reminder_intro = f"We remind you of the following information regarding what you and {target_label or 'the other participant'} have declared to each other:"
+        you_said_text = f"You said: {part1_data['you_said']}"
+        target_said_text = f"{target_label or 'the other participant'} said: {part1_data['target_said']}"
         
         # Determina le probabilità in base al tipo
         probabilities = PROBABILITIES_SINGLE_EVENT if q['type'] == 'single' else PROBABILITIES_COMPOSITE_EVENT
@@ -585,6 +589,9 @@ def generate_mpl_questions(player: Player) -> list[dict]:
             **q,
             'option1_text': option1_text,
             'reminder_text': reminder_text,
+            'reminder_intro': reminder_intro,
+            'you_said_text': you_said_text,
+            'target_said_text': target_said_text,
             'probabilities': probabilities
         })
     
@@ -685,6 +692,9 @@ class MPLQuestion(Page):
                 **base_return,
                 'option1_text': debug_info,
                 'reminder_text': '',
+                'reminder_intro': '',
+                'you_said_text': '',
+                'target_said_text': '',
                 'probabilities': PROBABILITIES_SINGLE_EVENT,  # Usa almeno le probabilità di default
                 'probabilities_json': json.dumps(PROBABILITIES_SINGLE_EVENT),
                 'question_type': 'single',  # Default
@@ -698,6 +708,9 @@ class MPLQuestion(Page):
             **base_return,
             'option1_text': current_question.get('option1_text', ''),
             'reminder_text': current_question.get('reminder_text', ''),
+            'reminder_intro': current_question.get('reminder_intro', ''),
+            'you_said_text': current_question.get('you_said_text', ''),
+            'target_said_text': current_question.get('target_said_text', ''),
             'probabilities': probabilities,
             'probabilities_json': json.dumps(probabilities),
             'question_type': question_type,  # 'single' o 'composite' per la nota nel template
