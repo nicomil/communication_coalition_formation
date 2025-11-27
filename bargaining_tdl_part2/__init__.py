@@ -723,8 +723,18 @@ class MPLQuestion(Page):
         
         # I dati vengono salvati automaticamente dal form
         # Qui possiamo fare validazioni aggiuntive se necessario
+        # Verifica che il switch_value sia stato salvato correttamente (anche se è 0)
+        switch_value = player.field_maybe_none(f'mpl_question_{question_num}_switch_value')
+        if switch_value is None:
+            # Se il valore è None, potrebbe essere un problema con il form submission
+            # Log per debug
+            print(f"WARNING: switch_value is None for question {question_num}, player {player.id}")
+            print(f"  - participant: {player.participant.id}")
+            print(f"  - choices_field: {player.field_maybe_none(f'mpl_question_{question_num}_choices')}")
+        
         # Converti choices_json da stringa a oggetto se necessario
-        choices_field = getattr(player, f'mpl_question_{question_num}_choices', None)
+        # Usa field_maybe_none() per accedere in modo sicuro a campi che possono essere None
+        choices_field = player.field_maybe_none(f'mpl_question_{question_num}_choices')
         if choices_field and isinstance(choices_field, str):
             # Il campo è già una stringa JSON, va bene così
             pass
@@ -742,7 +752,8 @@ class ResultsPart2(Page):
         # Raccogli tutte le risposte
         responses = []
         for i in range(1, 13):
-            switch_value = getattr(player, f'mpl_question_{i}_switch_value', None)
+            # Usa field_maybe_none() per accedere in modo sicuro a campi che possono essere None
+            switch_value = player.field_maybe_none(f'mpl_question_{i}_switch_value')
             if switch_value is not None:
                 responses.append({
                     'question_num': i,

@@ -338,14 +338,30 @@
         }
         
         // Imposta i valori nei campi hidden
-        switchField.value = switchValue;
+        // Converti switchValue a stringa esplicitamente per assicurarsi che 0 venga salvato correttamente
+        switchField.value = String(switchValue);
         choicesField.value = choicesJson;
+        
+        // Verifica che i valori siano stati impostati correttamente (anche se switchValue è 0)
+        if (switchField.value === '' || switchField.value === null || 
+            choicesField.value === '' || choicesField.value === null) {
+            console.error('Error: Form fields not set correctly!', {
+                switch_value: switchValue,
+                switch_field_value: switchField.value,
+                choices_json: choicesJson,
+                choices_field_value: choicesField.value
+            });
+            alert('Error: Failed to set form values. Please refresh the page and try again.');
+            return;
+        }
         
         // Verifica che i valori siano stati impostati
         console.log('Setting form values:', {
             switch_value: switchValue,
+            switch_value_type: typeof switchValue,
             choices_json: choicesJson,
             switch_field_value: switchField.value,
+            switch_field_value_type: typeof switchField.value,
             choices_field_value: choicesField.value
         });
         
@@ -386,7 +402,9 @@
         const switchField = document.getElementById('switch_value_field');
         const choicesField = document.getElementById('choices_json_field');
         
-        if (!switchField.value || !choicesField.value) {
+        // Controlla esplicitamente se i campi sono vuoti o null (non usare !value perché "0" è falsy ma valido)
+        if (switchField.value === '' || switchField.value === null || 
+            choicesField.value === '' || choicesField.value === null) {
             e.preventDefault();
             e.stopPropagation();
             alert('Please make your choices before submitting.');
