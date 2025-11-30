@@ -1,5 +1,8 @@
 {{ block title }}Results{{ endblock }}
 {{ block content }}
+
+{{ include_sibling '_button_style.html' }}
+
     <div class="card">
         <div class="card-body">
             <h4>Your Payoffs</h4>
@@ -32,7 +35,7 @@
                     <p><strong>Selected Question:</strong> Question {{ part2_payoff_data.selected_question }}</p>
                     
                     {% if part2_payoff_data.reminder_text %}
-                    <div class="alert alert-info mt-3 mb-3">
+                    <div class="alert alert-secondary mt-3 mb-3">
                         <strong>Reminder from Part 1:</strong><br>
                         {{ part2_payoff_data.reminder_text|safe }}
                     </div>
@@ -49,16 +52,16 @@
                     <p><strong>Random Probability (pr1):</strong> {{ part2_payoff_data.pr1 }}%</p>
                     
                     {% if part2_payoff_data.option_selected == 'Option 1' %}
-                        <p><strong>Option Selected:</strong> <span class="badge bg-primary">Option 1</span></p>
+                        <p><strong>Option Selected:</strong> <span class="badge bg-secondary">Option 1</span></p>
                         <p><strong>Event Occurred:</strong> 
                             {% if part2_payoff_data.event_occurred %}
-                                <span class="badge bg-success">Yes</span>
+                                <span class="badge bg-secondary">Yes</span>
                             {% else %}
-                                <span class="badge bg-danger">No</span>
+                                <span class="badge bg-dark">No</span>
                             {% endif %}
                         </p>
                     {% elif part2_payoff_data.option_selected == 'Option 2' %}
-                        <p><strong>Option Selected:</strong> <span class="badge bg-info">Option 2</span></p>
+                        <p><strong>Option Selected:</strong> <span class="badge bg-secondary">Option 2</span></p>
                         <p><strong>Random Probability (pr2):</strong> {{ part2_payoff_data.pr2 }}%</p>
                         <p><strong>Condition:</strong> pr2 ({{ part2_payoff_data.pr2 }}%) 
                             {% if part2_payoff_data.pr2 <= part2_payoff_data.pr1 %}
@@ -85,4 +88,5 @@
     </div>
 
     {{ next_button }}
+
 {{ endblock }}

@@ -1,0 +1,129 @@
+{{ extends "otree/Page.html" }}
+{{ load otree }}
+
+{{ block global_styles  }}
+<style>
+    /* Override Bootstrap primary button color for oTree next buttons - same style as OK button */
+    /* Using very high specificity to override Bootstrap */
+    body .otree-body button.otree-btn-next.btn-primary,
+    body .otree-body .otree-btn-next.btn-primary,
+    body button.otree-btn-next.btn-primary,
+    body .otree-btn-next.btn-primary,
+    .otree-btn-next,
+    .otree-btn-next.btn-primary,
+    button.otree-btn-next.btn-primary,
+    .btn-primary.otree-btn-next,
+    button.btn-primary.otree-btn-next,
+    .otree-body .btn-primary.otree-btn-next {
+        background-color: #6c757d !important;
+        background: #6c757d !important;
+        color: white !important;
+        padding: 10px 30px !important;
+        border: none !important;
+        border-color: transparent !important;
+        border-radius: 5px !important;
+        font-size: 16px !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        float: right !important;
+        margin-top: 20px !important;
+    }
+    body .otree-body button.otree-btn-next.btn-primary:hover,
+    body .otree-body .otree-btn-next.btn-primary:hover,
+    body button.otree-btn-next.btn-primary:hover,
+    body .otree-btn-next.btn-primary:hover,
+    .otree-btn-next:hover,
+    .otree-btn-next.btn-primary:hover,
+    button.otree-btn-next.btn-primary:hover,
+    .btn-primary.otree-btn-next:hover,
+    button.btn-primary.otree-btn-next:hover,
+    .otree-body .btn-primary.otree-btn-next:hover {
+        background-color: #5a6268 !important;
+        background: #5a6268 !important;
+        color: white !important;
+        border-color: transparent !important;
+    }
+    body .otree-body button.otree-btn-next.btn-primary:focus,
+    body .otree-body .otree-btn-next.btn-primary:focus,
+    body button.otree-btn-next.btn-primary:focus,
+    body .otree-btn-next.btn-primary:focus,
+    .otree-btn-next:focus,
+    .otree-btn-next.btn-primary:focus,
+    button.otree-btn-next.btn-primary:focus,
+    .btn-primary.otree-btn-next:focus,
+    button.btn-primary.otree-btn-next:focus,
+    .otree-body .btn-primary.otree-btn-next:focus {
+        background-color: #5a6268 !important;
+        background: #5a6268 !important;
+        color: white !important;
+        border-color: transparent !important;
+        box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5) !important;
+    }
+    body .otree-body button.otree-btn-next.btn-primary:active,
+    body .otree-body .otree-btn-next.btn-primary:active,
+    body button.otree-btn-next.btn-primary:active,
+    body .otree-btn-next.btn-primary:active,
+    .otree-btn-next:active,
+    .otree-btn-next.btn-primary:active,
+    button.otree-btn-next.btn-primary:active,
+    .btn-primary.otree-btn-next:active,
+    button.btn-primary.otree-btn-next:active,
+    .otree-body .btn-primary.otree-btn-next:active {
+        background-color: #545b62 !important;
+        background: #545b62 !important;
+        color: white !important;
+        border-color: transparent !important;
+    }
+</style>
+{{ endblock }}
+{{ block global_scripts  }}
+<script>
+    // Force gray style for all next buttons - runs immediately and repeatedly
+    (function() {
+        function forceGrayButton() {
+            const buttons = document.querySelectorAll('.otree-btn-next, button.otree-btn-next, .btn-primary.otree-btn-next');
+            buttons.forEach(function(btn) {
+                if (btn) {
+                    btn.style.setProperty('background-color', '#6c757d', 'important');
+                    btn.style.setProperty('background', '#6c757d', 'important');
+                    btn.style.setProperty('color', 'white', 'important');
+                    btn.style.setProperty('padding', '10px 30px', 'important');
+                    btn.style.setProperty('border', 'none', 'important');
+                    btn.style.setProperty('border-color', 'transparent', 'important');
+                    btn.style.setProperty('border-radius', '5px', 'important');
+                    btn.style.setProperty('font-size', '16px', 'important');
+                    btn.style.setProperty('font-weight', 'bold', 'important');
+                    btn.style.setProperty('cursor', 'pointer', 'important');
+                    btn.style.setProperty('float', 'right', 'important');
+                    btn.style.setProperty('margin-top', '20px', 'important');
+                }
+            });
+        }
+        
+        // Run immediately
+        forceGrayButton();
+        
+        // Run on DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', forceGrayButton);
+        } else {
+            forceGrayButton();
+        }
+        
+        // Run after a delay
+        setTimeout(forceGrayButton, 100);
+        setTimeout(forceGrayButton, 500);
+        setTimeout(forceGrayButton, 1000);
+        
+        // Use MutationObserver to catch dynamically added buttons
+        const observer = new MutationObserver(function(mutations) {
+            forceGrayButton();
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    })();
+</script>
+{{ endblock }}

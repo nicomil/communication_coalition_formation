@@ -125,7 +125,7 @@
         font-style: italic;
     }
     .ok-button {
-        background-color: #dc3545;
+        background-color: #6c757d;
         color: white;
         padding: 10px 30px;
         border: none;
@@ -142,7 +142,7 @@
     }
     .prize-amount {
         font-weight: bold;
-        color: #28a745;
+        color: #495057;
         font-size: 18px;
     }
     .condition-text {
@@ -238,12 +238,12 @@
 
 <form id="mpl-form" method="post">
     {% if form.errors %}
-    <div class="alert alert-danger">
+    <div class="alert alert-secondary">
         {{ form.errors }}
     </div>
     {% endif %}
-    <input type="hidden" id="switch_value_field" name="mpl_question_{{ question_num }}_switch_value">
-    <input type="hidden" id="choices_json_field" name="mpl_question_{{ question_num }}_choices">
+    <input type="hidden" id="switch_value_field" name="mpl_question_{{ question_num_original }}_switch_value">
+    <input type="hidden" id="choices_json_field" name="mpl_question_{{ question_num_original }}_choices">
     <button id="ok-button" type="button" class="ok-button" onclick="submitChoices()" disabled>{{ UI_OK_BUTTON_TEXT }}</button>
     <!-- Next button nascosto che verrà cliccato programmaticamente -->
     <button type="submit" id="hidden-next-button" style="display: none;"></button>

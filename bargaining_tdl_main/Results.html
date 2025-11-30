@@ -1,5 +1,8 @@
 {{ block title }}Results{{ endblock }}
 {{ block content }}
+
+{{ include_sibling '_button_style.html' }}
+
     <div class="card">
         <div class="card-body">
             <p>
@@ -18,5 +21,6 @@
     </div>
 
     {{ next_button }}
+
 {{ endblock }}
 

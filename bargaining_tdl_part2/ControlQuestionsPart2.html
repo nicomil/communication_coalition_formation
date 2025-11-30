@@ -1,5 +1,51 @@
 {{ block title }}Control questions for Part 2{{ endblock }}
 {{ block content }}
+
+<style>
+    /* Same style as OK button in MPLQuestion */
+    .otree-btn-next,
+    .otree-btn-next.btn-primary,
+    button.otree-btn-next.btn-primary,
+    .btn-primary.otree-btn-next,
+    button.btn-primary.otree-btn-next {
+        background-color: #6c757d !important;
+        color: white !important;
+        padding: 10px 30px !important;
+        border: none !important;
+        border-radius: 5px !important;
+        font-size: 16px !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        float: right !important;
+        margin-top: 20px !important;
+    }
+    .otree-btn-next:hover,
+    .otree-btn-next.btn-primary:hover,
+    button.otree-btn-next.btn-primary:hover,
+    .btn-primary.otree-btn-next:hover,
+    button.btn-primary.otree-btn-next:hover {
+        background-color: #5a6268 !important;
+        color: white !important;
+    }
+    .otree-btn-next:focus,
+    .otree-btn-next.btn-primary:focus,
+    button.otree-btn-next.btn-primary:focus,
+    .btn-primary.otree-btn-next:focus,
+    button.btn-primary.otree-btn-next:focus {
+        background-color: #5a6268 !important;
+        color: white !important;
+        box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5) !important;
+    }
+    .otree-btn-next:active,
+    .otree-btn-next.btn-primary:active,
+    button.otree-btn-next.btn-primary:active,
+    .btn-primary.otree-btn-next:active,
+    button.btn-primary.otree-btn-next:active {
+        background-color: #545b62 !important;
+        color: white !important;
+    }
+</style>
+
     <div class="card bg-light m-3">
         <div class="card-body">
             <p>
@@ -93,5 +139,6 @@
     </div>
 
     {{ next_button }}
+
 {{ endblock }}
 

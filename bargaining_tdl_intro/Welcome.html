@@ -1,5 +1,8 @@
 {{ block title }}General Instructions{{ endblock }}
 {{ block content }}
+
+{{ include_sibling '_button_style.html' }}
+
     <div class="card bg-light m-3">
         <div class="card-body">
     <p><strong>Welcome!</strong></p>
@@ -23,5 +26,6 @@
     </div>
 
     {{ next_button }}
+
 {{ endblock }}
 

@@ -142,6 +142,16 @@ class Player(BasePlayer):
         ],
         label="Question 2: What would be the payment for Part 2?"
     )
+    
+    # Tracking della randomizzazione MPL
+    # Ordine dei player: 'left_first' o 'right_first'
+    mpl_player_order = models.StringField(blank=True)
+    # Ordine dei tipi di domande per left: 'single_first' o 'composite_first'
+    mpl_left_type_order = models.StringField(blank=True)
+    # Ordine dei tipi di domande per right: 'single_first' o 'composite_first'
+    mpl_right_type_order = models.StringField(blank=True)
+    # Ordine finale delle domande (JSON con lista di question_num nell'ordine visualizzato)
+    mpl_question_order = models.LongStringField(blank=True)
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -262,6 +272,22 @@ def get_target_player_label(player: Player, target_code: str) -> str:
             return "the player on the right"
     
     return None
+
+def is_question_for_left_player(player: Player, target_code: str) -> bool:
+    """
+    Determina se una domanda è relativa al "player on the left" o "player on the right".
+    
+    Args:
+        player: Player corrente
+        target_code: 'A', 'B', o 'C' (il target della domanda)
+    
+    Returns:
+        True se la domanda è per "the player on the left", False se è per "the player on the right"
+    """
+    target_label = get_target_player_label(player, target_code)
+    if target_label is None:
+        return False
+    return "left" in target_label
 
 def generate_option1_single_event(
     player: Player,
@@ -477,13 +503,18 @@ def load_part1_data_for_mpl(player: Player, target_code: str) -> dict:
 
 def generate_mpl_questions(player: Player) -> list[dict]:
     """
-    Genera la lista delle 12 domande MPL per il player.
+    Genera la lista delle 12 domande MPL per il player con doppia randomizzazione.
     
     ⚠️ SOLO LETTURA - Non modifica i dati di intro/main.
     
+    Randomizzazione implementata:
+    1. Prima randomizzazione: ordine dei player (left first o right first)
+    2. Seconda randomizzazione: all'interno di ciascun gruppo player, ordine dei tipi (single first o composite first)
+    
     Returns:
         Lista di dict, ognuno con:
-        - 'question_num': int (1-12)
+        - 'question_num': int (1-12) - numero originale della domanda
+        - 'display_order': int (1-12) - ordine di visualizzazione dopo randomizzazione
         - 'type': 'single' o 'composite'
         - 'target_code': str ('A', 'B', o 'C')
         - 'event_codes': list[str] (es. ['EB1'] o ['EB2', 'EB3'])
@@ -491,6 +522,9 @@ def generate_mpl_questions(player: Player) -> list[dict]:
         - 'reminder_text': str (reminder Parte 1)
         - 'probabilities': list[int] (lista probabilità)
     """
+    import random
+    import json
+    
     role = get_participant_role_in_group(player)
     if role is None:
         return []
@@ -556,7 +590,7 @@ def generate_mpl_questions(player: Player) -> list[dict]:
             {'question_num': 12, 'type': 'composite', 'target_code': 'B', 'event_codes': ['EB3', 'EB2']},  # EB31: B divide among all three OR B divide with C only
         ]
     
-    # Arricchiamo ogni domanda con i dati necessari
+    # Arricchiamo ogni domanda con i dati necessari (prima della randomizzazione)
     enriched_questions = []
     for q in questions:
         # Genera il testo di Option 1
@@ -595,7 +629,77 @@ def generate_mpl_questions(player: Player) -> list[dict]:
             'probabilities': probabilities
         })
     
-    return enriched_questions
+    # ========================================================================
+    # DOPPIA RANDOMIZZAZIONE
+    # ========================================================================
+    
+    # Se l'ordine è già stato generato, riutilizzalo
+    question_order_json = player.field_maybe_none('mpl_question_order')
+    if question_order_json:
+        # L'ordine è già stato generato, ricostruisci la lista nell'ordine corretto
+        question_order = json.loads(question_order_json)
+        # Crea un dizionario per accesso rapido per question_num
+        questions_dict = {q['question_num']: q for q in enriched_questions}
+        # Ricostruisci la lista nell'ordine salvato
+        final_questions = []
+        for idx, question_num in enumerate(question_order, start=1):
+            if question_num in questions_dict:
+                q = questions_dict[question_num].copy()
+                q['display_order'] = idx
+                final_questions.append(q)
+        return final_questions
+    
+    # Separare le domande per player (left vs right)
+    left_questions = []
+    right_questions = []
+    
+    for q in enriched_questions:
+        if is_question_for_left_player(player, q['target_code']):
+            left_questions.append(q)
+        else:
+            right_questions.append(q)
+    
+    # Prima randomizzazione: ordine dei player (left first o right first)
+    # Usa un seed basato sul participant per garantire riproducibilità
+    base_seed = hash(str(player.participant.id)) % (2**31)
+    
+    # Scegli quale gruppo mostrare per primo
+    rng_player = random.Random(base_seed + 1000)
+    player_order = rng_player.choice(['left_first', 'right_first'])
+    
+    # Shuffle di tutte le domande di ciascun gruppo (senza distinguere single/composite)
+    rng_left_shuffle = random.Random(base_seed + 2000)
+    rng_left_shuffle.shuffle(left_questions)
+    
+    rng_right_shuffle = random.Random(base_seed + 3000)
+    rng_right_shuffle.shuffle(right_questions)
+    
+    # Costruisci l'ordine finale delle domande
+    final_questions = []
+    
+    if player_order == 'left_first':
+        # Prima tutte le domande del player left (già mescolate)
+        final_questions.extend(left_questions)
+        # Poi tutte le domande del player right (già mescolate)
+        final_questions.extend(right_questions)
+    else:  # right_first
+        # Prima tutte le domande del player right (già mescolate)
+        final_questions.extend(right_questions)
+        # Poi tutte le domande del player left (già mescolate)
+        final_questions.extend(left_questions)
+    
+    # Aggiungi display_order a ogni domanda (1-12)
+    for idx, q in enumerate(final_questions, start=1):
+        q['display_order'] = idx
+    
+    # Salva le informazioni di randomizzazione nel player
+    player.mpl_player_order = player_order
+    # Non servono più left_type_order e right_type_order (semplificato)
+    player.mpl_left_type_order = ''  # Campo mantenuto per compatibilità ma non più usato
+    player.mpl_right_type_order = ''  # Campo mantenuto per compatibilità ma non più usato
+    player.mpl_question_order = json.dumps([q['question_num'] for q in final_questions])
+    
+    return final_questions
 
 def check_control_questions_part2_correct(player: Player) -> bool:
     """Verifica se entrambe le risposte alle control questions sono corrette."""
@@ -912,9 +1016,12 @@ class MPLQuestion(Page):
     @staticmethod
     def vars_for_template(player):
         """Prepara i dati per il template."""
-        question_num = player.participant.vars.get('current_question_num', 1)
+        import json
         
-        # Genera tutte le domande
+        # display_order è l'ordine di visualizzazione (1-12)
+        display_order = player.participant.vars.get('current_display_order', 1)
+        
+        # Genera tutte le domande (questo genera anche l'ordine randomizzato se non esiste già)
         all_questions = generate_mpl_questions(player)
         
         # Debug: stampa informazioni utili
@@ -924,18 +1031,18 @@ class MPLQuestion(Page):
             print(f"  - role: {get_participant_role_in_group(player)}")
             print(f"  - main_player: {get_main_group_player(player)}")
         
-        # Trova la domanda corrente
+        # Trova la domanda corrente usando display_order
         current_question = None
         for q in all_questions:
-            if q['question_num'] == question_num:
+            if q.get('display_order') == display_order:
                 current_question = q
                 break
         
-        import json
-        
-        # Base return sempre con question_num e costanti UI
+        # Base return sempre con question_num (originale) e display_order e costanti UI
+        question_num = current_question.get('question_num', display_order) if current_question else display_order
         base_return = {
-            'question_num': question_num,
+            'question_num': display_order,  # Per il template, usiamo display_order come numero visualizzato
+            'question_num_original': question_num,  # Numero originale per riferimento
             'UI_OPTION1_HEADER': UI_OPTION1_HEADER,
             'UI_OPTION2_HEADER': UI_OPTION2_HEADER,
             'UI_COLUMN1_LABEL': UI_COLUMN1_LABEL,
@@ -947,7 +1054,7 @@ class MPLQuestion(Page):
         if current_question is None:
             # Se non troviamo la domanda, restituiamo almeno question_num e valori di default
             # Ma proviamo a mostrare un messaggio di debug
-            debug_info = f"DEBUG: No question found. Total questions: {len(all_questions)}, Question num: {question_num}"
+            debug_info = f"DEBUG: No question found. Total questions: {len(all_questions)}, Display order: {display_order}"
             return {
                 **base_return,
                 'option1_text': debug_info,
@@ -964,6 +1071,9 @@ class MPLQuestion(Page):
         question_type = current_question.get('type', 'single')
         probabilities = current_question.get('probabilities', PROBABILITIES_SINGLE_EVENT)
         
+        # Salva il question_num originale in participant.vars per usarlo nel form
+        player.participant.vars['current_question_num_original'] = question_num
+        
         return {
             **base_return,
             'option1_text': current_question.get('option1_text', ''),
@@ -979,7 +1089,8 @@ class MPLQuestion(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         """Salva i dati della risposta."""
-        question_num = player.participant.vars.get('current_question_num', 1)
+        # Usa il question_num originale salvato in vars_for_template
+        question_num = player.participant.vars.get('current_question_num_original', 1)
         
         # I dati vengono salvati automaticamente dal form
         # Qui possiamo fare validazioni aggiuntive se necessario
@@ -1027,149 +1138,210 @@ class ResultsPart2(Page):
 
 # Definiamo le 12 pagine MPLQuestion come classi separate per evitare problemi con oTree
 # Tutte usano lo stesso template MPLQuestion.html
+def get_form_fields_for_display_order(player, display_order):
+    """Determina i form_fields dinamicamente in base all'ordine randomizzato."""
+    import json
+    # Assicurati che l'ordine sia stato generato
+    question_order_json = player.field_maybe_none('mpl_question_order')
+    if not question_order_json:
+        # Se l'ordine non esiste ancora, generalo
+        generate_mpl_questions(player)
+        question_order_json = player.field_maybe_none('mpl_question_order')
+    
+    if not question_order_json:
+        # Fallback: usa display_order come question_num se ancora non esiste
+        return [f'mpl_question_{display_order}_switch_value', f'mpl_question_{display_order}_choices']
+    
+    question_order = json.loads(question_order_json)
+    # display_order è 1-based, quindi sottraiamo 1 per l'indice
+    if 1 <= display_order <= len(question_order):
+        question_num = question_order[display_order - 1]
+        return [f'mpl_question_{question_num}_switch_value', f'mpl_question_{question_num}_choices']
+    # Fallback
+    return [f'mpl_question_{display_order}_switch_value', f'mpl_question_{display_order}_choices']
+
 class MPLQuestion1(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    form_fields = ['mpl_question_1_switch_value', 'mpl_question_1_choices']
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         if failed:
             return False
-        player.participant.vars['current_question_num'] = 1
+        # Imposta display_order = 1 (prima domanda nell'ordine randomizzato)
+        player.participant.vars['current_display_order'] = 1
+        # Genera le domande per inizializzare la randomizzazione se non esiste già
+        generate_mpl_questions(player)
         return True
+    
+    @staticmethod
+    def get_form_fields(player):
+        return get_form_fields_for_display_order(player, 1)
 
 class MPLQuestion2(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    form_fields = ['mpl_question_2_switch_value', 'mpl_question_2_choices']
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         if failed:
             return False
-        player.participant.vars['current_question_num'] = 2
+        player.participant.vars['current_display_order'] = 2
         return True
+    
+    @staticmethod
+    def get_form_fields(player):
+        return get_form_fields_for_display_order(player, 2)
 
 class MPLQuestion3(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    form_fields = ['mpl_question_3_switch_value', 'mpl_question_3_choices']
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         if failed:
             return False
-        player.participant.vars['current_question_num'] = 3
+        player.participant.vars['current_display_order'] = 3
         return True
+    
+    @staticmethod
+    def get_form_fields(player):
+        return get_form_fields_for_display_order(player, 3)
 
 class MPLQuestion4(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    form_fields = ['mpl_question_4_switch_value', 'mpl_question_4_choices']
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         if failed:
             return False
-        player.participant.vars['current_question_num'] = 4
+        player.participant.vars['current_display_order'] = 4
         return True
+    
+    @staticmethod
+    def get_form_fields(player):
+        return get_form_fields_for_display_order(player, 4)
 
 class MPLQuestion5(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    form_fields = ['mpl_question_5_switch_value', 'mpl_question_5_choices']
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         if failed:
             return False
-        player.participant.vars['current_question_num'] = 5
+        player.participant.vars['current_display_order'] = 5
         return True
+    
+    @staticmethod
+    def get_form_fields(player):
+        return get_form_fields_for_display_order(player, 5)
 
 class MPLQuestion6(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    form_fields = ['mpl_question_6_switch_value', 'mpl_question_6_choices']
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         if failed:
             return False
-        player.participant.vars['current_question_num'] = 6
+        player.participant.vars['current_display_order'] = 6
         return True
+    
+    @staticmethod
+    def get_form_fields(player):
+        return get_form_fields_for_display_order(player, 6)
 
 class MPLQuestion7(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    form_fields = ['mpl_question_7_switch_value', 'mpl_question_7_choices']
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         if failed:
             return False
-        player.participant.vars['current_question_num'] = 7
+        player.participant.vars['current_display_order'] = 7
         return True
+    
+    @staticmethod
+    def get_form_fields(player):
+        return get_form_fields_for_display_order(player, 7)
 
 class MPLQuestion8(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    form_fields = ['mpl_question_8_switch_value', 'mpl_question_8_choices']
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         if failed:
             return False
-        player.participant.vars['current_question_num'] = 8
+        player.participant.vars['current_display_order'] = 8
         return True
+    
+    @staticmethod
+    def get_form_fields(player):
+        return get_form_fields_for_display_order(player, 8)
 
 class MPLQuestion9(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    form_fields = ['mpl_question_9_switch_value', 'mpl_question_9_choices']
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         if failed:
             return False
-        player.participant.vars['current_question_num'] = 9
+        player.participant.vars['current_display_order'] = 9
         return True
+    
+    @staticmethod
+    def get_form_fields(player):
+        return get_form_fields_for_display_order(player, 9)
 
 class MPLQuestion10(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    form_fields = ['mpl_question_10_switch_value', 'mpl_question_10_choices']
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         if failed:
             return False
-        player.participant.vars['current_question_num'] = 10
+        player.participant.vars['current_display_order'] = 10
         return True
+    
+    @staticmethod
+    def get_form_fields(player):
+        return get_form_fields_for_display_order(player, 10)
 
 class MPLQuestion11(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    form_fields = ['mpl_question_11_switch_value', 'mpl_question_11_choices']
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         if failed:
             return False
-        player.participant.vars['current_question_num'] = 11
+        player.participant.vars['current_display_order'] = 11
         return True
+    
+    @staticmethod
+    def get_form_fields(player):
+        return get_form_fields_for_display_order(player, 11)
 
 class MPLQuestion12(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    form_fields = ['mpl_question_12_switch_value', 'mpl_question_12_choices']
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         if failed:
             return False
-        player.participant.vars['current_question_num'] = 12
+        player.participant.vars['current_display_order'] = 12
         return True
+    
+    @staticmethod
+    def get_form_fields(player):
+        return get_form_fields_for_display_order(player, 12)
 
 page_sequence = [
     InstructionsPart2,

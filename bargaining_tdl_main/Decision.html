@@ -1,6 +1,8 @@
 {{ block title }}Your Decision{{ endblock }}
 {{ block content }}
 
+{{ include_sibling '_button_style.html' }}
+
 <style>
     .message-box {
         border: 1px solid #ddd;
@@ -14,10 +16,10 @@
     }
     .signal-box {
         font-weight: bold;
-        color: #0056b3;
+        color: #495057;
         margin-bottom: 10px;
         padding: 5px;
-        background-color: #e7f1ff;
+        background-color: #e9ecef;
         border-radius: 4px;
     }
 </style>
@@ -72,8 +74,8 @@
 
 <hr>
 
-<div class="card border-primary">
-    <div class="card-header bg-primary text-white">
+<div class="card border-secondary">
+    <div class="card-header bg-secondary text-white">
         <h4>Your Choice</h4>
     </div>
     <div class="card-body">
