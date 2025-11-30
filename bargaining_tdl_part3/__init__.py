@@ -192,30 +192,41 @@ class ResultsPart3(Page):
     
     @staticmethod
     def vars_for_template(player):
-        """Recupera i payoff per la visualizzazione."""
-        # Per ora: recuperare solo payoff Part 1
-        # Il payoff della Part 1 è già stato calcolato e salvato in bargaining_tdl_main
-        # In oTree, ogni app ha i propri player objects, quindi dobbiamo accedere ai dati della app precedente
+        """Recupera i payoff per la visualizzazione e calcola il payoff di Part 2 se necessario."""
+        from bargaining_tdl_part2 import calculate_part2_payoff
         
         # Prova a recuperare il payoff dalla Part 1 (bargaining_tdl_main)
-        # Il payoff viene salvato automaticamente in player.payoff per ogni app
-        # Per accedere ai dati di un'altra app, possiamo usare participant.vars o accedere direttamente
         part1_payoff = cu(0)
-        
-        # Verifica se il payoff è stato salvato in participant.vars
         if 'part1_payoff' in player.participant.vars:
             part1_payoff = player.participant.vars['part1_payoff']
-        else:
-            # Prova a recuperare dai dati della app precedente
-            # In oTree, possiamo accedere ai player objects delle app precedenti
-            # Per semplicità, se non trovato, mostriamo 0
-            # In futuro, questo verrà implementato correttamente quando si calcoleranno tutti i payoff
-            pass
         
-        # In futuro: aggiungere part2_payoff, part3_payoff, total_payoff
+        # Calcola o recupera payoff Part 2
+        # Se non è già stato calcolato, calcolalo ora
+        if 'part2_payoff_data' not in player.participant.vars:
+            # Calcola payoff Part 2 (la funzione gestisce automaticamente il recupero del player di Part 2)
+            part2_payoff_data = calculate_part2_payoff(player)
+            
+            # Salva in participant.vars per uso futuro
+            player.participant.vars['part2_payoff_data'] = part2_payoff_data
+            player.participant.vars['part2_payoff'] = part2_payoff_data['payoff']
+        else:
+            # Recupera i dati già calcolati
+            part2_payoff_data = player.participant.vars['part2_payoff_data']
+        
+        part2_payoff = player.participant.vars.get('part2_payoff', cu(0))
+        
         return dict(
             part1_payoff=part1_payoff,
+            part2_payoff=part2_payoff,
+            part2_payoff_data=part2_payoff_data,
         )
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        """Assicura che il payoff di Part 2 sia stato calcolato e salvato."""
+        # Il calcolo viene fatto in vars_for_template, ma assicuriamoci che sia salvato
+        # (già fatto in vars_for_template, ma questo metodo può essere usato per validazione)
+        pass
 
 page_sequence = [
     InstructionsPart3,

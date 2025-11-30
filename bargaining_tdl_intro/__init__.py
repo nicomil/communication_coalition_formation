@@ -262,7 +262,7 @@ class ChatAndSignals(Page):
 page_sequence = [
     Welcome,
     InstructionsPart1,
-    # ControlQuestions,  # TEMPORANEAMENTE DISABILITATO PER TEST
-    # Goodbye,  # TEMPORANEAMENTE DISABILITATO PER TEST
+    ControlQuestions,
+    Goodbye,
     ChatAndSignals
 ]

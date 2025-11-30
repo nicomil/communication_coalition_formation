@@ -610,6 +610,266 @@ def check_control_questions_part2_correct(player: Player) -> bool:
     return correct
 
 # ============================================================================
+# PAYOFF CALCULATION FUNCTIONS (Part 2)
+# ============================================================================
+
+# Mapping Event Codes → Decision Choices
+# Questo mapping definisce quale decision_choice ('Left', 'Right', 'Both') 
+# corrisponde a ciascun evento, dal punto di vista del target player.
+EVENT_TO_DECISION = {
+    'EB1': 'Right',  # B divide with C only (Share only with the player on the right)
+    'EB2': 'Left',   # B divide with A only (Share only with you = Left per A)
+    'EB3': 'Both',   # B divide among all three
+    'EC1': 'Left',   # C divide with B only (Share only with the player on the left)
+    'EC2': 'Right',  # C divide with A only (Share only with you = Right per A)
+    'EC3': 'Both',   # C divide among all three
+    'EA1': 'Right',  # A divide with C only (Share only with the player on the right)
+    'EA2': 'Left',   # A divide with B only (Share only with you = Left per B)
+    'EA3': 'Both',   # A divide among all three
+}
+
+def map_event_code_to_decision_choice(event_code: str) -> str:
+    """
+    Mappa un codice evento a una decision choice ('Left', 'Right', 'Both').
+    
+    Args:
+        event_code: Codice evento (es. 'EB1', 'EC2', 'EA3')
+    
+    Returns:
+        Stringa con la decision choice attesa ('Left', 'Right', 'Both'), 
+        o None se il codice evento non è valido
+    """
+    return EVENT_TO_DECISION.get(event_code)
+
+def get_part2_player(player):
+    """
+    Recupera il player della Part 2 da un player di un'altra app (es. Part 3).
+    
+    Args:
+        player: Player di qualsiasi app (es. Part 3)
+    
+    Returns:
+        Player della Part 2 corrispondente allo stesso participant, o None se non trovato
+    """
+    try:
+        from importlib import import_module
+        
+        # Importa l'app Part 2
+        part2_app = import_module('bargaining_tdl_part2')
+        Part2Player = part2_app.Player
+        Part2Subsession = part2_app.Subsession
+        
+        # Ottieni la sessione corrente
+        session = player.session
+        
+        # Cerchiamo il subsession dell'app Part 2
+        part2_subsession = None
+        for subsession in session.get_subsessions():
+            if isinstance(subsession, Part2Subsession):
+                part2_subsession = subsession
+                break
+        
+        if part2_subsession is None:
+            return None
+        
+        # Cerchiamo il player corrispondente (stesso participant)
+        for part2_player in part2_subsession.get_players():
+            if part2_player.participant == player.participant:
+                return part2_player
+        
+        return None
+    except Exception as e:
+        import traceback
+        print(f"ERROR in get_part2_player: {e}")
+        traceback.print_exc()
+        return None
+
+def get_target_player_from_part1(player: Player, target_code: str):
+    """
+    Recupera il target player dalla Part 1.
+    
+    Args:
+        player: Player corrente (Part 2)
+        target_code: 'A', 'B', o 'C'
+    
+    Returns:
+        Player della Part 1 corrispondente al target_code, o None se non trovato
+    """
+    from importlib import import_module
+    main_app = import_module('bargaining_tdl_main')
+    MainPlayer = main_app.Player
+    MainSubsession = main_app.Subsession
+    
+    # Recupera il gruppo della Part 1
+    main_player = get_main_group_player(player)
+    if main_player is None:
+        return None
+    
+    group = main_player.group
+    
+    # Mapping target_code → id_in_group
+    target_id_map = {'A': 1, 'B': 2, 'C': 3}
+    target_id = target_id_map.get(target_code)
+    if target_id is None:
+        return None
+    
+    # Trova il player con quell'id
+    target_player = group.get_player_by_id(target_id)
+    return target_player
+
+def check_event_occurred_in_part1(player: Player, target_code: str, event_codes: list[str]) -> bool:
+    """
+    Verifica se l'evento (o almeno uno degli eventi per composite) è accaduto nella Part 1.
+    
+    Args:
+        player: Player corrente (Part 2)
+        target_code: 'A', 'B', o 'C' (chi ha fatto la scelta)
+        event_codes: Lista di codici evento (es. ['EB1'] o ['EB2', 'EB3'])
+    
+    Returns:
+        True se l'evento è accaduto, False altrimenti
+    """
+    # Recupera il target player dalla Part 1
+    target_player = get_target_player_from_part1(player, target_code)
+    if target_player is None:
+        return False
+    
+    # Ottieni la scelta effettiva del target
+    actual_choice = target_player.decision_choice  # 'Left', 'Right', o 'Both'
+    if not actual_choice:
+        return False
+    
+    # Per ogni evento, verifica se è accaduto
+    for event_code in event_codes:
+        expected_choice = map_event_code_to_decision_choice(event_code)
+        if expected_choice == actual_choice:
+            return True  # Almeno un evento è accaduto (OR logico per composite)
+    
+    return False
+
+def calculate_part2_payoff(player) -> dict:
+    """
+    Calcola il payoff della Part 2 seguendo la logica specificata.
+    
+    Args:
+        player: Player di qualsiasi app (es. Part 2 o Part 3). 
+                Se non è un player di Part 2, viene recuperato automaticamente.
+    
+    Returns:
+        Dict con:
+        - 'payoff': Currency (cu(5) o cu(0))
+        - 'selected_question': int (1-12)
+        - 'switching_point': int
+        - 'pr1': int (0-100)
+        - 'pr2': int (0-99) o None
+        - 'option_selected': str ('Option 1' o 'Option 2')
+        - 'event_occurred': bool (solo per Option 1)
+        - 'payoff_amount': int (5 o 0)
+    """
+    import random
+    
+    # Se il player non è di Part 2, recuperalo
+    # Controlla se il player ha i campi MPL (è un player di Part 2)
+    if not hasattr(player, 'mpl_question_1_switch_value'):
+        # Non è un player di Part 2, recuperalo
+        part2_player = get_part2_player(player)
+        if part2_player is None:
+            # Se non troviamo il player di Part 2, ritorna payoff 0
+            return {
+                'payoff': cu(0),
+                'selected_question': None,
+                'switching_point': None,
+                'pr1': None,
+                'pr2': None,
+                'option_selected': None,
+                'event_occurred': None,
+                'payoff_amount': 0,
+                'error': 'Part 2 player not found'
+            }
+        player = part2_player
+    
+    # Step 1: Selezione casuale domanda (1-12)
+    selected_question_num = random.randint(1, 12)
+    
+    # Recupera metadati della domanda (serve sempre per il testo)
+    questions = generate_mpl_questions(player)
+    selected_question = questions[selected_question_num - 1] if selected_question_num <= len(questions) else None
+    
+    # Recupera switching point
+    switch_field_name = f'mpl_question_{selected_question_num}_switch_value'
+    switching_point = getattr(player, switch_field_name, None)
+    
+    if switching_point is None:
+        # Se non c'è switching point, payoff = 0
+        return {
+            'payoff': cu(0),
+            'selected_question': selected_question_num,
+            'switching_point': None,
+            'pr1': None,
+            'pr2': None,
+            'option_selected': None,
+            'event_occurred': None,
+            'payoff_amount': 0,
+            'question_text': selected_question.get('option1_text', '') if selected_question else '',
+            'reminder_text': selected_question.get('reminder_text', '') if selected_question else '',
+            'target_code': selected_question.get('target_code', '') if selected_question else '',
+            'event_codes': selected_question.get('event_codes', []) if selected_question else [],
+            'question_type': selected_question.get('type', 'single') if selected_question else 'single'
+        }
+    
+    # Step 2: Estrai pr1 (0-100)
+    pr1 = random.randint(0, 100)
+    
+    # Step 3: Decisione Option 1 vs Option 2
+    if pr1 < switching_point:
+        # Scenario 2.1: Option 1 - Verifica evento Part 1
+        target_code = selected_question['target_code']
+        event_codes = selected_question['event_codes']
+        
+        # Verifica se evento è accaduto
+        event_occurred = check_event_occurred_in_part1(player, target_code, event_codes)
+        
+        payoff_amount = 5 if event_occurred else 0
+        
+        return {
+            'payoff': cu(payoff_amount),
+            'selected_question': selected_question_num,
+            'switching_point': switching_point,
+            'pr1': pr1,
+            'pr2': None,
+            'option_selected': 'Option 1',
+            'event_occurred': event_occurred,
+            'payoff_amount': payoff_amount,
+            'question_text': selected_question.get('option1_text', ''),
+            'reminder_text': selected_question.get('reminder_text', ''),
+            'target_code': target_code,
+            'event_codes': event_codes,
+            'question_type': selected_question.get('type', 'single')
+        }
+    else:
+        # Scenario 2.2: Option 2 - Estrai pr2
+        pr2 = random.randint(0, 99)
+        
+        # Se pr2 <= pr1, vinci £5
+        payoff_amount = 5 if pr2 <= pr1 else 0
+        
+        return {
+            'payoff': cu(payoff_amount),
+            'selected_question': selected_question_num,
+            'switching_point': switching_point,
+            'pr1': pr1,
+            'pr2': pr2,
+            'option_selected': 'Option 2',
+            'event_occurred': None,
+            'payoff_amount': payoff_amount,
+            'question_text': selected_question.get('option1_text', ''),
+            'reminder_text': selected_question.get('reminder_text', ''),
+            'target_code': selected_question.get('target_code', ''),
+            'event_codes': selected_question.get('event_codes', []),
+            'question_type': selected_question.get('type', 'single')
+        }
+
+# ============================================================================
 # PAGES
 # ============================================================================
 
