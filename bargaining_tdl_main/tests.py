@@ -99,3 +99,6 @@ class PlayerBot(Bot):
         # Verifica che il payoff sia stato salvato in participant.vars
         expect(self.player.participant.vars.get('part1_payoff'), self.player.payoff)
 
+
+
+

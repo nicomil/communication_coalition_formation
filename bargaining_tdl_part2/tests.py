@@ -85,3 +85,6 @@ class PlayerBot(Bot):
             switch_value = getattr(self.player, f'mpl_question_{i}_switch_value', None)
             expect(switch_value, '!=', None)
 
+
+
+

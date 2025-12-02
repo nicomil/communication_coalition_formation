@@ -75,3 +75,6 @@ class PlayerBot(Bot):
         expect(self.player.participant.vars.get('signal_right'), signal_right)
         expect(self.player.participant.vars.get('failed_control_questions'), False)
 
+
+
+
