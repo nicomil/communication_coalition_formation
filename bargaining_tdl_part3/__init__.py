@@ -104,6 +104,17 @@ class Player(BasePlayer):
     
     # Flag validazione
     all_control_questions_correct = models.BooleanField(initial=False)
+    
+    # Time tracking fields (in seconds)
+    time_instructions_part3 = models.FloatField(initial=0)
+    time_summary_part3 = models.FloatField(initial=0)
+    time_control_questions_part3 = models.FloatField(initial=0)
+    time_thank_you_part3 = models.FloatField(initial=0)
+    time_decision_part3 = models.FloatField(initial=0)
+    time_results_part3 = models.FloatField(initial=0)
+    
+    # Hidden field for JavaScript to populate
+    time_on_page = models.FloatField(initial=0, blank=True)
 
 # HELPER FUNCTIONS
 
@@ -136,10 +147,34 @@ def check_all_control_questions_correct(player):
 # PAGES
 
 class InstructionsPart3(Page):
-    pass
+    form_model = 'player'
+    form_fields = ['time_on_page']
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_instructions_part3 = save_time_value(player.time_on_page)
 
 class SummaryPart3(Page):
-    pass
+    form_model = 'player'
+    form_fields = ['time_on_page']
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_summary_part3 = save_time_value(player.time_on_page)
 
 class ControlQuestionsPart3(Page):
     form_model = 'player'
@@ -150,11 +185,20 @@ class ControlQuestionsPart3(Page):
         'example2_earnings_you',
         'example2_earnings_left',
         'example2_earnings_right',
-        'payoff_question'
+        'payoff_question',
+        'time_on_page'
     ]
     
     @staticmethod
     def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_control_questions_part3 = save_time_value(player.time_on_page)
         """Valida tutte le risposte alle control questions."""
         player.all_control_questions_correct = check_all_control_questions_correct(player)
         if not player.all_control_questions_correct:
@@ -162,11 +206,24 @@ class ControlQuestionsPart3(Page):
 
 class ThankYouPart3(Page):
     """Pagina mostrata se il partecipante ha fallito le control questions."""
+    form_model = 'player'
+    form_fields = ['time_on_page']
     
     @staticmethod
     def is_displayed(player):
         """Mostra questa pagina solo se il partecipante ha fallito le control questions."""
         return not player.all_control_questions_correct
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_thank_you_part3 = save_time_value(player.time_on_page)
     
     @staticmethod
     def app_after_this_page(player, upcoming_apps):
@@ -175,20 +232,44 @@ class ThankYouPart3(Page):
 
 class DecisionPart3(Page):
     form_model = 'player'
-    form_fields = ['decision']
+    form_fields = ['decision', 'time_on_page']
     
     @staticmethod
     def is_displayed(player):
         """Mostra questa pagina solo se le control questions sono corrette."""
         return player.all_control_questions_correct
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_decision_part3 = save_time_value(player.time_on_page)
 
 class ResultsPart3(Page):
     """Payoff Page - mostra i payoff dell'esperimento."""
+    form_model = 'player'
+    form_fields = ['time_on_page']
     
     @staticmethod
     def is_displayed(player):
         """Mostra questa pagina solo se le control questions sono corrette e la decisione è stata presa."""
         return player.all_control_questions_correct and player.decision is not None
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_results_part3 = save_time_value(player.time_on_page)
     
     @staticmethod
     def vars_for_template(player):

@@ -1,0 +1,97 @@
+{# Hidden field for time tracking - include this in templates that use time_on_page #}
+<div style="display: none;">
+    {{ formfield "time_on_page" }}
+</div>
+<script>
+    // SIMPLE TIME TRACKING - runs on every page
+    (function() {
+        // Clean up previous interval
+        if (window._timeTrackingInterval) {
+            clearInterval(window._timeTrackingInterval);
+        }
+        
+        var pageStartTime = Date.now();
+        var timeOnPage = 0;
+        
+        function findTimeField() {
+            return document.querySelector('input[name="time_on_page"]') || 
+                   document.getElementById('id_time_on_page') ||
+                   document.querySelector('input[id*="time_on_page"]');
+        }
+        
+        function updateTimeField() {
+            var timeField = findTimeField();
+            if (timeField) {
+                timeOnPage = (Date.now() - pageStartTime) / 1000;
+                var timeValue = Math.max(0, timeOnPage).toFixed(2);
+                timeField.value = timeValue;
+                return true;
+            }
+            return false;
+        }
+        
+        // Initialize and start tracking
+        function startTracking() {
+            var timeField = findTimeField();
+            if (timeField) {
+                timeField.value = '0';
+                // Update every 0.5 seconds
+                window._timeTrackingInterval = setInterval(updateTimeField, 500);
+                console.log('⏱️ Time tracking started on:', window.location.pathname);
+                
+                // Update on form submit - use capture phase to run early
+                var forms = document.querySelectorAll('form');
+                forms.forEach(function(form) {
+                    form.addEventListener('submit', function(e) {
+                        // Force update multiple times to be absolutely sure
+                        updateTimeField();
+                        var field = findTimeField();
+                        if (field) {
+                            // Final update
+                            timeOnPage = (Date.now() - pageStartTime) / 1000;
+                            var timeValue = Math.max(0, timeOnPage).toFixed(2);
+                            field.value = timeValue;
+                            field.setAttribute('value', timeValue);
+                            // Trigger change event to ensure oTree recognizes it
+                            field.dispatchEvent(new Event('change', { bubbles: true }));
+                            field.dispatchEvent(new Event('input', { bubbles: true }));
+                            console.log('✅ Time saved before submit:', field.value, 'seconds');
+                        }
+                    }, true); // Capture phase
+                });
+                
+                // Update on button click - use capture phase
+                document.addEventListener('click', function(e) {
+                    if (e.target && (e.target.classList.contains('otree-btn-next') || e.target.closest('.otree-btn-next'))) {
+                        updateTimeField();
+                        var field = findTimeField();
+                        if (field) {
+                            // Final update
+                            timeOnPage = (Date.now() - pageStartTime) / 1000;
+                            var timeValue = Math.max(0, timeOnPage).toFixed(2);
+                            field.value = timeValue;
+                            field.setAttribute('value', timeValue);
+                            // Trigger change event
+                            field.dispatchEvent(new Event('change', { bubbles: true }));
+                            field.dispatchEvent(new Event('input', { bubbles: true }));
+                            console.log('✅ Time saved on button click:', field.value, 'seconds');
+                        }
+                    }
+                }, true); // Capture phase
+                
+                return true;
+            }
+            return false;
+        }
+        
+        // Start immediately
+        if (!startTracking()) {
+            // Retry if field not found yet
+            setTimeout(function() {
+                if (!startTracking()) {
+                    setTimeout(startTracking, 500);
+                }
+            }, 100);
+        }
+    })();
+</script>

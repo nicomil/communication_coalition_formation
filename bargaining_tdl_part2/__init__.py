@@ -152,6 +152,29 @@ class Player(BasePlayer):
     mpl_right_type_order = models.StringField(blank=True)
     # Ordine finale delle domande (JSON con lista di question_num nell'ordine visualizzato)
     mpl_question_order = models.LongStringField(blank=True)
+    
+    # Time tracking fields (in seconds)
+    time_instructions_part2 = models.FloatField(initial=0)
+    time_payment_instruction_part2 = models.FloatField(initial=0)
+    time_control_questions_part2 = models.FloatField(initial=0)
+    time_thank_you_part2 = models.FloatField(initial=0)
+    # Time tracking for each MPL question (1-12)
+    time_mpl_question_1 = models.FloatField(initial=0)
+    time_mpl_question_2 = models.FloatField(initial=0)
+    time_mpl_question_3 = models.FloatField(initial=0)
+    time_mpl_question_4 = models.FloatField(initial=0)
+    time_mpl_question_5 = models.FloatField(initial=0)
+    time_mpl_question_6 = models.FloatField(initial=0)
+    time_mpl_question_7 = models.FloatField(initial=0)
+    time_mpl_question_8 = models.FloatField(initial=0)
+    time_mpl_question_9 = models.FloatField(initial=0)
+    time_mpl_question_10 = models.FloatField(initial=0)
+    time_mpl_question_11 = models.FloatField(initial=0)
+    time_mpl_question_12 = models.FloatField(initial=0)
+    time_results_part2 = models.FloatField(initial=0)
+    
+    # Hidden field for JavaScript to populate
+    time_on_page = models.FloatField(initial=0, blank=True)
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -978,23 +1001,57 @@ def calculate_part2_payoff(player) -> dict:
 # ============================================================================
 
 class InstructionsPart2(Page):
-    pass
-
-class PaymentInstructionPart2(Page):
-    pass
-
-class ControlQuestionsPart2(Page):
     form_model = 'player'
-    form_fields = ['control_question_1', 'control_question_2']
+    form_fields = ['time_on_page']
     
     @staticmethod
     def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_instructions_part2 = save_time_value(player.time_on_page)
+
+class PaymentInstructionPart2(Page):
+    form_model = 'player'
+    form_fields = ['time_on_page']
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_payment_instruction_part2 = save_time_value(player.time_on_page)
+
+class ControlQuestionsPart2(Page):
+    form_model = 'player'
+    form_fields = ['control_question_1', 'control_question_2', 'time_on_page']
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_control_questions_part2 = save_time_value(player.time_on_page)
         """Salva un flag se le risposte sono sbagliate."""
         is_correct = check_control_questions_part2_correct(player)
         player.participant.vars['failed_control_questions_part2'] = not is_correct
 
 class ThankYouPart2(Page):
     """Pagina di saluto che termina l'esperimento per il partecipante."""
+    form_model = 'player'
+    form_fields = ['time_on_page']
     
     @staticmethod
     def is_displayed(player):
@@ -1003,6 +1060,17 @@ class ThankYouPart2(Page):
         if failed is None:
             return False
         return failed
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_thank_you_part2 = save_time_value(player.time_on_page)
     
     @staticmethod
     def app_after_this_page(player, upcoming_apps):
@@ -1092,6 +1160,21 @@ class MPLQuestion(Page):
         # Usa il question_num originale salvato in vars_for_template
         question_num = player.participant.vars.get('current_question_num_original', 1)
         
+        # Salva il tempo nel campo specifico per questa domanda MPL
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        
+        if 1 <= question_num <= 12:
+            time_field_name = f'time_mpl_question_{question_num}'
+            time_value = save_time_value(player.time_on_page)
+            setattr(player, time_field_name, time_value)
+            print(f"MPLQuestion {question_num} - time saved: {time_value}")
+        
         # I dati vengono salvati automaticamente dal form
         # Qui possiamo fare validazioni aggiuntive se necessario
         # Verifica che il switch_value sia stato salvato correttamente (anche se è 0)
@@ -1111,11 +1194,25 @@ class MPLQuestion(Page):
             pass
 
 class ResultsPart2(Page):
+    form_model = 'player'
+    form_fields = ['time_on_page']
+    
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         failed = player.participant.vars.get('failed_control_questions_part2', False)
         return not failed
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_results_part2 = save_time_value(player.time_on_page)
     
     @staticmethod
     def vars_for_template(player):
@@ -1141,6 +1238,7 @@ class ResultsPart2(Page):
 def get_form_fields_for_display_order(player, display_order):
     """Determina i form_fields dinamicamente in base all'ordine randomizzato."""
     import json
+    # time_on_page deve essere sempre incluso per il tracking del tempo
     # Assicurati che l'ordine sia stato generato
     question_order_json = player.field_maybe_none('mpl_question_order')
     if not question_order_json:
@@ -1150,15 +1248,15 @@ def get_form_fields_for_display_order(player, display_order):
     
     if not question_order_json:
         # Fallback: usa display_order come question_num se ancora non esiste
-        return [f'mpl_question_{display_order}_switch_value', f'mpl_question_{display_order}_choices']
+        return [f'mpl_question_{display_order}_switch_value', f'mpl_question_{display_order}_choices', 'time_on_page']
     
     question_order = json.loads(question_order_json)
     # display_order è 1-based, quindi sottraiamo 1 per l'indice
     if 1 <= display_order <= len(question_order):
         question_num = question_order[display_order - 1]
-        return [f'mpl_question_{question_num}_switch_value', f'mpl_question_{question_num}_choices']
+        return [f'mpl_question_{question_num}_switch_value', f'mpl_question_{question_num}_choices', 'time_on_page']
     # Fallback
-    return [f'mpl_question_{display_order}_switch_value', f'mpl_question_{display_order}_choices']
+    return [f'mpl_question_{display_order}_switch_value', f'mpl_question_{display_order}_choices', 'time_on_page']
 
 class MPLQuestion1(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'

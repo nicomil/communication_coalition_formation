@@ -143,8 +143,27 @@ class Player(BasePlayer):
         widget=widgets.RadioSelect,
         label="Excluding the participation fee of £2, how will your total payoff be determined in this experiment?"
     )
+    
+    # Time tracking fields (in seconds)
+    time_welcome = models.FloatField(initial=0)
+    time_instructions_part1 = models.FloatField(initial=0)
+    time_control_questions = models.FloatField(initial=0)
+    time_goodbye = models.FloatField(initial=0)
+    time_chat_and_signals = models.FloatField(initial=0)
+    
+    # Hidden field for JavaScript to populate
+    time_on_page = models.FloatField(initial=0, blank=True)
 
 # HELPER FUNCTIONS
+
+def save_time_value(time_value, default=0.0):
+    """Helper function to safely convert time_on_page value to float."""
+    if time_value is None or time_value == '':
+        return default
+    try:
+        return float(time_value)
+    except (ValueError, TypeError):
+        return default
 
 def check_all_answers_correct(player):
     """Verifica se tutte le risposte alle control questions sono corrette."""
@@ -178,10 +197,25 @@ def check_all_answers_correct(player):
 # PAGES
 
 class Welcome(Page):
-    pass
+    form_model = 'player'
+    form_fields = ['time_on_page']
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        # oTree salva automaticamente i form fields prima di chiamare before_next_page
+        # Quindi player.time_on_page dovrebbe già avere il valore dal form
+        time_value = save_time_value(player.time_on_page)
+        player.time_welcome = time_value
+        print(f"Welcome page - time_on_page received: {player.time_on_page}, time_welcome saved: {player.time_welcome}")
 
 class InstructionsPart1(Page):
-    pass
+    form_model = 'player'
+    form_fields = ['time_on_page']
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        player.time_instructions_part1 = save_time_value(player.time_on_page)
+        print(f"InstructionsPart1 - time_instructions_part1 saved: {player.time_instructions_part1}")
 
 class ControlQuestions(Page):
     form_model = 'player'
@@ -195,7 +229,8 @@ class ControlQuestions(Page):
         'example3_earnings_you',
         'example3_earnings_left',
         'example3_earnings_right',
-        'payoff_determination'
+        'payoff_determination',
+        'time_on_page'
     ]
 
     @staticmethod
@@ -209,12 +244,16 @@ class ControlQuestions(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         """Salva un flag se le risposte sono sbagliate."""
+        player.time_control_questions = save_time_value(player.time_on_page)
+        print(f"ControlQuestions - time_control_questions saved: {player.time_control_questions}")
         # Verifica le risposte e salva il flag
         is_correct = check_all_answers_correct(player)
         player.participant.vars['failed_control_questions'] = not is_correct
 
 class Goodbye(Page):
     """Pagina di saluto che termina l'esperimento per il partecipante."""
+    form_model = 'player'
+    form_fields = ['time_on_page']
     
     @staticmethod
     def is_displayed(player):
@@ -229,13 +268,18 @@ class Goodbye(Page):
         return failed
     
     @staticmethod
+    def before_next_page(player, timeout_happened):
+        player.time_goodbye = save_time_value(player.time_on_page)
+        print(f"Goodbye - time_goodbye saved: {player.time_goodbye}")
+    
+    @staticmethod
     def app_after_this_page(player, upcoming_apps):
         """Termina l'esperimento dopo questa pagina."""
         return []
 
 class ChatAndSignals(Page):
     form_model = 'player'
-    form_fields = ['signal_left', 'signal_right', 'draft_history_left', 'draft_history_right']
+    form_fields = ['signal_left', 'signal_right', 'draft_history_left', 'draft_history_right', 'time_on_page']
 
     @staticmethod
     def is_displayed(player):
@@ -251,6 +295,8 @@ class ChatAndSignals(Page):
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
+        player.time_chat_and_signals = save_time_value(player.time_on_page)
+        print(f"ChatAndSignals - time_chat_and_signals saved: {player.time_chat_and_signals}")
         # Save data to participant vars for the next app
         player.participant.vars['draft_history_left'] = player.draft_history_left
         player.participant.vars['draft_history_right'] = player.draft_history_right

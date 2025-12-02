@@ -244,6 +244,7 @@
     {% endif %}
     <input type="hidden" id="switch_value_field" name="mpl_question_{{ question_num_original }}_switch_value">
     <input type="hidden" id="choices_json_field" name="mpl_question_{{ question_num_original }}_choices">
+    {{ include '_templates/global/_time_tracking_field.html' }}
     <button id="ok-button" type="button" class="ok-button" onclick="submitChoices()" disabled>{{ UI_OK_BUTTON_TEXT }}</button>
     <!-- Next button nascosto che verrà cliccato programmaticamente -->
     <button type="submit" id="hidden-next-button" style="display: none;"></button>

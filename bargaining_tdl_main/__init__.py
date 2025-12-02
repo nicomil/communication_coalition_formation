@@ -32,16 +32,37 @@ class Player(BasePlayer):
     received_history_right = models.LongStringField(initial="")
     received_signal_left = models.StringField(initial="")
     received_signal_right = models.StringField(initial="")
+    
+    # Time tracking fields (in seconds)
+    time_experiment_terminated = models.FloatField(initial=0)
+    time_decision = models.FloatField(initial=0)
+    time_results = models.FloatField(initial=0)
+    
+    # Hidden field for JavaScript to populate
+    time_on_page = models.FloatField(initial=0, blank=True)
 
 # PAGES
 
 class ExperimentTerminated(Page):
     """Pagina mostrata se il partecipante ha fallito le control questions."""
+    form_model = 'player'
+    form_fields = ['time_on_page']
     
     @staticmethod
     def is_displayed(player):
         """Mostra questa pagina solo se il partecipante ha fallito le control questions."""
         return player.participant.vars.get('failed_control_questions', False)
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_experiment_terminated = save_time_value(player.time_on_page)
     
     @staticmethod
     def app_after_this_page(player, upcoming_apps):
@@ -113,12 +134,23 @@ class GroupingWaitPage(WaitPage):
 
 class Decision(Page):
     form_model = 'player'
-    form_fields = ['decision_choice']
+    form_fields = ['decision_choice', 'time_on_page']
 
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         return not player.participant.vars.get('failed_control_questions', False)
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_decision = save_time_value(player.time_on_page)
 
 class ResultsWaitPage(WaitPage):
     @staticmethod
@@ -175,6 +207,9 @@ class ResultsWaitPage(WaitPage):
         # Else remains 0 (Disagreement)
 
 class Results(Page):
+    form_model = 'player'
+    form_fields = ['time_on_page']
+    
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
@@ -182,6 +217,14 @@ class Results(Page):
     
     @staticmethod
     def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_results = save_time_value(player.time_on_page)
         """Salva il payoff della Part 1 in participant.vars per uso futuro."""
         player.participant.vars['part1_payoff'] = player.payoff
 
