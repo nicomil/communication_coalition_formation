@@ -74,7 +74,9 @@
         </div>
     </div>
 
-    {{ include '_templates/global/_time_tracking_field.html' }}
+    <div style="display: none;">
+        {{ formfield "time_on_page" }}
+    </div>
 
     {{ next_button }}
 

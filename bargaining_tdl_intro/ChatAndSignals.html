@@ -94,9 +94,17 @@
 
 {{ include '_templates/global/_time_tracking_field.html' }}
 
+<!-- Hidden field to store which intention was selected first -->
+<div style="display: none;">
+    {{ formfield player.first_intention_selected }}
+</div>
+
 {{ next_button }}
 
 <script>
+    // Track which intention was selected first
+    var firstIntentionSelected = null;
+    
     // Add placeholders to textareas when page loads
     document.addEventListener('DOMContentLoaded', function() {
         var leftTextarea = document.getElementById('id_draft_history_left') || 
@@ -110,6 +118,37 @@
         if (rightTextarea) {
             rightTextarea.placeholder = "Type your message here for Partner Right...";
         }
+        
+        // Add event listeners to radio buttons to track first selection
+        var leftRadios = document.querySelectorAll('input[name="signal_left"]');
+        var rightRadios = document.querySelectorAll('input[name="signal_right"]');
+        var hiddenField = document.getElementById('id_first_intention_selected') || 
+                         document.querySelector('input[name="first_intention_selected"]');
+        
+        // Function to handle radio button selection
+        function handleRadioSelection(side) {
+            if (firstIntentionSelected === null) {
+                firstIntentionSelected = side;
+                if (hiddenField) {
+                    hiddenField.value = side;
+                }
+                console.log('First intention selected: ' + side);
+            }
+        }
+        
+        // Add listeners to left radios
+        leftRadios.forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                handleRadioSelection('left');
+            });
+        });
+        
+        // Add listeners to right radios
+        rightRadios.forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                handleRadioSelection('right');
+            });
+        });
     });
     
     // Use capture phase to intercept before oTree's handler

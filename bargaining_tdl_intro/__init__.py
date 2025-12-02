@@ -42,6 +42,16 @@ class Player(BasePlayer):
         label="Select intention for the participant on your RIGHT:"
     )
     
+    # Track which chat/intention was selected first
+    first_intention_selected = models.StringField(
+        choices=[
+            ['left', 'Left'],
+            ['right', 'Right']
+        ],
+        blank=True,
+        label="Which intention was selected first"
+    )
+    
     # Control Questions - Example 1
     example1_earnings_you = models.StringField(
         choices=[
@@ -54,9 +64,9 @@ class Player(BasePlayer):
     )
     example1_earnings_left = models.StringField(
         choices=[
-            ['0', '£0'],  # Corretta
-            ['4', '£4'],  # Sbagliata 1
             ['6', '£6'],  # Sbagliata 2
+            ['4', '£4'],  # Sbagliata 1
+            ['0', '£0'],  # Corretta
         ],
         widget=widgets.RadioSelect,
         label="What would the earnings for the player on the left be for Part 1 in this case?"
@@ -74,8 +84,8 @@ class Player(BasePlayer):
     # Control Questions - Example 2
     example2_earnings_you = models.StringField(
         choices=[
-            ['4', '£4'],  # Corretta
             ['6', '£6'],  # Sbagliata 1
+            ['4', '£4'],  # Corretta
             ['0', '£0'],  # Sbagliata 2
         ],
         widget=widgets.RadioSelect,
@@ -83,8 +93,8 @@ class Player(BasePlayer):
     )
     example2_earnings_left = models.StringField(
         choices=[
-            ['4', '£4'],  # Corretta
             ['6', '£6'],  # Sbagliata 1
+            ['4', '£4'],  # Corretta
             ['0', '£0'],  # Sbagliata 2
         ],
         widget=widgets.RadioSelect,
@@ -92,8 +102,8 @@ class Player(BasePlayer):
     )
     example2_earnings_right = models.StringField(
         choices=[
-            ['4', '£4'],  # Corretta
             ['6', '£6'],  # Sbagliata 1
+            ['4', '£4'],  # Corretta
             ['0', '£0'],  # Sbagliata 2
         ],
         widget=widgets.RadioSelect,
@@ -103,27 +113,27 @@ class Player(BasePlayer):
     # Control Questions - Example 3
     example3_earnings_you = models.StringField(
         choices=[
-            ['0', '£0'],  # Corretta
-            ['4', '£4'],  # Sbagliata 1
             ['6', '£6'],  # Sbagliata 2
+            ['4', '£4'],  # Sbagliata 1
+            ['0', '£0'],  # Corretta
         ],
         widget=widgets.RadioSelect,
         label="What would your earnings be for Part 1 in this case?"
     )
     example3_earnings_left = models.StringField(
         choices=[
-            ['0', '£0'],  # Corretta
-            ['4', '£4'],  # Sbagliata 1
             ['6', '£6'],  # Sbagliata 2
+            ['4', '£4'],  # Sbagliata 1
+            ['0', '£0'],  # Corretta
         ],
         widget=widgets.RadioSelect,
         label="What would the earnings for the player on the left be for Part 1 in this case?"
     )
     example3_earnings_right = models.StringField(
         choices=[
-            ['0', '£0'],  # Corretta
-            ['4', '£4'],  # Sbagliata 1
             ['6', '£6'],  # Sbagliata 2
+            ['4', '£4'],  # Sbagliata 1
+            ['0', '£0'],  # Corretta
         ],
         widget=widgets.RadioSelect,
         label="What would the earnings for the player on the right be for Part 1 in this case?"
@@ -279,7 +289,7 @@ class Goodbye(Page):
 
 class ChatAndSignals(Page):
     form_model = 'player'
-    form_fields = ['signal_left', 'signal_right', 'draft_history_left', 'draft_history_right', 'time_on_page']
+    form_fields = ['signal_left', 'signal_right', 'draft_history_left', 'draft_history_right', 'first_intention_selected', 'time_on_page']
 
     @staticmethod
     def is_displayed(player):
