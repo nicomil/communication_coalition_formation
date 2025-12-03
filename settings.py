@@ -63,6 +63,7 @@ Here are some oTree games.
 """
 
 
-SECRET_KEY = '{{ secret_key }}'
+# SECRET_KEY: usa variabile d'ambiente in produzione, altrimenti usa un placeholder per sviluppo
+SECRET_KEY = environ.get('SECRET_KEY', '{{ secret_key }}')
 
 INSTALLED_APPS = ['otree']
