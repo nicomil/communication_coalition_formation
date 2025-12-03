@@ -3,21 +3,6 @@ from os import environ
 
 SESSION_CONFIGS = [
     dict(
-        name='guess_two_thirds',
-        display_name="Guess 2/3 of the Average",
-        app_sequence=['guess_two_thirds', 'payment_info'],
-        num_demo_participants=3,
-    ),
-    dict(
-        name='survey', app_sequence=['survey', 'payment_info'], num_demo_participants=1
-    ),
-    # dict(
-    #    name='phase_one_bargaining',
-    #    display_name="Phase 1 Bargaining Game",
-    #    app_sequence=['phase_one_bargaining'],
-    #    num_demo_participants=3,
-    # ),
-    dict(
         name='bargaining_tdl',
         display_name="Bargaining Game (TDL + Async)",
         app_sequence=['bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_part2', 'bargaining_tdl_part3'],
