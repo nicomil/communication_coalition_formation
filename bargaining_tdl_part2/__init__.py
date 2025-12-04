@@ -158,6 +158,8 @@ class Player(BasePlayer):
     time_payment_instruction_part2 = models.FloatField(initial=0)
     time_control_questions_part2 = models.FloatField(initial=0)
     time_thank_you_part2 = models.FloatField(initial=0)
+    time_mpl_intro_first = models.FloatField(initial=0)
+    time_mpl_intro_second = models.FloatField(initial=0)
     # Time tracking for each MPL question (1-12)
     time_mpl_question_1 = models.FloatField(initial=0)
     time_mpl_question_2 = models.FloatField(initial=0)
@@ -311,6 +313,64 @@ def is_question_for_left_player(player: Player, target_code: str) -> bool:
     if target_label is None:
         return False
     return "left" in target_label
+
+def get_first_player_label(player: Player) -> str:
+    """
+    Determina il nome del player che viene mostrato per primo nelle MPL questions.
+    
+    Args:
+        player: Player corrente
+    
+    Returns:
+        "the player on the left" o "the player on the right" a seconda di quale viene mostrato per primo
+    """
+    # Assicurati che le domande siano state generate
+    generate_mpl_questions(player)
+    
+    # Leggi l'ordine dei player
+    player_order = player.field_maybe_none('mpl_player_order')
+    if player_order == 'left_first':
+        return "the player on the left"
+    elif player_order == 'right_first':
+        return "the player on the right"
+    else:
+        # Fallback: determina guardando le prime domande generate
+        all_questions = generate_mpl_questions(player)
+        if all_questions and len(all_questions) > 0:
+            first_question = all_questions[0]
+            target_code = first_question.get('target_code')
+            if target_code:
+                return get_target_player_label(player, target_code) or "the other player"
+        return "the other player"
+
+def get_second_player_label(player: Player) -> str:
+    """
+    Determina il nome del player che viene mostrato per secondo nelle MPL questions.
+    
+    Args:
+        player: Player corrente
+    
+    Returns:
+        "the player on the left" o "the player on the right" a seconda di quale viene mostrato per secondo
+    """
+    # Assicurati che le domande siano state generate
+    generate_mpl_questions(player)
+    
+    # Leggi l'ordine dei player
+    player_order = player.field_maybe_none('mpl_player_order')
+    if player_order == 'left_first':
+        return "the player on the right"
+    elif player_order == 'right_first':
+        return "the player on the left"
+    else:
+        # Fallback: determina guardando le domande dopo la sesta
+        all_questions = generate_mpl_questions(player)
+        if all_questions and len(all_questions) > 6:
+            second_question = all_questions[6]
+            target_code = second_question.get('target_code')
+            if target_code:
+                return get_target_player_label(player, target_code) or "the other player"
+        return "the other player"
 
 def generate_option1_single_event(
     player: Player,
@@ -1077,6 +1137,70 @@ class ThankYouPart2(Page):
         """Termina l'esperimento dopo questa pagina."""
         return []
 
+class MPLIntroFirstPlayer(Page):
+    """Pagina introduttiva prima delle MPL questions che spiega quale player viene mostrato per primo."""
+    form_model = 'player'
+    form_fields = ['time_on_page']
+    
+    @staticmethod
+    def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        if failed:
+            return False
+        # Assicurati che le domande siano state generate per determinare l'ordine
+        generate_mpl_questions(player)
+        return True
+    
+    @staticmethod
+    def vars_for_template(player):
+        """Prepara i dati per il template."""
+        first_player_label = get_first_player_label(player)
+        return {
+            'first_player_label': first_player_label
+        }
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_mpl_intro_first = save_time_value(player.time_on_page)
+
+class MPLIntroSecondPlayer(Page):
+    """Pagina introduttiva dopo le prime 6 MPL questions che spiega quale player viene mostrato per secondo."""
+    form_model = 'player'
+    form_fields = ['time_on_page']
+    
+    @staticmethod
+    def is_displayed(player):
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        failed = player.participant.vars.get('failed_control_questions_part2', False)
+        return not failed
+    
+    @staticmethod
+    def vars_for_template(player):
+        """Prepara i dati per il template."""
+        second_player_label = get_second_player_label(player)
+        return {
+            'second_player_label': second_player_label
+        }
+    
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        def save_time_value(time_value, default=0.0):
+            if time_value is None or time_value == '':
+                return default
+            try:
+                return float(time_value)
+            except (ValueError, TypeError):
+                return default
+        player.time_mpl_intro_second = save_time_value(player.time_on_page)
+
 class MPLQuestion(Page):
     form_model = 'player'
     # form_fields sarà impostato dinamicamente per ogni istanza
@@ -1446,12 +1570,14 @@ page_sequence = [
     PaymentInstructionPart2,
     ControlQuestionsPart2,
     ThankYouPart2,
+    MPLIntroFirstPlayer,
     MPLQuestion1,
     MPLQuestion2,
     MPLQuestion3,
     MPLQuestion4,
     MPLQuestion5,
     MPLQuestion6,
+    MPLIntroSecondPlayer,
     MPLQuestion7,
     MPLQuestion8,
     MPLQuestion9,
