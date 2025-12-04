@@ -247,3 +247,5 @@ Dopo aver creato la sessione, otterrai un link unico per i partecipanti:
 
 Per esperimenti di testing, il piano gratuito è generalmente sufficiente.
 
+
+
