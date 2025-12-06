@@ -45,6 +45,68 @@ class Player(BasePlayer):
     # Hidden field for JavaScript to populate
     time_on_page = models.FloatField(initial=0, blank=True)
 
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+def map_player_data_in_group(group: Group):
+    """
+    Mappa i dati tra i player nel gruppo seguendo la topology circolare.
+    
+    Topology:
+    - P1 (id=1): Left=P3, Right=P2
+    - P2 (id=2): Left=P1, Right=P3
+    - P3 (id=3): Left=P2, Right=P1
+    
+    Logica di mapping (Postman Logic):
+    - Ogni player riceve i dati che gli altri player hanno inviato a lui
+    - P1 riceve da Left (P3): quello che P3 ha inviato a Right (P1)
+    - P1 riceve da Right (P2): quello che P2 ha inviato a Left (P1)
+    
+    Args:
+        group: Group instance con 3 player
+    """
+    p1 = group.get_player_by_id(1)
+    p2 = group.get_player_by_id(2)
+    p3 = group.get_player_by_id(3)
+    
+    # Helper per accedere ai participant.vars in modo sicuro
+    def get_vars(p):
+        return p.participant.vars
+    
+    # Mapping topology: (receiver_id, direction) -> (sender_id, sender_direction)
+    # receiver riceve da direction quello che sender ha inviato a sender_direction
+    topology = {
+        (1, 'left'): (3, 'right'),   # P1 riceve da Left (P3) quello che P3 ha inviato a Right
+        (1, 'right'): (2, 'left'),   # P1 riceve da Right (P2) quello che P2 ha inviato a Left
+        (2, 'left'): (1, 'right'),   # P2 riceve da Left (P1) quello che P1 ha inviato a Right
+        (2, 'right'): (3, 'left'),   # P2 riceve da Right (P3) quello che P3 ha inviato a Left
+        (3, 'left'): (2, 'right'),   # P3 riceve da Left (P2) quello che P2 ha inviato a Right
+        (3, 'right'): (1, 'left'),   # P3 riceve da Right (P1) quello che P1 ha inviato a Left
+    }
+    
+    # Mapping player objects per accesso rapido
+    players = {1: p1, 2: p2, 3: p3}
+    
+    # Applica il mapping per ogni player e direzione
+    for receiver_id in [1, 2, 3]:
+        receiver = players[receiver_id]
+        
+        for direction in ['left', 'right']:
+            sender_id, sender_direction = topology[(receiver_id, direction)]
+            sender = players[sender_id]
+            
+            # Recupera i dati dal sender
+            sender_vars = get_vars(sender)
+            
+            # Mappa history e signal
+            if direction == 'left':
+                receiver.received_history_left = sender_vars.get(f'draft_history_{sender_direction}', "")
+                receiver.received_signal_left = sender_vars.get(f'signal_{sender_direction}', "")
+            else:  # right
+                receiver.received_history_right = sender_vars.get(f'draft_history_{sender_direction}', "")
+                receiver.received_signal_right = sender_vars.get(f'signal_{sender_direction}', "")
+
 # PAGES
 
 class ExperimentTerminated(Page):
@@ -88,46 +150,11 @@ class GroupingWaitPage(WaitPage):
 
     @staticmethod
     def after_all_players_arrive(group: Group):
-        # Form Triad: IDs 1, 2, 3 are assigned by otree automatically within the group
-        p1 = group.get_player_by_id(1)
-        p2 = group.get_player_by_id(2)
-        p3 = group.get_player_by_id(3)
-
-        # Helper to safely get vars
-        def get_vars(p):
-            return p.participant.vars
-
-        # Topology:
-        # P1: Left=P3, Right=P2
-        # P2: Left=P1, Right=P3
-        # P3: Left=P2, Right=P1
-
-        # Mapping Data (Postman Logic)
-        # Note: participant.vars access
-        
-        # P1
-        # Receives from Left (P3). P3 sent to Right (P1).
-        p1.received_history_left = get_vars(p3).get('draft_history_right', "")
-        p1.received_signal_left = get_vars(p3).get('signal_right', "")
-        # Receives from Right (P2). P2 sent to Left (P1).
-        p1.received_history_right = get_vars(p2).get('draft_history_left', "")
-        p1.received_signal_right = get_vars(p2).get('signal_left', "")
-
-        # P2
-        # Receives from Left (P1). P1 sent to Right (P2).
-        p2.received_history_left = get_vars(p1).get('draft_history_right', "")
-        p2.received_signal_left = get_vars(p1).get('signal_right', "")
-        # Receives from Right (P3). P3 sent to Left (P2).
-        p2.received_history_right = get_vars(p3).get('draft_history_left', "")
-        p2.received_signal_right = get_vars(p3).get('signal_left', "")
-
-        # P3
-        # Receives from Left (P2). P2 sent to Right (P3).
-        p3.received_history_left = get_vars(p2).get('draft_history_right', "")
-        p3.received_signal_left = get_vars(p2).get('signal_right', "")
-        # Receives from Right (P1). P1 sent to Left (P3).
-        p3.received_history_right = get_vars(p1).get('draft_history_left', "")
-        p3.received_signal_right = get_vars(p1).get('signal_left', "")
+        """
+        Mappa i dati tra i player quando tutti sono arrivati nel gruppo.
+        Usa la funzione helper map_player_data_in_group per semplificare la logica.
+        """
+        map_player_data_in_group(group)
 
 class Decision(Page):
     form_model = 'player'
