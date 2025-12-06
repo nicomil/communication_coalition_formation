@@ -50,8 +50,21 @@
         <div class="card-body">
             <p>
                 <strong>Please answer the following questions correctly to proceed with the experiment.</strong>
-                You must answer all questions correctly to continue. If you answer incorrectly, the experiment will end.
+                You must answer all questions correctly to continue.
             </p>
+            
+            {% if not is_first_attempt %}
+            <div class="alert alert-warning" role="alert">
+                <strong>Attempt {{ current_attempt }} of {{ max_attempts }}</strong>
+                {% if attempts_remaining > 1 %}
+                    <br>You have {{ attempts_remaining }} attempts remaining. Please review your answers carefully.
+                {% elif attempts_remaining == 1 %}
+                    <br>You have 1 attempt remaining. Please review your answers carefully.
+                {% else %}
+                    <br>This is your last attempt. Please answer all questions correctly to continue with the experiment.
+                {% endif %}
+            </div>
+            {% endif %}
 
             <!-- Example -->
             <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">

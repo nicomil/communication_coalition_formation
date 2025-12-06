@@ -16,7 +16,8 @@ SESSION_CONFIGS = [
 # e.g. self.session.config['participation_fee']
 
 SESSION_CONFIG_DEFAULTS = dict(
-    real_world_currency_per_point=1.00, participation_fee=0.00, doc=""
+    real_world_currency_per_point=1.00, participation_fee=0.00, doc="",
+    control_questions_max_attempts=2,  # Numero massimo di tentativi per le control questions
 )
 
 PARTICIPANT_FIELDS = []

@@ -4,6 +4,11 @@ from bargaining_tdl_common import (
     check_control_questions_intro,
     set_control_questions_failed,
     has_failed_control_questions,
+    get_max_attempts,
+    get_control_questions_attempts,
+    increment_control_questions_attempts,
+    has_passed_control_questions,
+    set_control_questions_passed,
     get_logger,
 )
 
@@ -196,38 +201,108 @@ class InstructionsPart1(Page):
         player.time_instructions_part1 = save_time_value(player.time_on_page)
         logger.debug(f"InstructionsPart1 - time_instructions_part1 saved: {player.time_instructions_part1}")
 
-class ControlQuestions(Page):
-    form_model = 'player'
-    form_fields = [
-        'example1_earnings_you',
-        'example1_earnings_left',
-        'example1_earnings_right',
-        'example2_earnings_you',
-        'example2_earnings_left',
-        'example2_earnings_right',
-        'example3_earnings_you',
-        'example3_earnings_left',
-        'example3_earnings_right',
-        'payoff_determination',
-        'time_on_page'
-    ]
+def create_control_questions_class(attempt_number):
+    """
+    Factory function che crea dinamicamente una classe ControlQuestions per un tentativo specifico.
+    
+    Args:
+        attempt_number: Numero del tentativo (1-based)
+    
+    Returns:
+        Classe Page per oTree
+    """
+    class_name = f'ControlQuestionsAttempt{attempt_number}'
+    
+    class ControlQuestionsPage(Page):
+        template_name = 'bargaining_tdl_intro/ControlQuestions.html'
+        form_model = 'player'
+        form_fields = [
+            'example1_earnings_you',
+            'example1_earnings_left',
+            'example1_earnings_right',
+            'example2_earnings_you',
+            'example2_earnings_left',
+            'example2_earnings_right',
+            'example3_earnings_you',
+            'example3_earnings_left',
+            'example3_earnings_right',
+            'payoff_determination',
+            'time_on_page'
+        ]
 
-    @staticmethod
-    def vars_for_template(player):
-        return {
-            'example1_scenario': "Imagine that you chose 'Share only with the player on the right', that the player on the left chose 'Share with both you and the player on the right', and that the player on the right chose 'Share only with you'.",
-            'example2_scenario': "Imagine that you chose 'Share with both the player on the left and the player on the right', that the player on the left chose 'Share only with the player on the right', and that the player on the right chose 'Share with both you and the player on the left'.",
-            'example3_scenario': "Imagine that you chose 'Share with both the player on the left and the player on the right', that the player on the left chose 'Share only with you', and that the player on the right chose 'Share only with the player on the left'.",
-        }
+        @staticmethod
+        def is_displayed(player):
+            """
+            Mostra questa pagina solo se:
+            - Non ha ancora passato le control questions E
+            - Non ha ancora fallito definitivamente E
+            - È il tentativo corretto (current_attempts == attempt_number - 1)
+            """
+            if has_passed_control_questions(player, 'intro'):
+                return False
+            
+            if has_failed_control_questions(player, 'intro'):
+                return False
+            
+            current_attempts = get_control_questions_attempts(player, 'intro')
+            # Mostra solo quando è il turno di questo tentativo
+            return current_attempts == (attempt_number - 1)
 
-    @staticmethod
-    def before_next_page(player, timeout_happened):
-        """Salva un flag se le risposte sono sbagliate."""
-        player.time_control_questions = save_time_value(player.time_on_page)
-        logger.debug(f"ControlQuestions - time_control_questions saved: {player.time_control_questions}")
-        # Verifica le risposte e salva il flag
-        is_correct = check_control_questions_intro(player)
-        set_control_questions_failed(player, 'intro', failed=not is_correct)
+        @staticmethod
+        def vars_for_template(player):
+            max_attempts = get_max_attempts(player.session)
+            current_attempts = get_control_questions_attempts(player, 'intro')
+            attempts_remaining = max_attempts - current_attempts
+            
+            return {
+                'example1_scenario': "Imagine that you chose 'Share only with the player on the right', that the player on the left chose 'Share with both you and the player on the right', and that the player on the right chose 'Share only with you'.",
+                'example2_scenario': "Imagine that you chose 'Share with both the player on the left and the player on the right', that the player on the left chose 'Share only with the player on the right', and that the player on the right chose 'Share with both you and the player on the left'.",
+                'example3_scenario': "Imagine that you chose 'Share with both the player on the left and the player on the right', that the player on the left chose 'Share only with you', and that the player on the right chose 'Share only with the player on the left'.",
+                'max_attempts': max_attempts,
+                'current_attempt': attempt_number,
+                'attempts_remaining': max_attempts - attempt_number,
+                'is_first_attempt': attempt_number == 1,
+            }
+
+        @staticmethod
+        def before_next_page(player, timeout_happened):
+            """Gestisce la logica di retry per le control questions."""
+            player.time_control_questions = save_time_value(player.time_on_page)
+            logger.debug(f"ControlQuestions Attempt {attempt_number} - time_control_questions saved: {player.time_control_questions}")
+            
+            # Verifica le risposte
+            is_correct = check_control_questions_intro(player)
+            max_attempts = get_max_attempts(player.session)
+            current_attempts = increment_control_questions_attempts(player, 'intro')
+            
+            if is_correct:
+                # Risposte corrette: imposta passed e resetta attempts
+                set_control_questions_passed(player, 'intro', passed=True)
+                set_control_questions_failed(player, 'intro', failed=False)
+                logger.debug(f"ControlQuestions Attempt {attempt_number} - All answers correct on attempt {current_attempts}")
+            else:
+                # Risposte sbagliate
+                logger.debug(f"ControlQuestions Attempt {attempt_number} - Incorrect answers on attempt {current_attempts}/{max_attempts}")
+                
+                if current_attempts >= max_attempts:
+                    # Raggiunto il massimo numero di tentativi: imposta failed
+                    set_control_questions_failed(player, 'intro', failed=True)
+                    logger.debug(f"ControlQuestions Attempt {attempt_number} - Max attempts reached, setting failed flag")
+    
+    # Imposta il nome della classe per il debug
+    ControlQuestionsPage.__name__ = class_name
+    ControlQuestionsPage.__qualname__ = class_name
+    
+    return ControlQuestionsPage
+
+
+# Crea fino a 5 istanze di ControlQuestions (supporta fino a 5 tentativi)
+# Ogni istanza gestirà un tentativo specifico
+ControlQuestionsAttempt1 = create_control_questions_class(1)
+ControlQuestionsAttempt2 = create_control_questions_class(2)
+ControlQuestionsAttempt3 = create_control_questions_class(3)
+ControlQuestionsAttempt4 = create_control_questions_class(4)
+ControlQuestionsAttempt5 = create_control_questions_class(5)
 
 class Goodbye(Page):
     """Pagina di saluto che termina l'esperimento per il partecipante."""
@@ -256,7 +331,7 @@ class ChatAndSignals(Page):
     @staticmethod
     def is_displayed(player):
         """Mostra questa pagina solo se tutte le risposte alle control questions erano corrette."""
-        return not has_failed_control_questions(player, 'intro')
+        return has_passed_control_questions(player, 'intro')
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
@@ -273,7 +348,11 @@ class ChatAndSignals(Page):
 page_sequence = [
     Welcome,
     InstructionsPart1,
-    ControlQuestions,
+    ControlQuestionsAttempt1,
+    ControlQuestionsAttempt2,
+    ControlQuestionsAttempt3,
+    ControlQuestionsAttempt4,
+    ControlQuestionsAttempt5,
     Goodbye,
     ChatAndSignals
 ]

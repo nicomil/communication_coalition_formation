@@ -4,6 +4,11 @@ from bargaining_tdl_common import (
     check_control_questions_part2,
     set_control_questions_failed,
     has_failed_control_questions,
+    get_max_attempts,
+    get_control_questions_attempts,
+    increment_control_questions_attempts,
+    has_passed_control_questions,
+    set_control_questions_passed,
     get_main_group_player,
     get_participant_role_in_group,
     get_logger,
@@ -1284,16 +1289,90 @@ class PaymentInstructionPart2(Page):
     def before_next_page(player, timeout_happened):
         player.time_payment_instruction_part2 = save_time_value(player.time_on_page)
 
-class ControlQuestionsPart2(Page):
-    form_model = 'player'
-    form_fields = ['control_question_1', 'control_question_2', 'time_on_page']
+def create_control_questions_part2_class(attempt_number):
+    """
+    Factory function che crea dinamicamente una classe ControlQuestionsPart2 per un tentativo specifico.
     
-    @staticmethod
-    def before_next_page(player, timeout_happened):
-        player.time_control_questions_part2 = save_time_value(player.time_on_page)
-        """Salva un flag se le risposte sono sbagliate."""
-        is_correct = check_control_questions_part2(player)
-        set_control_questions_failed(player, 'part2', failed=not is_correct)
+    Args:
+        attempt_number: Numero del tentativo (1-based)
+    
+    Returns:
+        Classe Page per oTree
+    """
+    class_name = f'ControlQuestionsPart2Attempt{attempt_number}'
+    
+    class ControlQuestionsPart2Page(Page):
+        template_name = 'bargaining_tdl_part2/ControlQuestionsPart2.html'
+        form_model = 'player'
+        form_fields = ['control_question_1', 'control_question_2', 'time_on_page']
+        
+        @staticmethod
+        def is_displayed(player):
+            """
+            Mostra questa pagina solo se:
+            - Non ha ancora passato le control questions E
+            - Non ha ancora fallito definitivamente E
+            - È il tentativo corretto (current_attempts == attempt_number - 1)
+            """
+            if has_passed_control_questions(player, 'part2'):
+                return False
+            
+            if has_failed_control_questions(player, 'part2'):
+                return False
+            
+            current_attempts = get_control_questions_attempts(player, 'part2')
+            # Mostra solo quando è il turno di questo tentativo
+            return current_attempts == (attempt_number - 1)
+
+        @staticmethod
+        def vars_for_template(player):
+            max_attempts = get_max_attempts(player.session)
+            
+            return {
+                'max_attempts': max_attempts,
+                'current_attempt': attempt_number,
+                'attempts_remaining': max_attempts - attempt_number,
+                'is_first_attempt': attempt_number == 1,
+            }
+        
+        @staticmethod
+        def before_next_page(player, timeout_happened):
+            """Gestisce la logica di retry per le control questions."""
+            player.time_control_questions_part2 = save_time_value(player.time_on_page)
+            logger.debug(f"ControlQuestionsPart2 Attempt {attempt_number} - time_control_questions_part2 saved: {player.time_control_questions_part2}")
+            
+            # Verifica le risposte
+            is_correct = check_control_questions_part2(player)
+            max_attempts = get_max_attempts(player.session)
+            current_attempts = increment_control_questions_attempts(player, 'part2')
+            
+            if is_correct:
+                # Risposte corrette: imposta passed e resetta attempts
+                set_control_questions_passed(player, 'part2', passed=True)
+                set_control_questions_failed(player, 'part2', failed=False)
+                logger.debug(f"ControlQuestionsPart2 Attempt {attempt_number} - All answers correct on attempt {current_attempts}")
+            else:
+                # Risposte sbagliate
+                logger.debug(f"ControlQuestionsPart2 Attempt {attempt_number} - Incorrect answers on attempt {current_attempts}/{max_attempts}")
+                
+                if current_attempts >= max_attempts:
+                    # Raggiunto il massimo numero di tentativi: imposta failed
+                    set_control_questions_failed(player, 'part2', failed=True)
+                    logger.debug(f"ControlQuestionsPart2 Attempt {attempt_number} - Max attempts reached, setting failed flag")
+    
+    # Imposta il nome della classe per il debug
+    ControlQuestionsPart2Page.__name__ = class_name
+    ControlQuestionsPart2Page.__qualname__ = class_name
+    
+    return ControlQuestionsPart2Page
+
+
+# Crea fino a 5 istanze di ControlQuestionsPart2 (supporta fino a 5 tentativi)
+ControlQuestionsPart2Attempt1 = create_control_questions_part2_class(1)
+ControlQuestionsPart2Attempt2 = create_control_questions_part2_class(2)
+ControlQuestionsPart2Attempt3 = create_control_questions_part2_class(3)
+ControlQuestionsPart2Attempt4 = create_control_questions_part2_class(4)
+ControlQuestionsPart2Attempt5 = create_control_questions_part2_class(5)
 
 class ThankYouPart2(Page):
     """Pagina di saluto che termina l'esperimento per il partecipante."""
@@ -1322,7 +1401,7 @@ class MPLIntroFirstPlayer(Page):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        if has_failed_control_questions(player, 'part2'):
+        if not has_passed_control_questions(player, 'part2'):
             return False
         # Assicurati che le domande siano state generate per determinare l'ordine
         generate_mpl_questions(player)
@@ -1348,7 +1427,7 @@ class MPLIntroSecondPlayer(Page):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        return not has_failed_control_questions(player, 'part2')
+        return has_passed_control_questions(player, 'part2')
     
     @staticmethod
     def vars_for_template(player):
@@ -1483,7 +1562,7 @@ class ResultsPart2(Page):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        return not has_failed_control_questions(player, 'part2')
+        return has_passed_control_questions(player, 'part2')
     
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -1576,7 +1655,7 @@ def create_mpl_question_class(display_order):
         @staticmethod
         def is_displayed(player):
             """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-            if has_failed_control_questions(player, 'part2'):
+            if not has_passed_control_questions(player, 'part2'):
                 return False
             # Imposta display_order per questa pagina
             player.participant.vars['current_display_order'] = display_order
@@ -1613,7 +1692,11 @@ MPLQuestion12 = create_mpl_question_class(12)
 page_sequence = [
     InstructionsPart2,
     PaymentInstructionPart2,
-    ControlQuestionsPart2,
+    ControlQuestionsPart2Attempt1,
+    ControlQuestionsPart2Attempt2,
+    ControlQuestionsPart2Attempt3,
+    ControlQuestionsPart2Attempt4,
+    ControlQuestionsPart2Attempt5,
     ThankYouPart2,
     MPLIntroFirstPlayer,
     MPLQuestion1,

@@ -15,6 +15,12 @@ from .validators import (
     check_control_questions_intro,
     check_control_questions_part2,
     check_control_questions_part3,
+    get_max_attempts,
+    get_control_questions_attempts,
+    increment_control_questions_attempts,
+    reset_control_questions_attempts,
+    has_passed_control_questions,
+    set_control_questions_passed,
 )
 from .utils import get_main_group_player, get_participant_role_in_group
 from .mixins import TimeTrackedPage
@@ -27,6 +33,12 @@ __all__ = [
     'check_control_questions_intro',
     'check_control_questions_part2',
     'check_control_questions_part3',
+    'get_max_attempts',
+    'get_control_questions_attempts',
+    'increment_control_questions_attempts',
+    'reset_control_questions_attempts',
+    'has_passed_control_questions',
+    'set_control_questions_passed',
     'get_main_group_player',
     'get_participant_role_in_group',
     'TimeTrackedPage',

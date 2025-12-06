@@ -125,5 +125,230 @@
             subtree: true
         });
     })();
+    
+    // Time tracking for all pages - SIMPLIFIED VERSION
+    // This code runs immediately when the page loads
+    (function() {
+        // Clean up previous interval if exists
+        if (window._timeTrackingInterval) {
+            clearInterval(window._timeTrackingInterval);
+        }
+        
+        // Reset timer for this page
+        var pageStartTime = Date.now();
+        var timeOnPage = 0;
+        
+        console.log('========================================');
+        console.log('⏱️ Time tracking initialized for new page');
+        console.log('Page URL:', window.location.pathname);
+        console.log('Timestamp:', new Date().toISOString());
+        console.log('========================================');
+        
+        // Create the time_on_page hidden field if it doesn't exist
+        function ensureTimeField() {
+            // Try to find existing field first - check multiple possible names
+            let timeField = document.querySelector('input[name="time_on_page"]');
+            if (!timeField) {
+                timeField = document.getElementById('id_time_on_page');
+            }
+            if (!timeField) {
+                // Try oTree's format: id_id_time_on_page
+                timeField = document.getElementById('id_id_time_on_page');
+            }
+            if (!timeField) {
+                // Try to find by any name containing time_on_page
+                const allInputs = document.querySelectorAll('input');
+                for (let input of allInputs) {
+                    if (input.name && (input.name === 'time_on_page' || input.name.endsWith('time_on_page'))) {
+                        timeField = input;
+                        break;
+                    }
+                }
+            }
+            
+            // If field doesn't exist, create it
+            if (!timeField) {
+                // Find the form
+                const forms = document.querySelectorAll('form');
+                if (forms.length > 0) {
+                    const form = forms[0];
+                    // Create hidden input with oTree-compatible name
+                    timeField = document.createElement('input');
+                    timeField.type = 'hidden';
+                    timeField.name = 'time_on_page';
+                    timeField.id = 'id_time_on_page';
+                    timeField.value = '0';
+                    // Insert it at the beginning of the form
+                    form.insertBefore(timeField, form.firstChild);
+                    console.log('Created time_on_page field dynamically');
+                } else {
+                    console.warn('No form found to add time_on_page field');
+                }
+            }
+            return timeField;
+        }
+        
+        // Find the time_on_page input field
+        function findTimeField() {
+            // Try multiple strategies to find the field
+            // Strategy 1: Try by name attribute (oTree format)
+            let timeField = document.querySelector('input[name="time_on_page"]');
+            if (timeField) return timeField;
+            
+            // Strategy 2: Try by id (oTree format)
+            timeField = document.getElementById('id_time_on_page');
+            if (timeField) return timeField;
+            
+            // Strategy 3: Try to find any input with time_on_page in name/id
+            const allInputs = document.querySelectorAll('input');
+            for (let input of allInputs) {
+                if ((input.name && input.name.includes('time_on_page')) ||
+                    (input.id && input.id.includes('time_on_page'))) {
+                    return input;
+                }
+            }
+            
+            // Strategy 4: Ensure it exists (create if needed)
+            timeField = ensureTimeField();
+            return timeField;
+        }
+        
+        // Update time field
+        function updateTimeField() {
+            const timeField = findTimeField();
+            if (timeField) {
+                timeOnPage = (Date.now() - pageStartTime) / 1000; // Convert to seconds
+                // Ensure we always have a valid number (at least 0)
+                const timeValue = Math.max(0, timeOnPage).toFixed(2);
+                timeField.value = timeValue;
+                // Log for debugging - only log every 5 seconds to avoid spam
+                const now = Date.now();
+                if (!window._lastTimeLog || (now - window._lastTimeLog) > 5000) {
+                    console.log('⏱️ Time tracking updated:', timeValue, 'seconds on page:', window.location.pathname);
+                    window._lastTimeLog = now;
+                }
+                return true;
+            } else {
+                console.error('❌ Time field not found on page:', window.location.pathname);
+                return false;
+            }
+        }
+        
+        // Update time field periodically (every 0.5 seconds)
+        const updateInterval = setInterval(updateTimeField, 500);
+        
+        // Store interval ID so we can clear it later
+        window._timeTrackingInterval = updateInterval;
+        
+        // Update time field when page is about to unload (before form submission)
+        // Store handler so we can remove it later
+        const beforeUnloadHandler = function() {
+            const timeField = findTimeField();
+            if (timeField && pageStartTime) {
+                timeOnPage = (Date.now() - pageStartTime) / 1000;
+                const timeValue = Math.max(0, timeOnPage).toFixed(2);
+                timeField.value = timeValue;
+                timeField.setAttribute('value', timeValue);
+                console.log('Time update on beforeunload:', timeValue);
+            }
+        };
+        window.addEventListener('beforeunload', beforeUnloadHandler);
+        
+        // Update time field when form is submitted - use capture phase to run early
+        // This needs to be inside the initialization function to access pageStartTime
+        // We'll attach this in the initialization function
+        
+        // Attach form submit handlers
+        const forms = document.querySelectorAll('form');
+        forms.forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                // Force update before submit
+                updateTimeField();
+                const timeField = findTimeField();
+                if (timeField) {
+                    // Final update
+                    timeOnPage = (Date.now() - pageStartTime) / 1000;
+                    const timeValue = Math.max(0, timeOnPage).toFixed(2);
+                    timeField.value = timeValue;
+                    timeField.setAttribute('value', timeValue);
+                    
+                    // Verify the value was set
+                    if (timeField.value === timeValue || parseFloat(timeField.value) > 0) {
+                        console.log('✅ Final time update before submit:', timeValue, 'seconds');
+                    } else {
+                        console.error('❌ Failed to set time value! Expected:', timeValue, 'Got:', timeField.value);
+                    }
+                    
+                    // Trigger events
+                    timeField.dispatchEvent(new Event('change', { bubbles: true }));
+                    timeField.dispatchEvent(new Event('input', { bubbles: true }));
+                    timeField.dispatchEvent(new Event('blur', { bubbles: true }));
+                } else {
+                    console.error('❌ Time field not found during form submit on page:', window.location.pathname);
+                }
+            }, true); // Use capture phase to run early
+        });
+        
+        // Also update when next button is clicked - use capture phase
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+            if (target && (target.classList.contains('otree-btn-next') || 
+                          target.closest('.otree-btn-next') ||
+                          target.type === 'submit')) {
+                // Force update before navigation
+                updateTimeField();
+                const timeField = findTimeField();
+                if (timeField) {
+                    // Final update
+                    timeOnPage = (Date.now() - pageStartTime) / 1000;
+                    const timeValue = Math.max(0, timeOnPage).toFixed(2);
+                    timeField.value = timeValue;
+                    timeField.setAttribute('value', timeValue);
+                    console.log('Time update on button click:', timeValue);
+                    
+                    // Trigger events
+                    timeField.dispatchEvent(new Event('change', { bubbles: true }));
+                    timeField.dispatchEvent(new Event('input', { bubbles: true }));
+                    timeField.dispatchEvent(new Event('blur', { bubbles: true }));
+                }
+            }
+        }, true); // Use capture phase
+        
+        // Handle visibility change (when user switches tabs)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // Page is hidden, pause tracking
+                timeOnPage = (Date.now() - pageStartTime) / 1000;
+            } else {
+                // Page is visible again, resume tracking
+                pageStartTime = Date.now() - (timeOnPage * 1000);
+            }
+        });
+        
+        
+        // Initial update - ensure field exists first
+        function initField() {
+            ensureTimeField();
+            const found = updateTimeField();
+            if (!found) {
+                console.warn('Time field not found on initial load, retrying...');
+                // Retry after a short delay
+                setTimeout(function() {
+                    ensureTimeField();
+                    updateTimeField();
+                }, 200);
+            }
+        }
+        
+        // Run initialization immediately
+        initField();
+        
+        // Also ensure field exists after delays (in case form is added dynamically)
+        setTimeout(initField, 100);
+        setTimeout(initField, 500);
+        setTimeout(initField, 1000);
+        
+        console.log('✅ Time tracking setup complete');
+    })(); // Execute immediately
 </script>
 {{ endblock }}
