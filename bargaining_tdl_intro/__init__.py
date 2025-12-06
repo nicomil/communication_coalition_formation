@@ -69,27 +69,27 @@ class Player(BasePlayer):
     # Control Questions - Example 1
     example1_earnings_you = models.StringField(
         choices=[
-            ['6', '£6'],  # Corretta
-            ['4', '£4'],  # Sbagliata 1
-            ['0', '£0'],  # Sbagliata 2
+            ['6', '$6'],  # Corretta
+            ['4', '$4'],  # Sbagliata 1
+            ['0', '$0'],  # Sbagliata 2
         ],
         widget=widgets.RadioSelect,
         label="What would your earnings be for Part 1 in this case?"
     )
     example1_earnings_left = models.StringField(
         choices=[
-            ['6', '£6'],  # Sbagliata 2
-            ['4', '£4'],  # Sbagliata 1
-            ['0', '£0'],  # Corretta
+            ['6', '$6'],  # Sbagliata 2
+            ['4', '$4'],  # Sbagliata 1
+            ['0', '$0'],  # Corretta
         ],
         widget=widgets.RadioSelect,
         label="What would the earnings for the player on the left be for Part 1 in this case?"
     )
     example1_earnings_right = models.StringField(
         choices=[
-            ['6', '£6'],  # Corretta
-            ['4', '£4'],  # Sbagliata 1
-            ['0', '£0'],  # Sbagliata 2
+            ['6', '$6'],  # Corretta
+            ['4', '$4'],  # Sbagliata 1
+            ['0', '$0'],  # Sbagliata 2
         ],
         widget=widgets.RadioSelect,
         label="What would the earnings for the player on the right be for Part 1 in this case?"
@@ -98,27 +98,27 @@ class Player(BasePlayer):
     # Control Questions - Example 2
     example2_earnings_you = models.StringField(
         choices=[
-            ['6', '£6'],  # Sbagliata 1
-            ['4', '£4'],  # Corretta
-            ['0', '£0'],  # Sbagliata 2
+            ['6', '$6'],  # Sbagliata 1
+            ['4', '$4'],  # Corretta
+            ['0', '$0'],  # Sbagliata 2
         ],
         widget=widgets.RadioSelect,
         label="What would your earnings be for Part 1 in this case?"
     )
     example2_earnings_left = models.StringField(
         choices=[
-            ['6', '£6'],  # Sbagliata 1
-            ['4', '£4'],  # Corretta
-            ['0', '£0'],  # Sbagliata 2
+            ['6', '$6'],  # Sbagliata 1
+            ['4', '$4'],  # Corretta
+            ['0', '$0'],  # Sbagliata 2
         ],
         widget=widgets.RadioSelect,
         label="What would the earnings for the player on the left be for Part 1 in this case?"
     )
     example2_earnings_right = models.StringField(
         choices=[
-            ['6', '£6'],  # Sbagliata 1
-            ['4', '£4'],  # Corretta
-            ['0', '£0'],  # Sbagliata 2
+            ['6', '$6'],  # Sbagliata 1
+            ['4', '$4'],  # Corretta
+            ['0', '$0'],  # Sbagliata 2
         ],
         widget=widgets.RadioSelect,
         label="What would the earnings for the player on the right be for Part 1 in this case?"
@@ -127,27 +127,27 @@ class Player(BasePlayer):
     # Control Questions - Example 3
     example3_earnings_you = models.StringField(
         choices=[
-            ['6', '£6'],  # Sbagliata 2
-            ['4', '£4'],  # Sbagliata 1
-            ['0', '£0'],  # Corretta
+            ['6', '$6'],  # Sbagliata 2
+            ['4', '$4'],  # Sbagliata 1
+            ['0', '$0'],  # Corretta
         ],
         widget=widgets.RadioSelect,
         label="What would your earnings be for Part 1 in this case?"
     )
     example3_earnings_left = models.StringField(
         choices=[
-            ['6', '£6'],  # Sbagliata 2
-            ['4', '£4'],  # Sbagliata 1
-            ['0', '£0'],  # Corretta
+            ['6', '$6'],  # Sbagliata 2
+            ['4', '$4'],  # Sbagliata 1
+            ['0', '$0'],  # Corretta
         ],
         widget=widgets.RadioSelect,
         label="What would the earnings for the player on the left be for Part 1 in this case?"
     )
     example3_earnings_right = models.StringField(
         choices=[
-            ['6', '£6'],  # Sbagliata 2
-            ['4', '£4'],  # Sbagliata 1
-            ['0', '£0'],  # Corretta
+            ['6', '$6'],  # Sbagliata 2
+            ['4', '$4'],  # Sbagliata 1
+            ['0', '$0'],  # Corretta
         ],
         widget=widgets.RadioSelect,
         label="What would the earnings for the player on the right be for Part 1 in this case?"
@@ -165,7 +165,7 @@ class Player(BasePlayer):
             ["I don't know.", "I don't know."],  # Sbagliata 3
         ],
         widget=widgets.RadioSelect,
-        label="Excluding the participation fee of £2, how will your total payoff be determined in this experiment?"
+        label="Excluding the participation fee of $2, how will your total payoff be determined in this experiment?"
     )
     
     # Time tracking fields (in seconds)

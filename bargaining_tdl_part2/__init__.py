@@ -61,14 +61,14 @@ EVENT_TO_TEXT = {
 }
 
 # Struttura Testo Option 1 (Sezione 📄 5)
-# Nota: Usiamo £5 invece di €5 perché REAL_WORLD_CURRENCY_CODE = 'GBP'
-OPTION1_SINGLE_TEMPLATE_LEFT = "You win £5 if the player on the left chose \"{event_text}\" (and nothing otherwise)."
-OPTION1_SINGLE_TEMPLATE_RIGHT = "You win £5 if the player on the right chose \"{event_text}\" (and nothing otherwise)."
-OPTION1_COMPOSITE_TEMPLATE_LEFT = "You win £5 if the player on the left chose \"{event_text_1}\" or \"{event_text_2}\" (and nothing otherwise)."
-OPTION1_COMPOSITE_TEMPLATE_RIGHT = "You win £5 if the player on the right chose \"{event_text_1}\" or \"{event_text_2}\" (and nothing otherwise)."
+# Nota: Usiamo $5 invece di €5 perché REAL_WORLD_CURRENCY_CODE = 'GBP'
+OPTION1_SINGLE_TEMPLATE_LEFT = "You win $5 if the player on the left chose \"{event_text}\" (and nothing otherwise)."
+OPTION1_SINGLE_TEMPLATE_RIGHT = "You win $5 if the player on the right chose \"{event_text}\" (and nothing otherwise)."
+OPTION1_COMPOSITE_TEMPLATE_LEFT = "You win $5 if the player on the left chose \"{event_text_1}\" or \"{event_text_2}\" (and nothing otherwise)."
+OPTION1_COMPOSITE_TEMPLATE_RIGHT = "You win $5 if the player on the right chose \"{event_text_1}\" or \"{event_text_2}\" (and nothing otherwise)."
 
 # Struttura Testo Option 2 (Sezione 📄 6)
-OPTION2_TEXT = "You win £5 with the following probability (and nothing otherwise)."
+OPTION2_TEXT = "You win $5 with the following probability (and nothing otherwise)."
 
 # Testo Reminder Parte 1 (Sezione 📄 3)
 REMINDER_TEMPLATE = """We remind you of the following information regarding what you and {target_label} have declared to each other:
@@ -93,7 +93,7 @@ PROBABILITIES_SINGLE_EVENT = [0, 1, 2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55
 PROBABILITIES_COMPOSITE_EVENT = [0, 20, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 93, 95, 97, 98, 99, 100]
 
 # Costanti generali
-PRIZE_AMOUNT = "£5"
+PRIZE_AMOUNT = "$5"
 NUM_QUESTIONS_PER_PARTICIPANT = 12
 
 # ============================================================================
@@ -148,7 +148,7 @@ class Player(BasePlayer):
     control_question_1 = models.StringField(
         choices=[
             ["nothing", "I don't win anything."],
-            ["5", "£5."],
+            ["5", "$5."],
             ["dont_know", "I don't know."]
         ],
         label="Question 1: What would be the payment for Part 2?"
@@ -157,7 +157,7 @@ class Player(BasePlayer):
     control_question_2 = models.StringField(
         choices=[
             ["nothing", "I don't win anything."],
-            ["5", "£5."],
+            ["5", "$5."],
             ["dont_know", "I don't know."]
         ],
         label="Question 2: What would be the payment for Part 2?"
@@ -359,7 +359,7 @@ def generate_option1_composite_event(
     
     Un composite event rappresenta l'unione logica (OR) di due eventi.
     Il testo generato segue il formato:
-    "You win £5 if the player on the left/right chose \"{event1}\" or \"{event2}\" (and nothing otherwise)."
+    "You win $5 if the player on the left/right chose \"{event1}\" or \"{event2}\" (and nothing otherwise)."
     
     Args:
         player: Player corrente (da bargaining_tdl_part2)
@@ -375,7 +375,7 @@ def generate_option1_composite_event(
     Example:
         >>> text = generate_option1_composite_event(player, 'B', ['EB2', 'EB1'])
         >>> text
-        "You win £5 if the player on the left chose \"Share only with you\" or \"Share only with the player on the right\" (and nothing otherwise)."
+        "You win $5 if the player on the left chose \"Share only with you\" or \"Share only with the player on the right\" (and nothing otherwise)."
     
     Note:
         - Richiede esattamente 2 event_codes
@@ -1120,10 +1120,10 @@ def calculate_part2_payoff(player) -> dict:
     3. Decisione Option 1 vs Option 2:
        - Se pr1 < switching_point → Option 1
          * Verifica se l'evento della domanda è accaduto in Part 1
-         * Se sì: payoff = £5, altrimenti = £0
+         * Se sì: payoff = $5, altrimenti = $0
        - Se pr1 >= switching_point → Option 2
          * Estrae pr2 (0-99)
-         * Se pr2 <= pr1: payoff = £5, altrimenti = £0
+         * Se pr2 <= pr1: payoff = $5, altrimenti = $0
     
     Args:
         player: Player di qualsiasi app (es. Part 2 o Part 3).
@@ -1250,7 +1250,7 @@ def calculate_part2_payoff(player) -> dict:
         # Scenario 2.2: Option 2 - Estrai pr2
         pr2 = random.randint(0, 99)
         
-        # Se pr2 <= pr1, vinci £5
+        # Se pr2 <= pr1, vinci $5
         payoff_amount = 5 if pr2 <= pr1 else 0
         
         return {

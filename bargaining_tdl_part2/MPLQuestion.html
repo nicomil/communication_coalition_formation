@@ -1,4 +1,4 @@
-{{ block title }}Question {{ question_num }}{% if question_type == 'single' %} (Single Event){% else %} (Composite Event){% endif %}{{ endblock }}
+{{ block title }}Question {{ question_num }}{{ endblock }}
 {{ block content }}
 
 <style>
@@ -169,7 +169,7 @@
 </style>
 
 <div class="instructions">
-    <p>In each of the following rows in the table, please select your preferred option between A and B.</p>
+    <p>In each of the following rows in the table, please select your preferred option between 1 and 2.</p>
     <p>When done, please click on the button '{{ UI_OK_BUTTON_TEXT }}'.</p>
     <p>After you have chosen, one row will be randomly chosen and the option you chose will be played.</p>
 </div>
@@ -425,8 +425,8 @@
         if (option1TextDiv) {
             let text = option1TextDiv.textContent || option1TextDiv.innerText;
             
-            // Evidenzia l'importo del premio (£5)
-            text = text.replace(/(£\d+)/g, '<strong class="prize-amount">$1</strong>');
+            // Evidenzia l'importo del premio ($5)
+            text = text.replace(/(\$\d+)/g, '<strong class="prize-amount">$1</strong>');
             
             // Evidenzia le condizioni tra virgolette
             text = text.replace(/"([^"]+)"/g, '<strong>"$1"</strong>');

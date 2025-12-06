@@ -180,7 +180,7 @@ def check_control_questions_part2(player):
     if not player.control_question_1 or not player.control_question_2:
         return False
     
-    # Entrambe le risposte corrette devono essere "5" (£5)
+    # Entrambe le risposte corrette devono essere "5" ($5)
     correct = (
         player.control_question_1 == "5" and
         player.control_question_2 == "5"
