@@ -1,4 +1,10 @@
 from otree.api import *
+from bargaining_tdl_common import (
+    save_time_value,
+    check_control_questions_intro,
+    set_control_questions_failed,
+    has_failed_control_questions,
+)
 
 doc = """
 Bargaining Game (Part 1: Individual Tasks)
@@ -164,46 +170,6 @@ class Player(BasePlayer):
     # Hidden field for JavaScript to populate
     time_on_page = models.FloatField(initial=0, blank=True)
 
-# HELPER FUNCTIONS
-
-def save_time_value(time_value, default=0.0):
-    """Helper function to safely convert time_on_page value to float."""
-    if time_value is None or time_value == '':
-        return default
-    try:
-        return float(time_value)
-    except (ValueError, TypeError):
-        return default
-
-def check_all_answers_correct(player):
-    """Verifica se tutte le risposte alle control questions sono corrette."""
-    # Verifica che tutti i campi siano stati compilati
-    if (not player.example1_earnings_you or 
-        not player.example1_earnings_left or 
-        not player.example1_earnings_right or
-        not player.example2_earnings_you or 
-        not player.example2_earnings_left or 
-        not player.example2_earnings_right or
-        not player.example3_earnings_you or 
-        not player.example3_earnings_left or 
-        not player.example3_earnings_right or
-        not player.payoff_determination):
-        return False
-    
-    correct = (
-        player.example1_earnings_you == "6" and
-        player.example1_earnings_left == "0" and
-        player.example1_earnings_right == "6" and
-        player.example2_earnings_you == "4" and
-        player.example2_earnings_left == "4" and
-        player.example2_earnings_right == "4" and
-        player.example3_earnings_you == "0" and
-        player.example3_earnings_left == "0" and
-        player.example3_earnings_right == "0" and
-        player.payoff_determination == "I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3."
-    )
-    return correct
-
 # PAGES
 
 class Welcome(Page):
@@ -257,8 +223,8 @@ class ControlQuestions(Page):
         player.time_control_questions = save_time_value(player.time_on_page)
         print(f"ControlQuestions - time_control_questions saved: {player.time_control_questions}")
         # Verifica le risposte e salva il flag
-        is_correct = check_all_answers_correct(player)
-        player.participant.vars['failed_control_questions'] = not is_correct
+        is_correct = check_control_questions_intro(player)
+        set_control_questions_failed(player, 'intro', failed=not is_correct)
 
 class Goodbye(Page):
     """Pagina di saluto che termina l'esperimento per il partecipante."""
@@ -268,14 +234,7 @@ class Goodbye(Page):
     @staticmethod
     def is_displayed(player):
         """Mostra questa pagina solo se le risposte alle control questions erano sbagliate."""
-        # Usa il flag salvato in before_next_page invece di chiamare check_all_answers_correct
-        # perché is_displayed viene chiamato prima che i dati siano salvati
-        failed = player.participant.vars.get('failed_control_questions')
-        # Se il flag non è stato ancora impostato, non mostrare Goodbye
-        # (significa che siamo ancora prima di ControlQuestions o che le risposte sono corrette)
-        if failed is None:
-            return False
-        return failed
+        return has_failed_control_questions(player, 'intro')
     
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -294,14 +253,7 @@ class ChatAndSignals(Page):
     @staticmethod
     def is_displayed(player):
         """Mostra questa pagina solo se tutte le risposte alle control questions erano corrette."""
-        # Usa il flag salvato in before_next_page invece di chiamare check_all_answers_correct
-        # perché is_displayed viene chiamato prima che i dati siano salvati
-        failed = player.participant.vars.get('failed_control_questions')
-        # Se il flag non è stato ancora impostato, mostra la pagina (per retrocompatibilità)
-        # Altrimenti mostra solo se non ha fallito
-        if failed is None:
-            return True
-        return not failed
+        return not has_failed_control_questions(player, 'intro')
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
@@ -313,7 +265,7 @@ class ChatAndSignals(Page):
         player.participant.vars['signal_left'] = player.signal_left
         player.participant.vars['signal_right'] = player.signal_right
         # TEMPORANEO: Imposta failed_control_questions = False per permettere il test senza control questions
-        player.participant.vars['failed_control_questions'] = False
+        set_control_questions_failed(player, 'intro', failed=False)
 
 page_sequence = [
     Welcome,

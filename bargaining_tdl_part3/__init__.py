@@ -1,4 +1,10 @@
 from otree.api import *
+from bargaining_tdl_common import (
+    save_time_value,
+    check_control_questions_part3,
+    set_control_questions_failed,
+    has_failed_control_questions,
+)
 
 doc = """
 Bargaining Game (Part 3: Three-Person Dictator Game)
@@ -117,32 +123,7 @@ class Player(BasePlayer):
     time_on_page = models.FloatField(initial=0, blank=True)
 
 # HELPER FUNCTIONS
-
-def check_all_control_questions_correct(player):
-    """Verifica se tutte le risposte alle control questions sono corrette."""
-    # Verifica che tutti i campi siano stati compilati
-    if (not player.example1_earnings_you or 
-        not player.example1_earnings_left or 
-        not player.example1_earnings_right or
-        not player.example2_earnings_you or 
-        not player.example2_earnings_left or 
-        not player.example2_earnings_right or
-        not player.payoff_question):
-        return False
-    
-    # Example 1: tutte le risposte devono essere '4'
-    # Example 2: you='0', left='6', right='6'
-    # Payoff question: risposta corretta specifica
-    correct = (
-        player.example1_earnings_you == '4' and
-        player.example1_earnings_left == '4' and
-        player.example1_earnings_right == '4' and
-        player.example2_earnings_you == '0' and
-        player.example2_earnings_left == '6' and
-        player.example2_earnings_right == '6' and
-        player.payoff_question == 'I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3.'
-    )
-    return correct
+# Le funzioni di validazione sono ora importate da bargaining_tdl_common
 
 # PAGES
 
@@ -152,13 +133,6 @@ class InstructionsPart3(Page):
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_instructions_part3 = save_time_value(player.time_on_page)
 
 class SummaryPart3(Page):
@@ -167,13 +141,6 @@ class SummaryPart3(Page):
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_summary_part3 = save_time_value(player.time_on_page)
 
 class ControlQuestionsPart3(Page):
@@ -191,18 +158,11 @@ class ControlQuestionsPart3(Page):
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_control_questions_part3 = save_time_value(player.time_on_page)
         """Valida tutte le risposte alle control questions."""
-        player.all_control_questions_correct = check_all_control_questions_correct(player)
-        if not player.all_control_questions_correct:
-            player.participant.vars['failed_control_questions_part3'] = True
+        is_correct = check_control_questions_part3(player)
+        player.all_control_questions_correct = is_correct
+        set_control_questions_failed(player, 'part3', failed=not is_correct)
 
 class ThankYouPart3(Page):
     """Pagina mostrata se il partecipante ha fallito le control questions."""
@@ -216,13 +176,6 @@ class ThankYouPart3(Page):
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_thank_you_part3 = save_time_value(player.time_on_page)
     
     @staticmethod
@@ -241,13 +194,6 @@ class DecisionPart3(Page):
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_decision_part3 = save_time_value(player.time_on_page)
 
 class ResultsPart3(Page):
@@ -262,13 +208,6 @@ class ResultsPart3(Page):
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_results_part3 = save_time_value(player.time_on_page)
     
     @staticmethod

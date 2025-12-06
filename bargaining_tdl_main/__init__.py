@@ -1,4 +1,8 @@
 from otree.api import *
+from bargaining_tdl_common import (
+    save_time_value,
+    has_failed_control_questions,
+)
 
 doc = """
 Bargaining Game (Part 2: Grouping & Decision)
@@ -51,17 +55,10 @@ class ExperimentTerminated(Page):
     @staticmethod
     def is_displayed(player):
         """Mostra questa pagina solo se il partecipante ha fallito le control questions."""
-        return player.participant.vars.get('failed_control_questions', False)
+        return has_failed_control_questions(player, 'intro')
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_experiment_terminated = save_time_value(player.time_on_page)
     
     @staticmethod
@@ -77,12 +74,12 @@ class GroupingWaitPage(WaitPage):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        return not player.participant.vars.get('failed_control_questions', False)
+        return not has_failed_control_questions(player, 'intro')
     
     @staticmethod
     def app_after_this_page(player, upcoming_apps):
         """Termina l'esperimento se il partecipante ha fallito le control questions."""
-        if player.participant.vars.get('failed_control_questions', False):
+        if has_failed_control_questions(player, 'intro'):
             return []
         # NON restituire nulla - lascia che oTree gestisca automaticamente il flusso
         # Restituire upcoming_apps causa validazione prematura di tutte le app nella sequenza
@@ -139,24 +136,17 @@ class Decision(Page):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        return not player.participant.vars.get('failed_control_questions', False)
+        return not has_failed_control_questions(player, 'intro')
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_decision = save_time_value(player.time_on_page)
 
 class ResultsWaitPage(WaitPage):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        return not player.participant.vars.get('failed_control_questions', False)
+        return not has_failed_control_questions(player, 'intro')
     
     @staticmethod
     def after_all_players_arrive(group: Group):
@@ -213,17 +203,10 @@ class Results(Page):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        return not player.participant.vars.get('failed_control_questions', False)
+        return not has_failed_control_questions(player, 'intro')
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_results = save_time_value(player.time_on_page)
         """Salva il payoff della Part 1 in participant.vars per uso futuro."""
         player.participant.vars['part1_payoff'] = player.payoff

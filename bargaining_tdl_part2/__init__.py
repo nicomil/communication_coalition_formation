@@ -1,4 +1,12 @@
 from otree.api import *
+from bargaining_tdl_common import (
+    save_time_value,
+    check_control_questions_part2,
+    set_control_questions_failed,
+    has_failed_control_questions,
+    get_main_group_player,
+    get_participant_role_in_group,
+)
 
 doc = """
 Bargaining Game (Part 2: Matching Probability List - MPL)
@@ -186,80 +194,7 @@ class Player(BasePlayer):
 # HELPER FUNCTIONS
 # ============================================================================
 
-def get_main_group_player(player: Player):
-    """
-    Recupera il player dal gruppo di main (bargaining_tdl_main).
-    ⚠️ SOLO LETTURA - Non modifica i dati di main.
-    
-    In oTree, per accedere ai dati di un'app precedente, dobbiamo:
-    1. Ottenere la sessione corrente
-    2. Cercare il subsession dell'app main
-    3. Trovare il player corrispondente (stesso participant)
-    """
-    try:
-        # Importiamo il modello Player di main
-        from importlib import import_module
-        
-        # Importiamo l'app main
-        main_app = import_module('bargaining_tdl_main')
-        MainPlayer = main_app.Player
-        MainSubsession = main_app.Subsession
-        
-        # Otteniamo la sessione corrente
-        session = player.session
-        
-        # Cerchiamo il subsession dell'app main
-        # In oTree, ogni app ha un subsession per round
-        # Cerchiamo tutti i subsessions e controlliamo se sono di tipo MainSubsession
-        main_subsession = None
-        for subsession in session.get_subsessions():
-            # Controlliamo se questo subsession è un'istanza di MainSubsession
-            if isinstance(subsession, MainSubsession):
-                main_subsession = subsession
-                break
-        
-        if main_subsession is None:
-            return None
-        
-        # Cerchiamo il player corrispondente (stesso participant)
-        for main_player in main_subsession.get_players():
-            if main_player.participant == player.participant:
-                return main_player
-        
-        return None
-    except Exception as e:
-        # In caso di errore, ritorniamo None
-        # Questo può succedere durante i test o se l'app main non è ancora stata eseguita
-        import traceback
-        print(f"ERROR in get_main_group_player: {e}")
-        traceback.print_exc()
-        return None
-
-def get_participant_role_in_group(player: Player) -> str:
-    """
-    Determina il ruolo del player nel gruppo (A, B, o C).
-    Basato sulla posizione nel gruppo (id 1, 2, o 3).
-    
-    ⚠️ SOLO LETTURA - Non modifica i dati di main.
-    
-    Mapping:
-    - P1 (id_in_group=1) → A
-    - P2 (id_in_group=2) → B  
-    - P3 (id_in_group=3) → C
-    """
-    main_player = get_main_group_player(player)
-    if main_player is None:
-        return None
-    
-    # Il ruolo è determinato da id_in_group nel gruppo di main
-    id_in_group = main_player.id_in_group
-    if id_in_group == 1:
-        return 'A'
-    elif id_in_group == 2:
-        return 'B'
-    elif id_in_group == 3:
-        return 'C'
-    return None
+# get_participant_role_in_group è ora importato da bargaining_tdl_common
 
 def get_target_player_label(player: Player, target_code: str) -> str:
     """
@@ -953,17 +888,6 @@ def generate_mpl_questions(player: Player) -> list[dict]:
     
     return final_questions
 
-def check_control_questions_part2_correct(player: Player) -> bool:
-    """Verifica se entrambe le risposte alle control questions sono corrette."""
-    if not player.control_question_1 or not player.control_question_2:
-        return False
-    
-    # Entrambe le risposte corrette devono essere "5" (£5)
-    correct = (
-        player.control_question_1 == "5" and
-        player.control_question_2 == "5"
-    )
-    return correct
 
 # ============================================================================
 # PAYOFF CALCULATION FUNCTIONS (Part 2)
@@ -1240,13 +1164,6 @@ class InstructionsPart2(Page):
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_instructions_part2 = save_time_value(player.time_on_page)
 
 class PaymentInstructionPart2(Page):
@@ -1255,13 +1172,6 @@ class PaymentInstructionPart2(Page):
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_payment_instruction_part2 = save_time_value(player.time_on_page)
 
 class ControlQuestionsPart2(Page):
@@ -1270,17 +1180,10 @@ class ControlQuestionsPart2(Page):
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_control_questions_part2 = save_time_value(player.time_on_page)
         """Salva un flag se le risposte sono sbagliate."""
-        is_correct = check_control_questions_part2_correct(player)
-        player.participant.vars['failed_control_questions_part2'] = not is_correct
+        is_correct = check_control_questions_part2(player)
+        set_control_questions_failed(player, 'part2', failed=not is_correct)
 
 class ThankYouPart2(Page):
     """Pagina di saluto che termina l'esperimento per il partecipante."""
@@ -1290,20 +1193,10 @@ class ThankYouPart2(Page):
     @staticmethod
     def is_displayed(player):
         """Mostra questa pagina solo se le risposte alle control questions erano sbagliate."""
-        failed = player.participant.vars.get('failed_control_questions_part2')
-        if failed is None:
-            return False
-        return failed
+        return has_failed_control_questions(player, 'part2')
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_thank_you_part2 = save_time_value(player.time_on_page)
     
     @staticmethod
@@ -1319,8 +1212,7 @@ class MPLIntroFirstPlayer(Page):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
+        if has_failed_control_questions(player, 'part2'):
             return False
         # Assicurati che le domande siano state generate per determinare l'ordine
         generate_mpl_questions(player)
@@ -1336,13 +1228,6 @@ class MPLIntroFirstPlayer(Page):
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_mpl_intro_first = save_time_value(player.time_on_page)
 
 class MPLIntroSecondPlayer(Page):
@@ -1353,8 +1238,7 @@ class MPLIntroSecondPlayer(Page):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        return not failed
+        return not has_failed_control_questions(player, 'part2')
     
     @staticmethod
     def vars_for_template(player):
@@ -1366,13 +1250,6 @@ class MPLIntroSecondPlayer(Page):
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_mpl_intro_second = save_time_value(player.time_on_page)
 
 class MPLQuestion(Page):
@@ -1466,14 +1343,6 @@ class MPLQuestion(Page):
         question_num = player.participant.vars.get('current_question_num_original', 1)
         
         # Salva il tempo nel campo specifico per questa domanda MPL
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
-        
         if 1 <= question_num <= 12:
             time_field_name = f'time_mpl_question_{question_num}'
             time_value = save_time_value(player.time_on_page)
@@ -1504,18 +1373,10 @@ class ResultsPart2(Page):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        return not failed
+        return not has_failed_control_questions(player, 'part2')
     
     @staticmethod
     def before_next_page(player, timeout_happened):
-        def save_time_value(time_value, default=0.0):
-            if time_value is None or time_value == '':
-                return default
-            try:
-                return float(time_value)
-            except (ValueError, TypeError):
-                return default
         player.time_results_part2 = save_time_value(player.time_on_page)
     
     @staticmethod
@@ -1554,8 +1415,10 @@ class ResultsPart2(Page):
             'num_questions': NUM_QUESTIONS_PER_PARTICIPANT
         }
 
-# Definiamo le 12 pagine MPLQuestion come classi separate per evitare problemi con oTree
-# Tutte usano lo stesso template MPLQuestion.html
+# ============================================================================
+# FACTORY FUNCTION PER GENERARE DINAMICAMENTE LE 12 CLASSI MPLQuestion
+# ============================================================================
+
 def get_form_fields_for_display_order(player, display_order):
     """Determina i form_fields dinamicamente in base all'ordine randomizzato."""
     import json
@@ -1584,188 +1447,58 @@ def get_form_fields_for_display_order(player, display_order):
     
     return [event_field_name, event_choices_name, 'time_on_page']
 
-class MPLQuestion1(MPLQuestion):
-    template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
-            return False
-        # Imposta display_order = 1 (prima domanda nell'ordine randomizzato)
-        player.participant.vars['current_display_order'] = 1
-        # Genera le domande per inizializzare la randomizzazione se non esiste già
-        generate_mpl_questions(player)
-        return True
-    
-    @staticmethod
-    def get_form_fields(player):
-        return get_form_fields_for_display_order(player, 1)
 
-class MPLQuestion2(MPLQuestion):
-    template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
-            return False
-        player.participant.vars['current_display_order'] = 2
-        return True
+def create_mpl_question_class(display_order):
+    """
+    Factory function che crea dinamicamente una classe MPLQuestion per un display_order specifico.
     
-    @staticmethod
-    def get_form_fields(player):
-        return get_form_fields_for_display_order(player, 2)
+    Args:
+        display_order: Numero dell'ordine di visualizzazione (1-12)
+    
+    Returns:
+        Classe Page per oTree
+    """
+    class_name = f'MPLQuestion{display_order}'
+    
+    class MPLQuestionPage(MPLQuestion):
+        template_name = 'bargaining_tdl_part2/MPLQuestion.html'
+        
+        @staticmethod
+        def is_displayed(player):
+            """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+            if has_failed_control_questions(player, 'part2'):
+                return False
+            # Imposta display_order per questa pagina
+            player.participant.vars['current_display_order'] = display_order
+            # Genera le domande per inizializzare la randomizzazione se non esiste già (solo per la prima)
+            if display_order == 1:
+                generate_mpl_questions(player)
+            return True
+        
+        @staticmethod
+        def get_form_fields(player):
+            return get_form_fields_for_display_order(player, display_order)
+    
+    # Imposta il nome della classe per il debug
+    MPLQuestionPage.__name__ = class_name
+    MPLQuestionPage.__qualname__ = class_name
+    
+    return MPLQuestionPage
 
-class MPLQuestion3(MPLQuestion):
-    template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
-            return False
-        player.participant.vars['current_display_order'] = 3
-        return True
-    
-    @staticmethod
-    def get_form_fields(player):
-        return get_form_fields_for_display_order(player, 3)
 
-class MPLQuestion4(MPLQuestion):
-    template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
-            return False
-        player.participant.vars['current_display_order'] = 4
-        return True
-    
-    @staticmethod
-    def get_form_fields(player):
-        return get_form_fields_for_display_order(player, 4)
-
-class MPLQuestion5(MPLQuestion):
-    template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
-            return False
-        player.participant.vars['current_display_order'] = 5
-        return True
-    
-    @staticmethod
-    def get_form_fields(player):
-        return get_form_fields_for_display_order(player, 5)
-
-class MPLQuestion6(MPLQuestion):
-    template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
-            return False
-        player.participant.vars['current_display_order'] = 6
-        return True
-    
-    @staticmethod
-    def get_form_fields(player):
-        return get_form_fields_for_display_order(player, 6)
-
-class MPLQuestion7(MPLQuestion):
-    template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
-            return False
-        player.participant.vars['current_display_order'] = 7
-        return True
-    
-    @staticmethod
-    def get_form_fields(player):
-        return get_form_fields_for_display_order(player, 7)
-
-class MPLQuestion8(MPLQuestion):
-    template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
-            return False
-        player.participant.vars['current_display_order'] = 8
-        return True
-    
-    @staticmethod
-    def get_form_fields(player):
-        return get_form_fields_for_display_order(player, 8)
-
-class MPLQuestion9(MPLQuestion):
-    template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
-            return False
-        player.participant.vars['current_display_order'] = 9
-        return True
-    
-    @staticmethod
-    def get_form_fields(player):
-        return get_form_fields_for_display_order(player, 9)
-
-class MPLQuestion10(MPLQuestion):
-    template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
-            return False
-        player.participant.vars['current_display_order'] = 10
-        return True
-    
-    @staticmethod
-    def get_form_fields(player):
-        return get_form_fields_for_display_order(player, 10)
-
-class MPLQuestion11(MPLQuestion):
-    template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
-            return False
-        player.participant.vars['current_display_order'] = 11
-        return True
-    
-    @staticmethod
-    def get_form_fields(player):
-        return get_form_fields_for_display_order(player, 11)
-
-class MPLQuestion12(MPLQuestion):
-    template_name = 'bargaining_tdl_part2/MPLQuestion.html'
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        failed = player.participant.vars.get('failed_control_questions_part2', False)
-        if failed:
-            return False
-        player.participant.vars['current_display_order'] = 12
-        return True
-    
-    @staticmethod
-    def get_form_fields(player):
-        return get_form_fields_for_display_order(player, 12)
+# Genera dinamicamente le 12 classi MPLQuestion
+MPLQuestion1 = create_mpl_question_class(1)
+MPLQuestion2 = create_mpl_question_class(2)
+MPLQuestion3 = create_mpl_question_class(3)
+MPLQuestion4 = create_mpl_question_class(4)
+MPLQuestion5 = create_mpl_question_class(5)
+MPLQuestion6 = create_mpl_question_class(6)
+MPLQuestion7 = create_mpl_question_class(7)
+MPLQuestion8 = create_mpl_question_class(8)
+MPLQuestion9 = create_mpl_question_class(9)
+MPLQuestion10 = create_mpl_question_class(10)
+MPLQuestion11 = create_mpl_question_class(11)
+MPLQuestion12 = create_mpl_question_class(12)
 
 page_sequence = [
     InstructionsPart2,
