@@ -1,3 +1,12 @@
+"""
+Test suite for bargaining_tdl_intro module.
+
+Tests cover:
+- Control questions validation
+- Chat and signals submission
+- Data persistence in participant.vars
+"""
+
 from otree.api import Currency as c, currency_range, expect, Bot
 from . import *
 import random
