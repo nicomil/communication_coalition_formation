@@ -242,8 +242,8 @@
         {{ form.errors }}
     </div>
     {% endif %}
-    <input type="hidden" id="switch_value_field" name="mpl_question_{{ question_num_original }}_switch_value">
-    <input type="hidden" id="choices_json_field" name="mpl_question_{{ question_num_original }}_choices">
+    <input type="hidden" id="switch_value_field" name="{{ event_field_name }}">
+    <input type="hidden" id="choices_json_field" name="{{ event_choices_name }}">
     {{ include '_templates/global/_time_tracking_field.html' }}
     <button id="ok-button" type="button" class="ok-button" onclick="submitChoices()" disabled>{{ UI_OK_BUTTON_TEXT }}</button>
     <!-- Next button nascosto che verrà cliccato programmaticamente -->

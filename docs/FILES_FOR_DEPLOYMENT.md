@@ -214,3 +214,4 @@ progetto/
 ### Errore: "Directory '_static' does not exist"
 - **Causa**: La directory `_static/` non è tracciata
 - **Soluzione**: `git add _static/ && git commit`
+

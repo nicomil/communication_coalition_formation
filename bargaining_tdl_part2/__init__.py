@@ -96,33 +96,37 @@ class Group(BaseGroup):
     pass
 
 class Player(BasePlayer):
-    # Campi per le 12 risposte MPL (switch values)
-    mpl_question_1_switch_value = models.IntegerField(blank=True)
-    mpl_question_2_switch_value = models.IntegerField(blank=True)
-    mpl_question_3_switch_value = models.IntegerField(blank=True)
-    mpl_question_4_switch_value = models.IntegerField(blank=True)
-    mpl_question_5_switch_value = models.IntegerField(blank=True)
-    mpl_question_6_switch_value = models.IntegerField(blank=True)
-    mpl_question_7_switch_value = models.IntegerField(blank=True)
-    mpl_question_8_switch_value = models.IntegerField(blank=True)
-    mpl_question_9_switch_value = models.IntegerField(blank=True)
-    mpl_question_10_switch_value = models.IntegerField(blank=True)
-    mpl_question_11_switch_value = models.IntegerField(blank=True)
-    mpl_question_12_switch_value = models.IntegerField(blank=True)
+    # Campi per le risposte MPL (switch values) - nomenclatura basata su eventi
+    # Left player events (L)
+    EL1_switch_value = models.IntegerField(blank=True)   # Event Left 1
+    EL2_switch_value = models.IntegerField(blank=True)   # Event Left 2
+    EL3_switch_value = models.IntegerField(blank=True)   # Event Left 3
+    EL12_switch_value = models.IntegerField(blank=True) # Event Left 12 (composite)
+    EL23_switch_value = models.IntegerField(blank=True) # Event Left 23 (composite)
+    EL31_switch_value = models.IntegerField(blank=True) # Event Left 31 (composite)
+    
+    # Right player events (R)
+    ER1_switch_value = models.IntegerField(blank=True)   # Event Right 1
+    ER2_switch_value = models.IntegerField(blank=True)   # Event Right 2
+    ER3_switch_value = models.IntegerField(blank=True)   # Event Right 3
+    ER12_switch_value = models.IntegerField(blank=True) # Event Right 12 (composite)
+    ER23_switch_value = models.IntegerField(blank=True) # Event Right 23 (composite)
+    ER31_switch_value = models.IntegerField(blank=True) # Event Right 31 (composite)
     
     # Opzionale: salvare anche le scelte complete per validazione (JSON)
-    mpl_question_1_choices = models.LongStringField(blank=True)
-    mpl_question_2_choices = models.LongStringField(blank=True)
-    mpl_question_3_choices = models.LongStringField(blank=True)
-    mpl_question_4_choices = models.LongStringField(blank=True)
-    mpl_question_5_choices = models.LongStringField(blank=True)
-    mpl_question_6_choices = models.LongStringField(blank=True)
-    mpl_question_7_choices = models.LongStringField(blank=True)
-    mpl_question_8_choices = models.LongStringField(blank=True)
-    mpl_question_9_choices = models.LongStringField(blank=True)
-    mpl_question_10_choices = models.LongStringField(blank=True)
-    mpl_question_11_choices = models.LongStringField(blank=True)
-    mpl_question_12_choices = models.LongStringField(blank=True)
+    # Usiamo una nomenclatura basata sugli eventi per coerenza
+    EL1_choices = models.LongStringField(blank=True)
+    EL2_choices = models.LongStringField(blank=True)
+    EL3_choices = models.LongStringField(blank=True)
+    EL12_choices = models.LongStringField(blank=True)
+    EL23_choices = models.LongStringField(blank=True)
+    EL31_choices = models.LongStringField(blank=True)
+    ER1_choices = models.LongStringField(blank=True)
+    ER2_choices = models.LongStringField(blank=True)
+    ER3_choices = models.LongStringField(blank=True)
+    ER12_choices = models.LongStringField(blank=True)
+    ER23_choices = models.LongStringField(blank=True)
+    ER31_choices = models.LongStringField(blank=True)
     
     # Control Questions for Part 2
     control_question_1 = models.StringField(
@@ -584,6 +588,171 @@ def load_part1_data_for_mpl(player: Player, target_code: str) -> dict:
         'target_decision': target_decision
     }
 
+def get_event_description(player: Player, target_code: str, event_codes: list[str]) -> str:
+    """
+    Genera la descrizione testuale dell'evento basandosi sulla tabella degli eventi.
+    
+    Args:
+        player: Player corrente
+        target_code: 'A', 'B', o 'C' (il participant target)
+        event_codes: Lista di codici evento (es. ['EB1'] o ['EB2', 'EB3'])
+    
+    Returns:
+        Stringa con la descrizione dell'evento (es. "Participant B divide equally with Participant A only")
+    """
+    role = get_participant_role_in_group(player)
+    if role is None or not event_codes:
+        return ""
+    
+    # Mapping dei codici evento alle descrizioni in base al ruolo
+    # La tabella mostra le descrizioni per ogni ruolo
+    event_descriptions = {
+        'A': {
+            # Single events
+            'EB2': "Participant B divide equally with Participant A only",
+            'EC2': "Participant C divide equally with Participant A only",
+            'EB1': "Participant B divide equally with Participant C only",
+            'EC1': "Participant C divide equally with Participant B only",
+            'EB3': "Participant B divide equally among all three participants",
+            'EC3': "Participant C divide equally among all three participants",
+            # Composite events
+            ('EB2', 'EB1'): "Participant B divide equally with Participant A only or Participant B divide equally with Participant C only",
+            ('EC2', 'EC1'): "Participant C divide equally with Participant A only or Participant C divide equally with Participant B only",
+            ('EB1', 'EB3'): "Participant B divide equally with Participant C only or Participant B divide equally among all three participants",
+            ('EC1', 'EC3'): "Participant C divide equally with Participant B only or Participant C divide equally among all three participants",
+            ('EB3', 'EB2'): "Participant B divide equally among all three participants or Participant B divide equally with Participant A only",
+            ('EC3', 'EC2'): "Participant C divide equally among all three participants or Participant C divide equally with Participant A only",
+        },
+        'B': {
+            # Single events
+            'EA2': "Participant A divide equally with Participant B only",
+            'EC2': "Participant C divide equally with Participant B only",
+            'EA1': "Participant A divide equally with Participant C only",
+            'EC1': "Participant C divide equally with Participant A only",
+            'EA3': "Participant A divide equally among all three participants",
+            'EC3': "Participant C divide equally among all three participants",
+            # Composite events
+            ('EA2', 'EA1'): "Participant A divide equally with Participant B only or Participant A divide equally with Participant C only",
+            ('EC2', 'EC1'): "Participant C divide equally with Participant B only or Participant C divide equally with Participant A only",
+            ('EA1', 'EA3'): "Participant A divide equally with Participant C only or Participant A divide equally among all three participants",
+            ('EC1', 'EC3'): "Participant C divide equally with Participant A only or Participant C divide equally among all three participants",
+            ('EA3', 'EA2'): "Participant A divide equally among all three participants or Participant A divide equally with Participant B only",
+            ('EC3', 'EC2'): "Participant C divide equally among all three participants or Participant C divide equally with Participant B only",
+        },
+        'C': {
+            # Single events
+            'EA2': "Participant A divide equally with Participant C only",
+            'EB2': "Participant B divide equally with Participant C only",
+            'EA1': "Participant A divide equally with Participant B only",
+            'EB1': "Participant B divide equally with Participant A only",
+            'EA3': "Participant A divide equally among all three participants",
+            'EB3': "Participant B divide equally among all three participants",
+            # Composite events
+            ('EA2', 'EA1'): "Participant A divide equally with Participant C only or Participant A divide equally with Participant B only",
+            ('EB2', 'EB1'): "Participant B divide equally with Participant C only or Participant B divide equally with Participant A only",
+            ('EA1', 'EA3'): "Participant A divide equally with Participant B only or Participant A divide equally among all three participants",
+            ('EB1', 'EB3'): "Participant B divide equally with Participant A only or Participant B divide equally among all three participants",
+            ('EA3', 'EA2'): "Participant A divide equally among all three participants or Participant A divide equally with Participant C only",
+            ('EB3', 'EB2'): "Participant B divide equally among all three participants or Participant B divide equally with Participant C only",
+        }
+    }
+    
+    # Determina la chiave per il mapping
+    if len(event_codes) == 1:
+        # Single event
+        key = event_codes[0]
+    elif len(event_codes) == 2:
+        # Composite event - usa tupla nell'ordine esatto (non sorted)
+        key = tuple(event_codes)
+    else:
+        return ""
+    
+    # Cerca la descrizione nel mapping
+    role_mapping = event_descriptions.get(role, {})
+    description = role_mapping.get(key, "")
+    
+    return description
+
+def get_event_field_name(player: Player, question_num: int) -> str:
+    """
+    Converte question_num in nome campo evento (EL1, ER1, EL12, ecc.).
+    
+    Mapping basato sulla tabella di mapping delle domande MPL:
+    - E = Event
+    - L/R = Left o Right (posizione relativa del target player)
+    - Numero = numero evento (1, 2, 3 per single, 12, 23, 31 per composite)
+    
+    Args:
+        player: Player corrente
+        question_num: Numero della domanda (1-12)
+    
+    Returns:
+        Nome del campo (es. 'EL1_switch_value', 'ER12_switch_value')
+    """
+    role = get_participant_role_in_group(player)
+    if role is None:
+        return f'mpl_question_{question_num}_switch_value'  # Fallback
+    
+    # Tabella di mapping question_num → (target_code, event_codes, event_number)
+    # event_number: 1, 2, 3 per single, 12, 23, 31 per composite
+    mapping = {
+        'A': {
+            1: ('B', ['EB2'], 1),      # B (left) divide with A only → EL1
+            2: ('C', ['EC2'], 1),      # C (right) divide with A only → ER1
+            3: ('B', ['EB1'], 2),      # B (left) divide with C only → EL2
+            4: ('C', ['EC1'], 2),      # C (right) divide with B only → ER2
+            5: ('B', ['EB3'], 3),      # B (left) divide among all three → EL3
+            6: ('C', ['EC3'], 3),      # C (right) divide among all three → ER3
+            7: ('B', ['EB2', 'EB1'], 12),  # B (left) composite → EL12
+            8: ('C', ['EC2', 'EC1'], 12),  # C (right) composite → ER12
+            9: ('B', ['EB1', 'EB3'], 23),   # B (left) composite → EL23
+            10: ('C', ['EC1', 'EC3'], 23),  # C (right) composite → ER23
+            11: ('B', ['EB3', 'EB2'], 31),  # B (left) composite → EL31
+            12: ('C', ['EC3', 'EC2'], 31),  # C (right) composite → ER31
+        },
+        'B': {
+            1: ('A', ['EA2'], 1),      # A (left) divide with B only → EL1
+            2: ('C', ['EC2'], 1),      # C (right) divide with B only → ER1
+            3: ('A', ['EA1'], 2),      # A (left) divide with C only → EL2
+            4: ('C', ['EC1'], 2),      # C (right) divide with A only → ER2
+            5: ('A', ['EA3'], 3),      # A (left) divide among all three → EL3
+            6: ('C', ['EC3'], 3),      # C (right) divide among all three → ER3
+            7: ('A', ['EA2', 'EA1'], 12),  # A (left) composite → EL12
+            8: ('C', ['EC2', 'EC1'], 12),  # C (right) composite → ER12
+            9: ('A', ['EA1', 'EA3'], 23),   # A (left) composite → EL23
+            10: ('C', ['EC1', 'EC3'], 23),  # C (right) composite → ER23
+            11: ('A', ['EA3', 'EA2'], 31),  # A (left) composite → EL31
+            12: ('C', ['EC3', 'EC2'], 31),  # C (right) composite → ER31
+        },
+        'C': {
+            1: ('A', ['EA2'], 1),      # A (left) divide with C only → EL1
+            2: ('B', ['EB2'], 1),      # B (right) divide with C only → ER1
+            3: ('A', ['EA1'], 2),      # A (left) divide with B only → EL2
+            4: ('B', ['EB1'], 2),      # B (right) divide with A only → ER2
+            5: ('A', ['EA3'], 3),      # A (left) divide among all three → EL3
+            6: ('B', ['EB3'], 3),      # B (right) divide among all three → ER3
+            7: ('A', ['EA2', 'EA1'], 12),  # A (left) composite → EL12
+            8: ('B', ['EB2', 'EB1'], 12),  # B (right) composite → ER12
+            9: ('A', ['EA1', 'EA3'], 23),   # A (left) composite → EL23
+            10: ('B', ['EB1', 'EB3'], 23),  # B (right) composite → ER23
+            11: ('A', ['EA3', 'EA2'], 31),  # A (left) composite → EL31
+            12: ('B', ['EB3', 'EB2'], 31),  # B (right) composite → ER31
+        }
+    }
+    
+    if question_num not in mapping[role]:
+        return f'mpl_question_{question_num}_switch_value'  # Fallback
+    
+    target_code, event_codes, event_number = mapping[role][question_num]
+    
+    # Determina se il target è left o right
+    is_left = is_question_for_left_player(player, target_code)
+    lr = 'L' if is_left else 'R'
+    
+    # Costruisci il nome del campo
+    field_name = f'E{lr}{event_number}_switch_value'
+    return field_name
+
 def generate_mpl_questions(player: Player) -> list[dict]:
     """
     Genera la lista delle 12 domande MPL per il player con doppia randomizzazione.
@@ -957,7 +1126,12 @@ def calculate_part2_payoff(player) -> dict:
     
     # Se il player non è di Part 2, recuperalo
     # Controlla se il player ha i campi MPL (è un player di Part 2)
-    if not hasattr(player, 'mpl_question_1_switch_value'):
+    is_part2_player = (
+        hasattr(player, 'EL1_switch_value') or 
+        hasattr(player, 'mpl_question_1_switch_value')
+    )
+    
+    if not is_part2_player:
         # Non è un player di Part 2, recuperalo
         part2_player = get_part2_player(player)
         if part2_player is None:
@@ -982,9 +1156,9 @@ def calculate_part2_payoff(player) -> dict:
     questions = generate_mpl_questions(player)
     selected_question = questions[selected_question_num - 1] if selected_question_num <= len(questions) else None
     
-    # Recupera switching point
-    switch_field_name = f'mpl_question_{selected_question_num}_switch_value'
-    switching_point = getattr(player, switch_field_name, None)
+    # Recupera switching point usando il nuovo nome del campo
+    event_field_name = get_event_field_name(player, selected_question_num)
+    switching_point = player.field_maybe_none(event_field_name)
     
     if switching_point is None:
         # Se non c'è switching point, payoff = 0
@@ -1266,6 +1440,11 @@ class MPLQuestion(Page):
         # Salva il question_num originale in participant.vars per usarlo nel form
         player.participant.vars['current_question_num_original'] = question_num
         
+        # Determina il nome del campo evento per il form
+        event_field_name = get_event_field_name(player, question_num)
+        # Per le choices, usa lo stesso pattern ma con _choices invece di _switch_value
+        event_choices_name = event_field_name.replace('_switch_value', '_choices')
+        
         return {
             **base_return,
             'option1_text': current_question.get('option1_text', ''),
@@ -1276,6 +1455,8 @@ class MPLQuestion(Page):
             'probabilities': probabilities,
             'probabilities_json': json.dumps(probabilities),
             'question_type': question_type,  # 'single' o 'composite' per la nota nel template
+            'event_field_name': event_field_name,  # Nome del campo evento per il form
+            'event_choices_name': event_choices_name,  # Nome del campo choices per il form
         }
     
     @staticmethod
@@ -1299,23 +1480,22 @@ class MPLQuestion(Page):
             setattr(player, time_field_name, time_value)
             print(f"MPLQuestion {question_num} - time saved: {time_value}")
         
-        # I dati vengono salvati automaticamente dal form
-        # Qui possiamo fare validazioni aggiuntive se necessario
-        # Verifica che il switch_value sia stato salvato correttamente (anche se è 0)
-        switch_value = player.field_maybe_none(f'mpl_question_{question_num}_switch_value')
+        # Determina il nome del campo evento basato su question_num
+        event_field_name = get_event_field_name(player, question_num)
+        event_choices_name = event_field_name.replace('_switch_value', '_choices')
+        
+        # I dati vengono salvati automaticamente dal form nei nuovi campi evento
+        # Verifica che il switch_value sia stato salvato correttamente
+        switch_value = player.field_maybe_none(event_field_name)
         if switch_value is None:
             # Se il valore è None, potrebbe essere un problema con il form submission
             # Log per debug
             print(f"WARNING: switch_value is None for question {question_num}, player {player.id}")
             print(f"  - participant: {player.participant.id}")
-            print(f"  - choices_field: {player.field_maybe_none(f'mpl_question_{question_num}_choices')}")
-        
-        # Converti choices_json da stringa a oggetto se necessario
-        # Usa field_maybe_none() per accedere in modo sicuro a campi che possono essere None
-        choices_field = player.field_maybe_none(f'mpl_question_{question_num}_choices')
-        if choices_field and isinstance(choices_field, str):
-            # Il campo è già una stringa JSON, va bene così
-            pass
+            print(f"  - event_field: {event_field_name}")
+            print(f"  - choices_field: {player.field_maybe_none(event_choices_name)}")
+        else:
+            print(f"MPLQuestion {question_num} - saved to {event_field_name}: {switch_value}")
 
 class ResultsPart2(Page):
     form_model = 'player'
@@ -1341,15 +1521,32 @@ class ResultsPart2(Page):
     @staticmethod
     def vars_for_template(player):
         """Mostra un riepilogo delle risposte."""
-        # Raccogli tutte le risposte
+        # Raccogli tutte le risposte usando i nuovi nomi dei campi evento
         responses = []
+        all_questions = generate_mpl_questions(player)
+        
+        # Crea un dizionario per accesso rapido per question_num
+        questions_dict = {q['question_num']: q for q in all_questions}
+        
         for i in range(1, 13):
-            # Usa field_maybe_none() per accedere in modo sicuro a campi che possono essere None
-            switch_value = player.field_maybe_none(f'mpl_question_{i}_switch_value')
+            # Usa il nuovo nome del campo evento
+            event_field_name = get_event_field_name(player, i)
+            switch_value = player.field_maybe_none(event_field_name)
+            
             if switch_value is not None:
+                # Recupera le informazioni della domanda per la descrizione
+                question_info = questions_dict.get(i, {})
+                event_codes = question_info.get('event_codes', [])
+                target_code = question_info.get('target_code', '')
+                
+                # Genera la descrizione dell'evento
+                event_description = get_event_description(player, target_code, event_codes)
+                
                 responses.append({
                     'question_num': i,
-                    'switch_value': switch_value
+                    'switch_value': switch_value,
+                    'event_description': event_description,
+                    'event_field_name': event_field_name
                 })
         
         return {
@@ -1372,15 +1569,20 @@ def get_form_fields_for_display_order(player, display_order):
     
     if not question_order_json:
         # Fallback: usa display_order come question_num se ancora non esiste
-        return [f'mpl_question_{display_order}_switch_value', f'mpl_question_{display_order}_choices', 'time_on_page']
+        question_num = display_order
+    else:
+        question_order = json.loads(question_order_json)
+        # display_order è 1-based, quindi sottraiamo 1 per l'indice
+        if 1 <= display_order <= len(question_order):
+            question_num = question_order[display_order - 1]
+        else:
+            question_num = display_order
     
-    question_order = json.loads(question_order_json)
-    # display_order è 1-based, quindi sottraiamo 1 per l'indice
-    if 1 <= display_order <= len(question_order):
-        question_num = question_order[display_order - 1]
-        return [f'mpl_question_{question_num}_switch_value', f'mpl_question_{question_num}_choices', 'time_on_page']
-    # Fallback
-    return [f'mpl_question_{display_order}_switch_value', f'mpl_question_{display_order}_choices', 'time_on_page']
+    # Usa i nuovi nomi dei campi evento
+    event_field_name = get_event_field_name(player, question_num)
+    event_choices_name = event_field_name.replace('_switch_value', '_choices')
+    
+    return [event_field_name, event_choices_name, 'time_on_page']
 
 class MPLQuestion1(MPLQuestion):
     template_name = 'bargaining_tdl_part2/MPLQuestion.html'

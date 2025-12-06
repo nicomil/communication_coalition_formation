@@ -15,14 +15,14 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Question</th>
+                    <th>Event</th>
                     <th>Switch Value</th>
                 </tr>
             </thead>
             <tbody>
                 {% for response in responses %}
                 <tr>
-                    <td>Question {{ response.question_num }}</td>
+                    <td>{{ response.event_description }}</td>
                     <td>{{ response.switch_value }}%</td>
                 </tr>
                 {% endfor %}
