@@ -4,23 +4,35 @@ Mixins and base classes for bargaining_tdl modules.
 
 from otree.api import Page
 from .helpers import save_time_value
+from .logger import get_logger
+
+logger = get_logger('mixins')
 
 
 class TimeTrackedPage(Page):
     """
-    Base class for pages that track time spent on page.
+    Base class for pages that automatically track time spent on page.
+    
+    This mixin automatically saves the time spent on the page to a Player model field.
+    The field name must be explicitly set in the subclass using the `time_field_name`
+    class attribute.
     
     Usage:
         class MyPage(TimeTrackedPage):
-            time_field_name = 'time_my_page'  # Nome del campo nel Player model
+            time_field_name = 'time_my_page'  # REQUIRED: Nome del campo nel Player model
             
             @staticmethod
             def before_next_page(player, timeout_happened):
                 super().before_next_page(player, timeout_happened)
                 # ... altre operazioni ...
+    
+    Note:
+        - time_field_name DEVE essere definito nella sottoclasse
+        - Il campo deve esistere nel Player model
+        - Se time_field_name non è definito, viene loggato un warning ma non viene sollevato errore
     """
     
-    # Subclass should override this with the field name in Player model
+    # Subclass MUST override this with the field name in Player model
     time_field_name = None
     
     form_model = 'player'
@@ -31,26 +43,32 @@ class TimeTrackedPage(Page):
         """
         Salva automaticamente il tempo speso sulla pagina.
         
-        Il campo time_field_name deve essere definito nella sottoclasse come attributo di classe.
+        Il campo viene determinato dall'attributo time_field_name della classe.
+        Se time_field_name non è definito, viene loggato un warning.
         """
-        # Ottieni il nome della classe per accedere all'attributo time_field_name
-        # Usa type() per ottenere la classe anche se chiamato come metodo statico
-        cls = type(player).__class__.__mro__[1] if hasattr(type(player), '__mro__') else None
+        # Ottieni la classe dalla pagina stessa
+        # oTree passa la classe come attributo della pagina
+        page_class = getattr(player, '_page_class', None)
         
-        # Prova a ottenere time_field_name dalla classe della pagina
-        # Dobbiamo cercare nella gerarchia delle classi
-        time_field = None
-        for base_class in Page.__subclasses__():
-            if hasattr(base_class, 'time_field_name') and base_class.time_field_name:
-                # Questo è un approccio semplificato - in realtà dobbiamo trovare la classe corretta
-                pass
+        if page_class is None:
+            # Fallback: cerca nella gerarchia delle classi
+            # Questo è un workaround per oTree
+            for cls in type(player).__mro__:
+                if hasattr(cls, 'time_field_name') and issubclass(cls, TimeTrackedPage):
+                    page_class = cls
+                    break
         
-        # Approccio più semplice: usa il nome della classe per inferire il campo
-        # Oppure richiedi che time_field_name sia definito esplicitamente
-        # Per ora, se time_field_name non è definito, non salviamo (evita errori)
-        # Le sottoclassi devono definire time_field_name come attributo di classe
+        if page_class and hasattr(page_class, 'time_field_name'):
+            time_field_name = page_class.time_field_name
+            if time_field_name:
+                time_value = save_time_value(player.time_on_page)
+                setattr(player, time_field_name, time_value)
+                logger.debug(f"Time saved to {time_field_name}: {time_value} seconds")
+                return
         
-        # Nota: questo mixin richiede che le sottoclassi definiscano time_field_name
-        # come attributo di classe. Se non è definito, non viene salvato nulla.
-        # Questo è intenzionale per evitare errori silenziosi.
+        # Se non trovato, logga warning
+        logger.warning(
+            f"TimeTrackedPage: time_field_name not set for page. "
+            f"Player: {player.id}, Participant: {player.participant.id}"
+        )
 

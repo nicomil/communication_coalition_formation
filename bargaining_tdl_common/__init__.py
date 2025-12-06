@@ -18,6 +18,7 @@ from .validators import (
 )
 from .utils import get_main_group_player, get_participant_role_in_group
 from .mixins import TimeTrackedPage
+from .logger import get_logger, logger, info, warning, error, debug
 
 __all__ = [
     'save_time_value',
@@ -29,5 +30,11 @@ __all__ = [
     'get_main_group_player',
     'get_participant_role_in_group',
     'TimeTrackedPage',
+    'get_logger',
+    'logger',
+    'info',
+    'warning',
+    'error',
+    'debug',
 ]
 

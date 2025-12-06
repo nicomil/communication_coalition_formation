@@ -53,7 +53,11 @@ def map_player_data_in_group(group: Group):
     """
     Mappa i dati tra i player nel gruppo seguendo la topology circolare.
     
-    Topology:
+    Questa funzione implementa la logica "Postman" per distribuire i dati
+    tra i player del gruppo. Ogni player riceve i dati che gli altri player
+    hanno inviato a lui durante la fase intro (draft_history e signal).
+    
+    Topology del Gruppo (circolare):
     - P1 (id=1): Left=P3, Right=P2
     - P2 (id=2): Left=P1, Right=P3
     - P3 (id=3): Left=P2, Right=P1
@@ -63,8 +67,28 @@ def map_player_data_in_group(group: Group):
     - P1 riceve da Left (P3): quello che P3 ha inviato a Right (P1)
     - P1 riceve da Right (P2): quello che P2 ha inviato a Left (P1)
     
+    I dati vengono letti da participant.vars (salvati in intro) e mappati
+    nei campi received_* del Player model in main.
+    
     Args:
-        group: Group instance con 3 player
+        group: Group instance con esattamente 3 player
+    
+    Side Effects:
+        - Modifica i campi received_* di tutti i player nel gruppo:
+          * received_history_left/right
+          * received_signal_left/right
+    
+    Example:
+        >>> map_player_data_in_group(group)
+        >>> p1.received_signal_left
+        "I wish to split the $ 12 equally with you only."
+        >>> p1.received_history_right
+        "Message from P2..."
+    
+    Note:
+        - Richiede che i dati siano già presenti in participant.vars
+        - Funziona solo con gruppi di esattamente 3 player
+        - I dati mancanti vengono sostituiti con stringa vuota ("")
     """
     p1 = group.get_player_by_id(1)
     p2 = group.get_player_by_id(2)

@@ -4,7 +4,10 @@ from bargaining_tdl_common import (
     check_control_questions_intro,
     set_control_questions_failed,
     has_failed_control_questions,
+    get_logger,
 )
+
+logger = get_logger('intro')
 
 doc = """
 Bargaining Game (Part 1: Individual Tasks)
@@ -182,7 +185,7 @@ class Welcome(Page):
         # Quindi player.time_on_page dovrebbe già avere il valore dal form
         time_value = save_time_value(player.time_on_page)
         player.time_welcome = time_value
-        print(f"Welcome page - time_on_page received: {player.time_on_page}, time_welcome saved: {player.time_welcome}")
+        logger.debug(f"Welcome page - time_on_page received: {player.time_on_page}, time_welcome saved: {player.time_welcome}")
 
 class InstructionsPart1(Page):
     form_model = 'player'
@@ -191,7 +194,7 @@ class InstructionsPart1(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_instructions_part1 = save_time_value(player.time_on_page)
-        print(f"InstructionsPart1 - time_instructions_part1 saved: {player.time_instructions_part1}")
+        logger.debug(f"InstructionsPart1 - time_instructions_part1 saved: {player.time_instructions_part1}")
 
 class ControlQuestions(Page):
     form_model = 'player'
@@ -221,7 +224,7 @@ class ControlQuestions(Page):
     def before_next_page(player, timeout_happened):
         """Salva un flag se le risposte sono sbagliate."""
         player.time_control_questions = save_time_value(player.time_on_page)
-        print(f"ControlQuestions - time_control_questions saved: {player.time_control_questions}")
+        logger.debug(f"ControlQuestions - time_control_questions saved: {player.time_control_questions}")
         # Verifica le risposte e salva il flag
         is_correct = check_control_questions_intro(player)
         set_control_questions_failed(player, 'intro', failed=not is_correct)
@@ -239,7 +242,7 @@ class Goodbye(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_goodbye = save_time_value(player.time_on_page)
-        print(f"Goodbye - time_goodbye saved: {player.time_goodbye}")
+        logger.debug(f"Goodbye - time_goodbye saved: {player.time_goodbye}")
     
     @staticmethod
     def app_after_this_page(player, upcoming_apps):
@@ -258,7 +261,7 @@ class ChatAndSignals(Page):
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
         player.time_chat_and_signals = save_time_value(player.time_on_page)
-        print(f"ChatAndSignals - time_chat_and_signals saved: {player.time_chat_and_signals}")
+        logger.debug(f"ChatAndSignals - time_chat_and_signals saved: {player.time_chat_and_signals}")
         # Save data to participant vars for the next app
         player.participant.vars['draft_history_left'] = player.draft_history_left
         player.participant.vars['draft_history_right'] = player.draft_history_right

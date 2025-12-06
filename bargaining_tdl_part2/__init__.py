@@ -6,7 +6,10 @@ from bargaining_tdl_common import (
     has_failed_control_questions,
     get_main_group_player,
     get_participant_role_in_group,
+    get_logger,
 )
+
+logger = get_logger('part2')
 
 doc = """
 Bargaining Game (Part 2: Matching Probability List - MPL)
@@ -349,13 +352,29 @@ def generate_option1_composite_event(
     """
     Genera il testo di Option 1 per un Composite Event (OR logico).
     
+    Un composite event rappresenta l'unione logica (OR) di due eventi.
+    Il testo generato segue il formato:
+    "You win £5 if the player on the left/right chose \"{event1}\" or \"{event2}\" (and nothing otherwise)."
+    
     Args:
-        player: Player corrente
-        target_code: 'A', 'B', o 'C'
-        event_codes: Lista di codici evento (es. ['EB2', 'EB3'])
+        player: Player corrente (da bargaining_tdl_part2)
+        target_code: 'A', 'B', o 'C' - Il participant che ha fatto la scelta
+        event_codes: Lista di esattamente 2 codici evento (es. ['EB2', 'EB3'])
+                    Rappresenta l'unione logica: evento1 OR evento2
     
     Returns:
-        Stringa con il testo completo di Option 1
+        str: Testo completo di Option 1, o stringa vuota se:
+             - event_codes non ha esattamente 2 elementi
+             - I dati non sono disponibili
+    
+    Example:
+        >>> text = generate_option1_composite_event(player, 'B', ['EB2', 'EB1'])
+        >>> text
+        "You win £5 if the player on the left chose \"Share only with you\" or \"Share only with the player on the right\" (and nothing otherwise)."
+    
+    Note:
+        - Richiede esattamente 2 event_codes
+        - L'ordine degli eventi è preservato nel testo generato
     """
     target_label = get_target_player_label(player, target_code)
     if target_label is None:
@@ -388,15 +407,36 @@ def load_part1_data_for_mpl(player: Player, target_code: str) -> dict:
     
     ⚠️ VINCOLO: SOLO LETTURA - Non modifica i dati di intro/main.
     
+    Questa funzione recupera i dati necessari per generare il reminder nelle
+    domande MPL. I dati vengono letti da participant.vars (salvati in intro)
+    e dal Player model di main (decision_choice).
+    
+    La funzione gestisce la topology complessa del gruppo per determinare
+    quale signal è stato inviato a chi, basandosi sulla posizione relativa
+    dei player nel gruppo.
+    
     Args:
-        player: Player corrente
+        player: Player corrente (da bargaining_tdl_part2)
         target_code: 'A', 'B', o 'C' (il participant di cui si sta chiedendo la scelta)
     
     Returns:
         Dict con:
-        - 'you_said': str (intenzione dichiarata al target)
-        - 'target_said': str (intenzione dichiarata dal target)
-        - 'target_decision': str (scelta finale del target: Left/Right/Both)
+        - 'you_said': str - Intenzione dichiarata dal player corrente al target
+                          (es. "I wish to split the $ 12 equally with you only.")
+        - 'target_said': str - Intenzione dichiarata dal target al player corrente
+        - 'target_decision': str - Scelta finale del target in Part 1
+                                ('Left', 'Right', o 'Both')
+    
+    Example:
+        >>> data = load_part1_data_for_mpl(player, 'B')
+        >>> data['you_said']
+        "I wish to split the $ 12 equally with you only."
+        >>> data['target_decision']
+        'Both'
+    
+    Note:
+        - Restituisce dict con valori vuoti se i dati non sono disponibili
+        - Gestisce automaticamente la topology del gruppo (P1-P2-P3)
     """
     # Recupera il player corrente dal gruppo di main
     main_player = get_main_group_player(player)
@@ -694,20 +734,54 @@ def generate_mpl_questions(player: Player) -> list[dict]:
     
     ⚠️ SOLO LETTURA - Non modifica i dati di intro/main.
     
+    Questa funzione è il cuore del sistema MPL della Part 2. Genera dinamicamente
+    le 12 domande basandosi sul ruolo del player nel gruppo (A, B, o C) e applica
+    una doppia randomizzazione per evitare effetti di ordine.
+    
     Randomizzazione implementata:
     1. Prima randomizzazione: ordine dei player (left first o right first)
-    2. Seconda randomizzazione: all'interno di ciascun gruppo player, ordine dei tipi (single first o composite first)
+       - Determina quale player (left o right) viene mostrato per primo
+       - Basata su seed deterministica (hash del participant.id)
+    2. Seconda randomizzazione: shuffle completo delle domande per ogni player
+       - Le 6 domande per left player vengono mescolate
+       - Le 6 domande per right player vengono mescolate
+       - L'ordine finale è salvato in mpl_question_order per persistenza
+    
+    Struttura delle domande:
+    - 6 domande per "player on the left" (3 single + 3 composite)
+    - 6 domande per "player on the right" (3 single + 3 composite)
+    - Ogni domanda è mappata a un evento specifico (EB1, EC2, etc.)
+    
+    Args:
+        player: Player instance da bargaining_tdl_part2
     
     Returns:
         Lista di dict, ognuno con:
-        - 'question_num': int (1-12) - numero originale della domanda
+        - 'question_num': int (1-12) - numero originale della domanda (fisso)
         - 'display_order': int (1-12) - ordine di visualizzazione dopo randomizzazione
-        - 'type': 'single' o 'composite'
-        - 'target_code': str ('A', 'B', o 'C')
-        - 'event_codes': list[str] (es. ['EB1'] o ['EB2', 'EB3'])
-        - 'option1_text': str (testo completo)
-        - 'reminder_text': str (reminder Parte 1)
-        - 'probabilities': list[int] (lista probabilità)
+        - 'type': str - 'single' o 'composite'
+        - 'target_code': str - 'A', 'B', o 'C' (il target della domanda)
+        - 'event_codes': list[str] - Codici evento (es. ['EB1'] o ['EB2', 'EB3'])
+        - 'option1_text': str - Testo completo di Option 1
+        - 'reminder_text': str - Reminder con dati Parte 1
+        - 'reminder_intro': str - Introduzione del reminder
+        - 'you_said_text': str - Testo "You said: ..."
+        - 'target_said_text': str - Testo "{target} said: ..."
+        - 'probabilities': list[int] - Lista probabilità per Option 2
+    
+    Side Effects:
+        - Salva mpl_player_order in player se non già presente
+        - Salva mpl_question_order in player se non già presente
+        - Genera dati se non già generati (idempotente)
+    
+    Example:
+        >>> questions = generate_mpl_questions(player)
+        >>> len(questions)
+        12
+        >>> questions[0]['type']
+        'single'
+        >>> questions[0]['display_order']
+        1
     """
     import random
     import json
@@ -960,7 +1034,7 @@ def get_part2_player(player):
         return None
     except Exception as e:
         import traceback
-        print(f"ERROR in get_part2_player: {e}")
+        logger.error(f"ERROR in get_part2_player: {e}", exc_info=True)
         traceback.print_exc()
         return None
 
@@ -1029,22 +1103,58 @@ def check_event_occurred_in_part1(player: Player, target_code: str, event_codes:
 
 def calculate_part2_payoff(player) -> dict:
     """
-    Calcola il payoff della Part 2 seguendo la logica specificata.
+    Calcola il payoff della Part 2 seguendo la logica specificata nel paper.
+    
+    Questa funzione implementa l'algoritmo di calcolo del payoff per la Part 2,
+    che combina selezione casuale di una domanda MPL, estrazione di probabilità,
+    e verifica di eventi della Part 1.
+    
+    Algoritmo:
+    1. Selezione casuale: sceglie una domanda MPL tra 1-12
+    2. Estrazione pr1: numero casuale 0-100
+    3. Decisione Option 1 vs Option 2:
+       - Se pr1 < switching_point → Option 1
+         * Verifica se l'evento della domanda è accaduto in Part 1
+         * Se sì: payoff = £5, altrimenti = £0
+       - Se pr1 >= switching_point → Option 2
+         * Estrae pr2 (0-99)
+         * Se pr2 <= pr1: payoff = £5, altrimenti = £0
     
     Args:
-        player: Player di qualsiasi app (es. Part 2 o Part 3). 
-                Se non è un player di Part 2, viene recuperato automaticamente.
+        player: Player di qualsiasi app (es. Part 2 o Part 3).
+                Se non è un player di Part 2, viene recuperato automaticamente
+                tramite get_part2_player().
     
     Returns:
-        Dict con:
-        - 'payoff': Currency (cu(5) o cu(0))
-        - 'selected_question': int (1-12)
-        - 'switching_point': int
-        - 'pr1': int (0-100)
-        - 'pr2': int (0-99) o None
-        - 'option_selected': str ('Option 1' o 'Option 2')
-        - 'event_occurred': bool (solo per Option 1)
-        - 'payoff_amount': int (5 o 0)
+        Dict con tutti i dettagli del calcolo:
+        - 'payoff': Currency - cu(5) o cu(0)
+        - 'selected_question': int - Numero domanda selezionata (1-12)
+        - 'switching_point': int - Valore di switching point della domanda
+        - 'pr1': int - Probabilità estratta (0-100)
+        - 'pr2': int - Probabilità estratta per Option 2 (0-99) o None
+        - 'option_selected': str - 'Option 1' o 'Option 2'
+        - 'event_occurred': bool - Se evento è accaduto (solo Option 1) o None
+        - 'payoff_amount': int - 5 o 0
+        - 'question_text': str - Testo della domanda
+        - 'reminder_text': str - Reminder della domanda
+        - 'target_code': str - Codice target ('A', 'B', 'C')
+        - 'event_codes': list[str] - Codici evento
+        - 'question_type': str - 'single' o 'composite'
+        - 'error': str - Messaggio di errore se presente
+    
+    Side Effects:
+        - Usa random.randint() per selezione ed estrazioni
+        - Può chiamare get_part2_player() se necessario
+        - Può chiamare check_event_occurred_in_part1()
+    
+    Example:
+        >>> result = calculate_part2_payoff(player)
+        >>> result['payoff']
+        cu(5)
+        >>> result['option_selected']
+        'Option 1'
+        >>> result['event_occurred']
+        True
     """
     import random
     
@@ -1267,12 +1377,12 @@ class MPLQuestion(Page):
         # Genera tutte le domande (questo genera anche l'ordine randomizzato se non esiste già)
         all_questions = generate_mpl_questions(player)
         
-        # Debug: stampa informazioni utili
+        # Debug: log informazioni utili
         if not all_questions:
-            print(f"WARNING: generate_mpl_questions returned empty list for player {player.id}")
-            print(f"  - participant: {player.participant.id}")
-            print(f"  - role: {get_participant_role_in_group(player)}")
-            print(f"  - main_player: {get_main_group_player(player)}")
+            logger.warning(f"generate_mpl_questions returned empty list for player {player.id}")
+            logger.debug(f"  - participant: {player.participant.id}")
+            logger.debug(f"  - role: {get_participant_role_in_group(player)}")
+            logger.debug(f"  - main_player: {get_main_group_player(player)}")
         
         # Trova la domanda corrente usando display_order
         current_question = None
@@ -1347,7 +1457,7 @@ class MPLQuestion(Page):
             time_field_name = f'time_mpl_question_{question_num}'
             time_value = save_time_value(player.time_on_page)
             setattr(player, time_field_name, time_value)
-            print(f"MPLQuestion {question_num} - time saved: {time_value}")
+            logger.debug(f"MPLQuestion {question_num} - time saved: {time_value}")
         
         # Determina il nome del campo evento basato su question_num
         event_field_name = get_event_field_name(player, question_num)
@@ -1359,12 +1469,12 @@ class MPLQuestion(Page):
         if switch_value is None:
             # Se il valore è None, potrebbe essere un problema con il form submission
             # Log per debug
-            print(f"WARNING: switch_value is None for question {question_num}, player {player.id}")
-            print(f"  - participant: {player.participant.id}")
-            print(f"  - event_field: {event_field_name}")
-            print(f"  - choices_field: {player.field_maybe_none(event_choices_name)}")
+            logger.warning(f"switch_value is None for question {question_num}, player {player.id}")
+            logger.debug(f"  - participant: {player.participant.id}")
+            logger.debug(f"  - event_field: {event_field_name}")
+            logger.debug(f"  - choices_field: {player.field_maybe_none(event_choices_name)}")
         else:
-            print(f"MPLQuestion {question_num} - saved to {event_field_name}: {switch_value}")
+            logger.debug(f"MPLQuestion {question_num} - saved to {event_field_name}: {switch_value}")
 
 class ResultsPart2(Page):
     form_model = 'player'
