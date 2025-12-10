@@ -215,3 +215,5 @@ progetto/
 - **Causa**: La directory `_static/` non è tracciata
 - **Soluzione**: `git add _static/ && git commit`
 
+
+
