@@ -26,7 +26,11 @@ class Group(BaseGroup):
 class Player(BasePlayer):
     # Decision
     decision_choice = models.StringField(
-        choices=['Left', 'Right', 'Both'],
+        choices=[
+            ('Left', 'I would like to divide the $12 equally with player on the left'),
+            ('Right', 'I would like to divide the $12 equally with player on the right'),
+            ('Both', 'I would like to divide the $12 equally among all the members of the group')
+        ],
         widget=widgets.RadioSelect,
         label="Select your choice:"
     )
@@ -216,8 +220,9 @@ class ResultsWaitPage(WaitPage):
             p.payoff = C.PAYOFF_DISAGREEMENT
 
         # Logic:
-        # 1. All choose Both -> All get 4
-        if c1 == 'Both' and c2 == 'Both' and c3 == 'Both':
+        # 1. At least 2 choose Both -> All get 4
+        both_count = sum([c1 == 'Both', c2 == 'Both', c3 == 'Both'])
+        if both_count >= 2:
             for p in players:
                 p.payoff = C.PAYOFF_SPLIT
             return

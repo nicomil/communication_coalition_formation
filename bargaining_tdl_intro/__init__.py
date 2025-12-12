@@ -39,18 +39,18 @@ class Player(BasePlayer):
     # Intentions
     signal_left = models.StringField(
         choices=[
-            "I wish to split the $ 12 equally with you only.",
-            "I wish to split the $ 12 equally with the other player only.",
-            "I wish to split the $ 12 equally with both the two players."
+            "I wish to split the $ 12 equally with you only, player on the left.",
+            "I wish to split the $ 12 equally with the other player only, the one on the right.",
+            "I wish to split the $ 12 equally with both you and player on the right"
         ],
         widget=widgets.RadioSelect,
         label="Select intention for the participant on your LEFT:"
     )
     signal_right = models.StringField(
         choices=[
-            "I wish to split the $ 12 equally with you only.",
-            "I wish to split the $ 12 equally with the other player only.",
-            "I wish to split the $ 12 equally with both the two players."
+            "I wish to split the $ 12 equally with you only, player on the right.",
+            "I wish to split the $ 12 equally with the other player only, the one on the left.",
+            "I wish to split the $ 12 equally with both you and player on the left"
         ],
         widget=widgets.RadioSelect,
         label="Select intention for the participant on your RIGHT:"

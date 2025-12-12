@@ -57,20 +57,20 @@ class PlayerBot(Bot):
         
         if case == 'cooperative':
             # Sempre Both per entrambi
-            signal_left = "I wish to split the $ 12 equally with both the two players."
-            signal_right = "I wish to split the $ 12 equally with both the two players."
+            signal_left = "I wish to split the $ 12 equally with both you and player on the right"
+            signal_right = "I wish to split the $ 12 equally with both you and player on the left"
         elif case == 'competitive':
             # Strategia competitiva: cerca di formare coalizioni
-            signal_left = "I wish to split the $ 12 equally with you only."
-            signal_right = "I wish to split the $ 12 equally with the other player only."
+            signal_left = "I wish to split the $ 12 equally with you only, player on the left."
+            signal_right = "I wish to split the $ 12 equally with the other player only, the one on the left."
         elif case == 'mixed':
             # Strategia mista
-            signal_left = "I wish to split the $ 12 equally with you only."
-            signal_right = "I wish to split the $ 12 equally with both the two players."
+            signal_left = "I wish to split the $ 12 equally with you only, player on the left."
+            signal_right = "I wish to split the $ 12 equally with both you and player on the left"
         else:  # altruistic
             # Sempre Both
-            signal_left = "I wish to split the $ 12 equally with both the two players."
-            signal_right = "I wish to split the $ 12 equally with both the two players."
+            signal_left = "I wish to split the $ 12 equally with both you and player on the right"
+            signal_right = "I wish to split the $ 12 equally with both you and player on the left"
         
         yield ChatAndSignals, dict(
             signal_left=signal_left,

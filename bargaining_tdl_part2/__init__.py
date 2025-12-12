@@ -27,37 +27,25 @@ Genera 12 MPL questions per ogni partecipante basandosi sui dati della Parte 1.
 # ============================================================================
 
 # Testi delle Opzioni di Scelta Parte 1 (Sezione 📄 4)
-# Per il "player on the left" (B nel gruppo):
-EVENT_TEXT_EB1 = "Share only with the player on the right"
-EVENT_TEXT_EB2 = "Share only with you"
-EVENT_TEXT_EB3 = "Share with both you and the player on the right"
+# Usiamo le nuove etichette descrittive che corrispondono a quelle in bargaining_tdl_main
+# Mapping basato su EVENT_TO_DECISION per determinare quale etichetta usare
 
-# Per il "player on the right" (C nel gruppo):
-EVENT_TEXT_EC1 = "Share only with the player on the left"
-EVENT_TEXT_EC2 = "Share only with you"
-EVENT_TEXT_EC3 = "Share with both you and the player on the left"
+# Nuove etichette descrittive (allineate con bargaining_tdl_main)
+DECISION_LABEL_LEFT = "I would like to divide the $12 equally with player on the left"
+DECISION_LABEL_RIGHT = "I would like to divide the $12 equally with player on the right"
+DECISION_LABEL_BOTH = "I would like to divide the $12 equally among all the members of the group"
 
-# Per A (quando B o C fanno domande su A):
-# Quando B o C fanno domande su A, A è sempre "the player on the left" per entrambi
-# Quindi i testi sono gli stessi di EB1-3 (perché A è left come B)
-# EA1: A divide with C only (per B) o A divide with B only (per C) → "Share only with the player on the right"
-# EA2: A divide with B only (per B) o A divide with C only (per C) → "Share only with you"
-# EA3: A divide among all three → "Share with both you and the player on the right"
-EVENT_TEXT_EA1 = EVENT_TEXT_EB1  # A divide with C only (per B) o A divide with B only (per C)
-EVENT_TEXT_EA2 = EVENT_TEXT_EB2  # A divide with B only (per B) o A divide with C only (per C)
-EVENT_TEXT_EA3 = EVENT_TEXT_EB3  # A divide among all three
-
-# Mapping Eventi → Testi
+# Mapping Eventi → Testi (usando le nuove etichette descrittive)
 EVENT_TO_TEXT = {
-    'EB1': EVENT_TEXT_EB1,
-    'EB2': EVENT_TEXT_EB2,
-    'EB3': EVENT_TEXT_EB3,
-    'EC1': EVENT_TEXT_EC1,
-    'EC2': EVENT_TEXT_EC2,
-    'EC3': EVENT_TEXT_EC3,
-    'EA1': EVENT_TEXT_EA1,  # Usato quando B o C fanno domande su A (stesso di EB1)
-    'EA2': EVENT_TEXT_EA2,  # Usato quando B o C fanno domande su A (stesso di EB2)
-    'EA3': EVENT_TEXT_EA3,  # Usato quando B o C fanno domande su A (stesso di EB3)
+    'EB1': DECISION_LABEL_RIGHT,  # B divide with C only → Right
+    'EB2': DECISION_LABEL_LEFT,   # B divide with A only → Left
+    'EB3': DECISION_LABEL_BOTH,   # B divide among all three → Both
+    'EC1': DECISION_LABEL_LEFT,   # C divide with B only → Left
+    'EC2': DECISION_LABEL_RIGHT,  # C divide with A only → Right
+    'EC3': DECISION_LABEL_BOTH,   # C divide among all three → Both
+    'EA1': DECISION_LABEL_RIGHT,  # A divide with C only (per B) o A divide with B only (per C) → Right
+    'EA2': DECISION_LABEL_LEFT,   # A divide with B only (per B) o A divide with C only (per C) → Left
+    'EA3': DECISION_LABEL_BOTH,   # A divide among all three → Both
 }
 
 # Struttura Testo Option 1 (Sezione 📄 5)
