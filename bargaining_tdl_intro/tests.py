@@ -35,7 +35,9 @@ class PlayerBot(Bot):
         yield InstructionsPart1
         
         # Control Questions - risposte sempre corrette per permettere il test completo
-        yield ControlQuestions, dict(
+        # Usa ControlQuestionsAttempt1 (primo tentativo)
+        # Le altre pagine (Attempt2-5) non verranno mostrate perché is_displayed ritorna False
+        yield ControlQuestionsAttempt1, dict(
             example1_earnings_you='6',
             example1_earnings_left='0',
             example1_earnings_right='6',

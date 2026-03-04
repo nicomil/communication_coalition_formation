@@ -201,6 +201,7 @@ def play_round(self):
 
 ## 📚 Riferimenti
 
+- [HOW_TESTS_WORK.md](./HOW_TESTS_WORK.md) - **Documento dettagliato** su come funzionano internamente i test, come i bot interagiscono, e come vengono verificate le logiche
 - [Documentazione oTree - Bots](https://otree.readthedocs.io/en/latest/bots.html)
 - [Documentazione oTree - Test Avanzati](https://otree.readthedocs.io/en/latest/misc/bots_advanced.html)
 - File di test esistenti: `bargaining_tdl_*/tests.py`

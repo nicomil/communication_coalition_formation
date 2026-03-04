@@ -293,11 +293,42 @@ class ResultsPart3(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_results_part3 = save_time_value(player.time_on_page)
+        
+        # Calcola e imposta i payoff
+        from bargaining_tdl_part2 import calculate_part2_payoff, get_part2_player
+        
+        # Calcola o recupera payoff Part 2
+        if 'part2_payoff_data' not in player.participant.vars:
+            part2_payoff_data = calculate_part2_payoff(player)
+            player.participant.vars['part2_payoff_data'] = part2_payoff_data
+            player.participant.vars['part2_payoff'] = part2_payoff_data['payoff']
+        else:
+            part2_payoff_data = player.participant.vars['part2_payoff_data']
+        
+        part2_payoff = player.participant.vars.get('part2_payoff', cu(0))
+        
+        # IMPORTANTE: Salva il payoff di Part 2 anche nel player.payoff del player di Part 2
+        # Questo è necessario per l'export CSV
+        part2_player = get_part2_player(player)
+        if part2_player is not None:
+            part2_player.payoff = part2_payoff
+        
+        # Imposta player.payoff per Part 3
+        # Part 3 payoff viene calcolato solo se Part 3 viene selezionata casualmente
+        # Per ora impostiamo 0 perché Part 3 non viene sempre inclusa nel payoff finale
+        # La logica è: Part 2 (sempre) + Part 1 O Part 3 (selezionato casualmente)
+        # Per semplicità, per ora usiamo sempre Part 1, quindi Part 3 = 0
+        # TODO: Aggiungere logica di selezione casuale tra Part 1 e Part 3 se necessario
+        player.payoff = cu(0)
+        
+        # NOTA: oTree calcola automaticamente participant.payoff come somma di tutti i player.payoff
+        # Quindi: participant.payoff = Part1.player.payoff + Part2.player.payoff + Part3.player.payoff
+        # Questo è corretto perché Part 3 = 0 e quindi participant.payoff = Part1 + Part2 + 0 = Part1 + Part2
     
     @staticmethod
     def vars_for_template(player):
         """Recupera i payoff per la visualizzazione e calcola il payoff di Part 2 se necessario."""
-        from bargaining_tdl_part2 import calculate_part2_payoff
+        from bargaining_tdl_part2 import calculate_part2_payoff, get_part2_player
         
         # Prova a recuperare il payoff dalla Part 1 (bargaining_tdl_main)
         part1_payoff = cu(0)
@@ -313,9 +344,24 @@ class ResultsPart3(Page):
             # Salva in participant.vars per uso futuro
             player.participant.vars['part2_payoff_data'] = part2_payoff_data
             player.participant.vars['part2_payoff'] = part2_payoff_data['payoff']
+            
+            # IMPORTANTE: Salva anche nel player.payoff del player di Part 2 per l'export CSV
+            # Questo garantisce che il valore sia salvato anche se ResultsPart2.before_next_page 
+            # non viene chiamato o se viene chiamato dopo vars_for_template
+            part2_player = get_part2_player(player)
+            if part2_player is not None:
+                part2_player.payoff = part2_payoff_data['payoff']
         else:
             # Recupera i dati già calcolati
             part2_payoff_data = player.participant.vars['part2_payoff_data']
+            
+            # Assicurati che il payoff sia salvato anche nel player di Part 2
+            # (nel caso in cui sia stato calcolato in vars_for_template prima di before_next_page)
+            part2_player = get_part2_player(player)
+            if part2_player is not None and part2_player.payoff == cu(0):
+                part2_payoff = player.participant.vars.get('part2_payoff', cu(0))
+                if part2_payoff != cu(0):
+                    part2_player.payoff = part2_payoff
         
         part2_payoff = player.participant.vars.get('part2_payoff', cu(0))
         
@@ -324,13 +370,6 @@ class ResultsPart3(Page):
             part2_payoff=part2_payoff,
             part2_payoff_data=part2_payoff_data,
         )
-    
-    @staticmethod
-    def before_next_page(player, timeout_happened):
-        """Assicura che il payoff di Part 2 sia stato calcolato e salvato."""
-        # Il calcolo viene fatto in vars_for_template, ma assicuriamoci che sia salvato
-        # (già fatto in vars_for_template, ma questo metodo può essere usato per validazione)
-        pass
 
 page_sequence = [
     InstructionsPart3,

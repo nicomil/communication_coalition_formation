@@ -21,7 +21,9 @@ class Subsession(BaseSubsession):
     pass
 
 class Group(BaseGroup):
-    pass
+    # Group-level variables for CSV export
+    grp_coordinate = models.IntegerField(initial=0)  # 1 if group payoff is different from disagreement (at least one player has payoff > 0)
+    grp_triadicsplit = models.IntegerField(initial=0)  # 1 if at least two players vote for "equally split among all the members of the group" (Both)
 
 class Player(BasePlayer):
     # Decision
@@ -40,6 +42,12 @@ class Player(BasePlayer):
     received_history_right = models.LongStringField(initial="")
     received_signal_left = models.StringField(initial="")
     received_signal_right = models.StringField(initial="")
+    
+    # Player identification fields (for CSV export compatibility)
+    # These fields store the participant.code of players on left and right
+    # Topology: P1->Left=P3, Right=P2; P2->Left=P1, Right=P3; P3->Left=P2, Right=P1
+    id_player_on_the_left = models.StringField(blank=True)  # participant.code of player on the left
+    id_player_on_the_right = models.StringField(blank=True)  # participant.code of player on the right
     
     # Time tracking fields (in seconds)
     time_experiment_terminated = models.FloatField(initial=0)
@@ -81,6 +89,9 @@ def map_player_data_in_group(group: Group):
         - Modifica i campi received_* di tutti i player nel gruppo:
           * received_history_left/right
           * received_signal_left/right
+        - Imposta i campi id_player_on_the_left/right per ogni player:
+          * id_player_on_the_left: participant.code del player a sinistra
+          * id_player_on_the_right: participant.code del player a destra
     
     Example:
         >>> map_player_data_in_group(group)
@@ -116,9 +127,23 @@ def map_player_data_in_group(group: Group):
     # Mapping player objects per accesso rapido
     players = {1: p1, 2: p2, 3: p3}
     
+    # Mapping degli id dei player left/right per ogni player
+    # Topology: P1->Left=P3, Right=P2; P2->Left=P1, Right=P3; P3->Left=P2, Right=P1
+    player_id_mapping = {
+        1: {'left': 3, 'right': 2},  # P1: Left=P3, Right=P2
+        2: {'left': 1, 'right': 3},  # P2: Left=P1, Right=P3
+        3: {'left': 2, 'right': 1},  # P3: Left=P2, Right=P1
+    }
+    
     # Applica il mapping per ogni player e direzione
     for receiver_id in [1, 2, 3]:
         receiver = players[receiver_id]
+        
+        # Imposta i participant.code dei player left/right
+        left_player_id = player_id_mapping[receiver_id]['left']
+        right_player_id = player_id_mapping[receiver_id]['right']
+        receiver.id_player_on_the_left = players[left_player_id].participant.code
+        receiver.id_player_on_the_right = players[right_player_id].participant.code
         
         for direction in ['left', 'right']:
             sender_id, sender_direction = topology[(receiver_id, direction)]
@@ -225,32 +250,38 @@ class ResultsWaitPage(WaitPage):
         if both_count >= 2:
             for p in players:
                 p.payoff = C.PAYOFF_SPLIT
-            return
+        else:
+            # 2. Pairwise matches (Strict majority, implicit)
+            # P1-P2 match? (P1->Right, P2->Left)
+            match_12 = (c1 == 'Right' and c2 == 'Left')
+            
+            # P2-P3 match? (P2->Right, P3->Left)
+            match_23 = (c2 == 'Right' and c3 == 'Left')
 
-        # 2. Pairwise matches (Strict majority, implicit)
-        # P1-P2 match? (P1->Right, P2->Left)
-        match_12 = (c1 == 'Right' and c2 == 'Left')
+            # P3-P1 match? (P3->Right, P1->Left)
+            match_31 = (c3 == 'Right' and c1 == 'Left')
+
+            if match_12:
+                p1.payoff = C.PAYOFF_MAX
+                p2.payoff = C.PAYOFF_MAX
+                p3.payoff = C.PAYOFF_DISAGREEMENT
+            elif match_23:
+                p2.payoff = C.PAYOFF_MAX
+                p3.payoff = C.PAYOFF_MAX
+                p1.payoff = C.PAYOFF_DISAGREEMENT
+            elif match_31:
+                p3.payoff = C.PAYOFF_MAX
+                p1.payoff = C.PAYOFF_MAX
+                p2.payoff = C.PAYOFF_DISAGREEMENT
+            
+            # Else remains 0 (Disagreement)
         
-        # P2-P3 match? (P2->Right, P3->Left)
-        match_23 = (c2 == 'Right' and c3 == 'Left')
-
-        # P3-P1 match? (P3->Right, P1->Left)
-        match_31 = (c3 == 'Right' and c1 == 'Left')
-
-        if match_12:
-            p1.payoff = C.PAYOFF_MAX
-            p2.payoff = C.PAYOFF_MAX
-            p3.payoff = C.PAYOFF_DISAGREEMENT
-        elif match_23:
-            p2.payoff = C.PAYOFF_MAX
-            p3.payoff = C.PAYOFF_MAX
-            p1.payoff = C.PAYOFF_DISAGREEMENT
-        elif match_31:
-            p3.payoff = C.PAYOFF_MAX
-            p1.payoff = C.PAYOFF_MAX
-            p2.payoff = C.PAYOFF_DISAGREEMENT
+        # Calculate group-level variables
+        # grp_coordinate: 1 if at least one player has payoff different from disagreement (payoff > 0)
+        group.grp_coordinate = 1 if any(p.payoff > C.PAYOFF_DISAGREEMENT for p in players) else 0
         
-        # Else remains 0 (Disagreement)
+        # grp_triadicsplit: 1 if at least two players voted for "Both" (equally split among all members)
+        group.grp_triadicsplit = 1 if both_count >= 2 else 0
 
 class Results(Page):
     form_model = 'player'

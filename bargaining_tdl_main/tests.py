@@ -1,5 +1,6 @@
 from otree.api import Currency as c, currency_range, expect, Bot
 from . import *
+from bargaining_tdl_common import set_control_questions_failed
 
 
 class PlayerBot(Bot):
@@ -15,16 +16,34 @@ class PlayerBot(Bot):
         'match_31',        # P3->Right, P1->Left -> P3 e P1 vincono (6), P2 perde (0)
         'disagreement',    # Nessun match -> tutti 0
         'mixed_strategy',  # Strategia mista per testare vari scenari
+        # Nota: 'experiment_terminated' non può essere testato insieme agli altri casi
+        # perché richiede che tutti i partecipanti falliscano le control questions
     ]
     
     def play_round(self):
         """Simula il comportamento del partecipante nel gioco principale."""
         
+        case = self.case
+        
+        # Test per ExperimentTerminated page (quando failed_control_questions=True)
+        if case == 'experiment_terminated':
+            # Imposta il flag per simulare il fallimento delle control questions
+            set_control_questions_failed(self.player, 'intro', failed=True)
+            
+            # ExperimentTerminated page - dovrebbe essere mostrata
+            yield ExperimentTerminated, dict(time_on_page=1.0)
+            
+            # Verifica che il time tracking sia stato salvato
+            expect(self.player.time_experiment_terminated, '>=', 0)
+            
+            # L'esperimento dovrebbe terminare qui (app_after_this_page ritorna [])
+            # Non ci dovrebbero essere altre pagine dopo questa
+            return
+        
         # GroupingWaitPage - oTree gestisce automaticamente il raggruppamento
         # I bot vengono raggruppati in gruppi di 3 automaticamente
         
         # Decision - la scelta varia in base al case e alla posizione nel gruppo
-        case = self.case
         id_in_group = self.player.id_in_group
         
         if case == 'all_both':
@@ -65,12 +84,24 @@ class PlayerBot(Bot):
             else:
                 decision = 'Both'
         
-        yield Decision, dict(decision_choice=decision)
+        yield Decision, dict(decision_choice=decision, time_on_page=1.5)
         
         # ResultsWaitPage - oTree gestisce automaticamente l'attesa
         # Il calcolo del payoff viene fatto in after_all_players_arrive
         
-        yield Results
+        yield Results, dict(time_on_page=2.0)
+        
+        # Verifica che i time tracking fields siano stati salvati
+        expect(self.player.time_decision, '>=', 0)
+        expect(self.player.time_results, '>=', 0)
+        
+        # Verifica che i campi received_* siano stati popolati dopo il mapping
+        # (questi vengono popolati in after_all_players_arrive della GroupingWaitPage)
+        # I dati provengono da participant.vars salvati nella fase intro
+        expect(self.player.received_history_left, '!=', None)
+        expect(self.player.received_history_right, '!=', None)
+        expect(self.player.received_signal_left, '!=', None)
+        expect(self.player.received_signal_right, '!=', None)
         
         # Verifica che il payoff sia stato calcolato correttamente
         expect(self.player.payoff, '!=', None)

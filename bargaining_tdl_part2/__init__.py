@@ -1153,10 +1153,15 @@ def calculate_part2_payoff(player) -> dict:
     
     # Se il player non è di Part 2, recuperalo
     # Controlla se il player ha i campi MPL (è un player di Part 2)
-    is_part2_player = (
-        hasattr(player, 'EL1_switch_value') or 
-        hasattr(player, 'mpl_question_1_switch_value')
-    )
+    # Usa field_maybe_none per evitare TypeError quando il campo è None
+    try:
+        el1_value = player.field_maybe_none('EL1_switch_value')
+        mpl1_value = player.field_maybe_none('mpl_question_1_switch_value')
+        # Se almeno uno dei due campi esiste (non è None), è un player di Part 2
+        is_part2_player = (el1_value is not None) or (mpl1_value is not None)
+    except AttributeError:
+        # Se il campo non esiste affatto, non è un player di Part 2
+        is_part2_player = False
     
     if not is_part2_player:
         # Non è un player di Part 2, recuperalo
@@ -1555,6 +1560,20 @@ class ResultsPart2(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_results_part2 = save_time_value(player.time_on_page)
+        # Calcola il payoff di Part 2 e impostalo
+        # Verifica se è già stato calcolato (per evitare ricalcoli con valori casuali diversi)
+        if 'part2_payoff_data' not in player.participant.vars:
+            # Calcola il payoff usando la funzione calculate_part2_payoff
+            part2_payoff_data = calculate_part2_payoff(player)
+            # Salva in participant.vars per uso futuro
+            player.participant.vars['part2_payoff_data'] = part2_payoff_data
+            player.participant.vars['part2_payoff'] = part2_payoff_data['payoff']
+        else:
+            # Usa il valore già calcolato
+            part2_payoff_data = player.participant.vars['part2_payoff_data']
+        
+        # Imposta player.payoff con il valore calcolato (o già salvato)
+        player.payoff = player.participant.vars.get('part2_payoff', cu(0))
     
     @staticmethod
     def vars_for_template(player):
