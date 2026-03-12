@@ -67,12 +67,17 @@ def play_round(self):
         # ... altre risposte
     )
     
-    # ChatAndSignals - compila il form
-    yield ChatAndSignals, dict(
+    # Chat - compila i messaggi
+    yield Chat, dict(
+        draft_history_left="Hi...",
+        draft_history_right="Hello...",
+        time_on_page=1.0,
+    )
+    # Signals - compila le intenzioni
+    yield Signals, dict(
         signal_left="I wish to split...",
         signal_right="I wish to split...",
-        draft_history_left="Hi...",
-        draft_history_right="Hello..."
+        time_on_page=1.0,
     )
 ```
 
@@ -357,7 +362,8 @@ otree test bargaining_tdl 9
 3. **ControlQuestions** (form)
    - Bot risponde correttamente (per permettere test completo)
    - `participant.vars['failed_control_questions'] = False`
-4. **ChatAndSignals** (form)
+4. **Chat** (form) – messaggi verso left e right  
+5. **Signals** (form) – intenzioni verso left e right
    - Bot genera messaggi e segnali in base al suo `case`
    - Dati salvati in `participant.vars`:
      - `signal_left`, `signal_right`

@@ -1,0 +1,89 @@
+{{ block title }}Select your intentions{{ endblock }}
+{{ block content }}
+
+<style>
+    .container-columns {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+    }
+    .column {
+        width: 48%;
+        border: 1px solid #ccc;
+        padding: 15px;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+    .column h4 {
+        text-align: center;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+    }
+    .section-title {
+        font-weight: bold;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        text-decoration: underline;
+    }
+    .signal-box {
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        border-radius: 4px;
+        background: white;
+        margin-bottom: 15px;
+    }
+    .form-check { margin-bottom: 5px; }
+</style>
+
+{{ include_sibling '_button_style.html' }}
+
+<p>
+    Please select your intention for each of your partners.
+</p>
+
+<div class="container-columns">
+    <div class="column">
+        <h4>Partner Left</h4>
+        <div class="section-title">Select your intention</div>
+        <div class="signal-box">
+            {{ formfield player.signal_left label="" }}
+        </div>
+    </div>
+    <div class="column">
+        <h4>Partner Right</h4>
+        <div class="section-title">Select your intention</div>
+        <div class="signal-box">
+            {{ formfield player.signal_right label="" }}
+        </div>
+    </div>
+</div>
+
+<br>
+
+{{ include '_templates/global/_time_tracking_field.html' }}
+
+<div style="display: none;">
+    {{ formfield player.first_intention_selected }}
+</div>
+
+{{ next_button }}
+
+<script>
+    var firstIntentionSelected = null;
+    document.addEventListener('DOMContentLoaded', function() {
+        var leftRadios = document.querySelectorAll('input[name="signal_left"]');
+        var rightRadios = document.querySelectorAll('input[name="signal_right"]');
+        var hiddenField = document.getElementById('id_first_intention_selected') || document.querySelector('input[name="first_intention_selected"]');
+        function handleRadioSelection(side) {
+            if (firstIntentionSelected === null) {
+                firstIntentionSelected = side;
+                if (hiddenField) hiddenField.value = side;
+            }
+        }
+        leftRadios.forEach(function(radio) { radio.addEventListener('change', function() { handleRadioSelection('left'); }); });
+        rightRadios.forEach(function(radio) { radio.addEventListener('change', function() { handleRadioSelection('right'); }); });
+    });
+</script>
+
+{{ endblock }}

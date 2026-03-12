@@ -151,10 +151,9 @@ from bargaining_tdl_common import (
 - `signal_left`, `signal_right`
 - `failed_control_questions` (flag)
 
-**Pagina chiave**: `ChatAndSignals`
-- Interfaccia split-screen per due chat simultanee
-- Selezione intenzioni per left e right player
-- Tracking del primo intention selezionato
+**Pagine chiavi**: `Chat` e `Signals`
+- **Chat**: interfaccia a due colonne per i messaggi verso partner a sinistra e a destra
+- **Signals**: selezione intenzioni per left e right player; tracking del primo intention selezionato
 
 ---
 

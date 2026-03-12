@@ -10,7 +10,7 @@ logger = get_logger('main')
 
 doc = """
 Bargaining Game (Part 1: Grouping, Chat/Signals & Decision)
-First page = group_by_arrival_time (form triads); then ChatAndSignals, data mapping, Decision, Results.
+First page = group_by_arrival_time (form triads); then Chat, Signals, data mapping, Decision, Results.
 """
 
 class C(BaseConstants):
@@ -57,6 +57,8 @@ class Player(BasePlayer):
         label="Which intention was selected first"
     )
     time_welcome = models.FloatField(initial=0)
+    time_chat = models.FloatField(initial=0)
+    time_signals = models.FloatField(initial=0)
     time_chat_and_signals = models.FloatField(initial=0)
 
     # Decision
@@ -212,16 +214,27 @@ class GroupingAfterControlQuestions(WaitPage):
         logger.debug(f"GroupingAfterControlQuestions: group formed ({len(intro_groups)} triads so far)")
 
 
-class ChatAndSignals(Page):
+class Chat(Page):
     form_model = 'player'
-    form_fields = ['signal_left', 'signal_right', 'draft_history_left', 'draft_history_right', 'first_intention_selected', 'time_on_page']
+    form_fields = ['draft_history_left', 'draft_history_right', 'time_on_page']
 
     @staticmethod
     def before_next_page(player, timeout_happened):
-        player.time_chat_and_signals = save_time_value(player.time_on_page)
-        logger.debug(f"ChatAndSignals - time_chat_and_signals saved: {player.time_chat_and_signals}")
+        player.time_chat = save_time_value(player.time_on_page)
+        logger.debug(f"Chat - time_chat saved: {player.time_chat}")
         player.participant.vars['draft_history_left'] = player.draft_history_left
         player.participant.vars['draft_history_right'] = player.draft_history_right
+
+
+class Signals(Page):
+    form_model = 'player'
+    form_fields = ['signal_left', 'signal_right', 'first_intention_selected', 'time_on_page']
+
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        player.time_signals = save_time_value(player.time_on_page)
+        player.time_chat_and_signals = player.time_chat + player.time_signals
+        logger.debug(f"Signals - time_signals saved: {player.time_signals}, time_chat_and_signals: {player.time_chat_and_signals}")
         player.participant.vars['signal_left'] = player.signal_left
         player.participant.vars['signal_right'] = player.signal_right
         set_control_questions_failed(player, 'intro', failed=False)
@@ -350,7 +363,8 @@ class Results(Page):
 
 page_sequence = [
     GroupingAfterControlQuestions,  # Must be first (oTree: group_by_arrival_time)
-    ChatAndSignals,
+    Chat,
+    Signals,
     ExperimentTerminated,
     DataMappingWaitPage,
     Decision,

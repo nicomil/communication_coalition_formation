@@ -46,12 +46,13 @@ Il numero di partecipanti per sessione è configurato in `settings.py` (es. 9 pe
 | # | Pagina | Tipo | Descrizione |
 |---|--------|------|-------------|
 | 1 | **GroupingAfterControlQuestions** | Wait page | “Aspettate gli altri per formare il gruppo.” I partecipanti vengono raggruppati **per ordine di arrivo** (chi passa per primo le control questions forma il primo gruppo, ecc.). |
-| 2 | **ChatAndSignals** | Pagina | Chat (testi) verso il giocatore a sinistra e a destra + scelta delle **intenzioni** (signal) verso sinistra e verso destra. Dati salvati e poi usati per la Part 2. |
-| 3 | **ExperimentTerminated** | Pagina | Mostrata **solo** a chi ha fallito le control questions in intro. Dopo questa pagina l’esperimento per quel partecipante **termina**. |
-| 4 | **DataMappingWaitPage** | Wait page | Sincronizzazione e mappatura dei dati di chat/signals tra i tre membri del gruppo (chi riceve cosa da chi). Non mostrata a chi ha fallito le control questions. |
-| 5 | **Decision** | Pagina | Scelta: dividere con il giocatore a sinistra, a destra, o con entrambi (tutti e tre). Non mostrata a chi ha fallito le control questions. |
-| 6 | **ResultsWaitPage** | Wait page | Attesa che tutti e tre abbiano scelto; calcolo dei payoff della Part 1. Non mostrata a chi ha fallito le control questions. |
-| 7 | **Results** | Pagina | Visualizzazione del risultato e del payoff Part 1. Il payoff viene salvato in `participant.vars` per Part 2 e Part 3. Non mostrata a chi ha fallito le control questions. |
+| 2 | **Chat** | Pagina | Messaggi (testi) verso il giocatore a sinistra e a destra. Dati salvati e poi usati per il mapping in DataMappingWaitPage. |
+| 3 | **Signals** | Pagina | Scelta delle **intenzioni** (signal) verso il giocatore a sinistra e verso il giocatore a destra. Dati salvati e poi usati per la Part 2. |
+| 4 | **ExperimentTerminated** | Pagina | Mostrata **solo** a chi ha fallito le control questions in intro. Dopo questa pagina l’esperimento per quel partecipante **termina**. |
+| 5 | **DataMappingWaitPage** | Wait page | Sincronizzazione e mappatura dei dati di chat/signals tra i tre membri del gruppo (chi riceve cosa da chi). Non mostrata a chi ha fallito le control questions. |
+| 6 | **Decision** | Pagina | Scelta: dividere con il giocatore a sinistra, a destra, o con entrambi (tutti e tre). Non mostrata a chi ha fallito le control questions. |
+| 7 | **ResultsWaitPage** | Wait page | Attesa che tutti e tre abbiano scelto; calcolo dei payoff della Part 1. Non mostrata a chi ha fallito le control questions. |
+| 8 | **Results** | Pagina | Visualizzazione del risultato e del payoff Part 1. Il payoff viene salvato in `participant.vars` per Part 2 e Part 3. Non mostrata a chi ha fallito le control questions. |
 
 **Collegamento:** Dopo Results tutti i partecipanti che sono ancora in gioco passano automaticamente a **bargaining_tdl_part2**.
 

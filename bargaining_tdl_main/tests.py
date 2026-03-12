@@ -41,16 +41,20 @@ class PlayerBot(Bot):
             return
         
         # GroupingAfterControlQuestions is a WaitPage - handled automatically by oTree
-        # ChatAndSignals - fill participant.vars for DataMappingWaitPage mapping
+        # Chat - save draft messages to participant.vars
         chat_left = "Hi, let's work together!"
         chat_right = "Hello, I hope we can coordinate."
-        signal_left = "I wish to split the $ 12 equally with both you and player on the right"
-        signal_right = "I wish to split the $ 12 equally with both you and player on the left"
-        yield ChatAndSignals, dict(
-            signal_left=signal_left,
-            signal_right=signal_right,
+        yield Chat, dict(
             draft_history_left=chat_left,
             draft_history_right=chat_right,
+            time_on_page=1.0,
+        )
+        # Signals - save intentions to participant.vars for DataMappingWaitPage mapping
+        signal_left = "I wish to split the $ 12 equally with both you and player on the right"
+        signal_right = "I wish to split the $ 12 equally with both you and player on the left"
+        yield Signals, dict(
+            signal_left=signal_left,
+            signal_right=signal_right,
             time_on_page=1.0,
         )
         
