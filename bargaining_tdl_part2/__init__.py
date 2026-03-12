@@ -1265,8 +1265,18 @@ def calculate_part2_payoff(player) -> dict:
 # ============================================================================
 # PAGES
 # ============================================================================
+# Base per Part 2: nasconde Group/ID in group nel debug (fase individuale, PLAYERS_PER_GROUP=None)
+class BasePagePart2(Page):
+    def _get_debug_tables(self, vars_for_template):
+        tables = super()._get_debug_tables(vars_for_template)
+        for t in tables:
+            if getattr(t, 'title', None) == 'Basic info':
+                t.rows = [(k, v) for k, v in t.rows if k not in ('Group', 'ID in group')]
+                break
+        return tables
 
-class InstructionsPart2(Page):
+
+class InstructionsPart2(BasePagePart2):
     form_model = 'player'
     form_fields = ['time_on_page']
     
@@ -1274,7 +1284,7 @@ class InstructionsPart2(Page):
     def before_next_page(player, timeout_happened):
         player.time_instructions_part2 = save_time_value(player.time_on_page)
 
-class PaymentInstructionPart2(Page):
+class PaymentInstructionPart2(BasePagePart2):
     form_model = 'player'
     form_fields = ['time_on_page']
     
@@ -1294,7 +1304,7 @@ def create_control_questions_part2_class(attempt_number):
     """
     class_name = f'ControlQuestionsPart2Attempt{attempt_number}'
     
-    class ControlQuestionsPart2Page(Page):
+    class ControlQuestionsPart2Page(BasePagePart2):
         template_name = 'bargaining_tdl_part2/ControlQuestionsPart2.html'
         form_model = 'player'
         form_fields = ['control_question_1', 'control_question_2', 'time_on_page']
@@ -1367,7 +1377,7 @@ ControlQuestionsPart2Attempt3 = create_control_questions_part2_class(3)
 ControlQuestionsPart2Attempt4 = create_control_questions_part2_class(4)
 ControlQuestionsPart2Attempt5 = create_control_questions_part2_class(5)
 
-class ThankYouPart2(Page):
+class ThankYouPart2(BasePagePart2):
     """Pagina di saluto che termina l'esperimento per il partecipante."""
     form_model = 'player'
     form_fields = ['time_on_page']
@@ -1386,7 +1396,7 @@ class ThankYouPart2(Page):
         """Termina l'esperimento dopo questa pagina."""
         return []
 
-class MPLIntroFirstPlayer(Page):
+class MPLIntroFirstPlayer(BasePagePart2):
     """Pagina introduttiva prima delle MPL questions che spiega quale player viene mostrato per primo."""
     form_model = 'player'
     form_fields = ['time_on_page']
@@ -1412,7 +1422,7 @@ class MPLIntroFirstPlayer(Page):
     def before_next_page(player, timeout_happened):
         player.time_mpl_intro_first = save_time_value(player.time_on_page)
 
-class MPLIntroSecondPlayer(Page):
+class MPLIntroSecondPlayer(BasePagePart2):
     """Pagina introduttiva dopo le prime 6 MPL questions che spiega quale player viene mostrato per secondo."""
     form_model = 'player'
     form_fields = ['time_on_page']
@@ -1434,7 +1444,7 @@ class MPLIntroSecondPlayer(Page):
     def before_next_page(player, timeout_happened):
         player.time_mpl_intro_second = save_time_value(player.time_on_page)
 
-class MPLQuestion(Page):
+class MPLQuestion(BasePagePart2):
     form_model = 'player'
     # form_fields sarà impostato dinamicamente per ogni istanza
     
@@ -1548,7 +1558,7 @@ class MPLQuestion(Page):
         else:
             logger.debug(f"MPLQuestion {question_num} - saved to {event_field_name}: {switch_value}")
 
-class ResultsPart2(Page):
+class ResultsPart2(BasePagePart2):
     form_model = 'player'
     form_fields = ['time_on_page']
     

@@ -6,7 +6,7 @@ SESSION_CONFIGS = [
         name='bargaining_tdl',
         display_name="Bargaining Game (TDL + Async)",
         app_sequence=['bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_part2', 'bargaining_tdl_part3'],
-        num_demo_participants=6,
+        num_demo_participants=9,
     ),
 ]
 
@@ -53,3 +53,22 @@ Here are some oTree games.
 SECRET_KEY = environ.get('SECRET_KEY', '{{ secret_key }}')
 
 INSTALLED_APPS = ['otree']
+
+# Patch oTree bot: response.url può essere un oggetto URL (Starlette/httpx), unquote() richiede str
+try:
+    from urllib.parse import unquote, urlsplit
+    import otree.bots.bot as _bot
+    _fget = _bot.ParticipantBot.response.fget
+
+    def _response_setter(self, response):
+        url = response.url
+        if not isinstance(url, str):
+            url = str(url)
+        self.url = unquote(url)
+        self.path = urlsplit(self.url).path
+        self._response = response
+        self.html = response.content.decode('utf-8')
+
+    _bot.ParticipantBot.response = property(_fget, _response_setter)
+except Exception:
+    pass

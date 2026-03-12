@@ -2,11 +2,15 @@ from otree.api import *
 from bargaining_tdl_common import (
     save_time_value,
     has_failed_control_questions,
+    set_control_questions_failed,
+    get_logger,
 )
 
+logger = get_logger('main')
+
 doc = """
-Bargaining Game (Part 2: Grouping & Decision)
-GroupingWaitPage -> Decision -> Results
+Bargaining Game (Part 1: Grouping, Chat/Signals & Decision)
+First page = group_by_arrival_time (form triads); then ChatAndSignals, data mapping, Decision, Results.
 """
 
 class C(BaseConstants):
@@ -26,6 +30,35 @@ class Group(BaseGroup):
     grp_triadicsplit = models.IntegerField(initial=0)  # 1 if at least two players vote for "equally split among all the members of the group" (Both)
 
 class Player(BasePlayer):
+    # Chat/Signals (from former intro_groups)
+    draft_history_left = models.LongStringField(blank=True)
+    draft_history_right = models.LongStringField(blank=True)
+    signal_left = models.StringField(
+        choices=[
+            "I wish to split the $ 12 equally with you only, player on the left.",
+            "I wish to split the $ 12 equally with the other player only, the one on the right.",
+            "I wish to split the $ 12 equally with both you and player on the right"
+        ],
+        widget=widgets.RadioSelect,
+        label="Select intention for the participant on your LEFT:"
+    )
+    signal_right = models.StringField(
+        choices=[
+            "I wish to split the $ 12 equally with you only, player on the right.",
+            "I wish to split the $ 12 equally with the other player only, the one on the left.",
+            "I wish to split the $ 12 equally with both you and player on the left"
+        ],
+        widget=widgets.RadioSelect,
+        label="Select intention for the participant on your RIGHT:"
+    )
+    first_intention_selected = models.StringField(
+        choices=[['left', 'Left'], ['right', 'Right']],
+        blank=True,
+        label="Which intention was selected first"
+    )
+    time_welcome = models.FloatField(initial=0)
+    time_chat_and_signals = models.FloatField(initial=0)
+
     # Decision
     decision_choice = models.StringField(
         choices=[
@@ -162,6 +195,38 @@ def map_player_data_in_group(group: Group):
 
 # PAGES
 
+class GroupingAfterControlQuestions(WaitPage):
+    """Form groups of 3 by arrival time (order of passing control questions). First page of app (oTree requirement)."""
+    group_by_arrival_time = True
+    title_text = "Please wait for other participants"
+    body_text = "Please wait for the other participants to form your group."
+
+    @staticmethod
+    def after_all_players_arrive(group: Group):
+        for p in group.get_players():
+            p.time_welcome = p.participant.vars.get('time_welcome', 0)
+        triad_pids = [p.participant.id for p in group.get_players()]
+        intro_groups = group.session.vars.setdefault('intro_groups', [])
+        if triad_pids not in intro_groups:
+            intro_groups.append(triad_pids)
+        logger.debug(f"GroupingAfterControlQuestions: group formed ({len(intro_groups)} triads so far)")
+
+
+class ChatAndSignals(Page):
+    form_model = 'player'
+    form_fields = ['signal_left', 'signal_right', 'draft_history_left', 'draft_history_right', 'first_intention_selected', 'time_on_page']
+
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        player.time_chat_and_signals = save_time_value(player.time_on_page)
+        logger.debug(f"ChatAndSignals - time_chat_and_signals saved: {player.time_chat_and_signals}")
+        player.participant.vars['draft_history_left'] = player.draft_history_left
+        player.participant.vars['draft_history_right'] = player.draft_history_right
+        player.participant.vars['signal_left'] = player.signal_left
+        player.participant.vars['signal_right'] = player.signal_right
+        set_control_questions_failed(player, 'intro', failed=False)
+
+
 class ExperimentTerminated(Page):
     """Pagina mostrata se il partecipante ha fallito le control questions."""
     form_model = 'player'
@@ -181,32 +246,17 @@ class ExperimentTerminated(Page):
         """Termina l'esperimento dopo questa pagina."""
         return []
 
-class GroupingWaitPage(WaitPage):
-    group_by_arrival_time = True
-    title_text = "Please wait for other participants"
-    body_text = "Waiting for other participants to finish the initial phase."
+class DataMappingWaitPage(WaitPage):
+    """Sync and map participant.vars (intro chat/signals) to group received_* fields."""
+    title_text = "Please wait"
+    body_text = "Waiting for other participants."
 
     @staticmethod
     def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         return not has_failed_control_questions(player, 'intro')
-    
-    @staticmethod
-    def app_after_this_page(player, upcoming_apps):
-        """Termina l'esperimento se il partecipante ha fallito le control questions."""
-        if has_failed_control_questions(player, 'intro'):
-            return []
-        # NON restituire nulla - lascia che oTree gestisca automaticamente il flusso
-        # Restituire upcoming_apps causa validazione prematura di tutte le app nella sequenza
-        # Se part2 non è ancora riconosciuta, fallisce
-        return None
 
     @staticmethod
     def after_all_players_arrive(group: Group):
-        """
-        Mappa i dati tra i player quando tutti sono arrivati nel gruppo.
-        Usa la funzione helper map_player_data_in_group per semplificare la logica.
-        """
         map_player_data_in_group(group)
 
 class Decision(Page):
@@ -299,8 +349,10 @@ class Results(Page):
         player.participant.vars['part1_payoff'] = player.payoff
 
 page_sequence = [
-    GroupingWaitPage,  # Deve essere prima per group_by_arrival_time=True
-    ExperimentTerminated,  # Mostrata solo se failed_control_questions=True
+    GroupingAfterControlQuestions,  # Must be first (oTree: group_by_arrival_time)
+    ChatAndSignals,
+    ExperimentTerminated,
+    DataMappingWaitPage,
     Decision,
     ResultsWaitPage,
     Results

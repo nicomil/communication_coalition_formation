@@ -1,4 +1,73 @@
 from otree.api import *
+from otree.common import get_models_module
+
+# Patch oTree bot: response.url può essere URL object (Starlette/httpx), unquote() richiede str;
+# client.post() in nuove versioni richiede keyword (data=, follow_redirects=).
+try:
+    from urllib.parse import unquote, urlsplit
+    import otree.bots.bot as _bot
+
+    _fget = _bot.ParticipantBot.response.fget
+
+    def _response_setter(self, response):
+        url = response.url
+        if not isinstance(url, str):
+            url = str(url)
+        self.url = unquote(url)
+        self.path = urlsplit(self.url).path
+        self._response = response
+        self.html = response.content.decode('utf-8')
+
+    _bot.ParticipantBot.response = property(_fget, _response_setter)
+
+    _orig_submit = _bot.ParticipantBot.submit
+
+    def _submit(self, submission):
+        post_data = submission.post_data
+        pretty_post_data = _bot.bot_prettify_post_data(post_data)
+        log_string = 'Submit ' + self.path
+        if pretty_post_data:
+            log_string += ', {}'.format(pretty_post_data)
+        if post_data.get('must_fail'):
+            log_string += ', SubmissionMustFail'
+        if post_data.get('timeout_happened'):
+            log_string += ', timeout_happened'
+        _bot.logger.info(log_string)
+        try:
+            self.response = self.client.post(
+                self.url, data=post_data, follow_redirects=True
+            )
+        except TypeError:
+            self.response = self.client.post(
+                self.url, post_data, allow_redirects=True
+            )
+
+    _bot.ParticipantBot.submit = _submit
+
+    # client.get() in nuove versioni usa follow_redirects invece di allow_redirects
+    from otree import common as _otree_common
+
+    _orig_open_start_url = _bot.ParticipantBot.open_start_url
+    def _open_start_url(self):
+        start_url = _otree_common.participant_start_url(self.participant_code)
+        try:
+            self.response = self.client.get(start_url, follow_redirects=True)
+        except TypeError:
+            self.response = self.client.get(start_url, allow_redirects=True)
+    _bot.ParticipantBot.open_start_url = _open_start_url
+
+    def _on_wait_page(self):
+        if not _bot.is_wait_page(self.response):
+            return False
+        try:
+            self.response = self.client.get(self.url, follow_redirects=True)
+        except TypeError:
+            self.response = self.client.get(self.url, allow_redirects=True)
+        return _bot.is_wait_page(self.response)
+    _bot.ParticipantBot.on_wait_page = _on_wait_page
+except Exception:
+    pass
+
 from bargaining_tdl_common import (
     save_time_value,
     check_control_questions_intro,
@@ -22,7 +91,7 @@ Data is saved to participant.vars for the next app.
 
 class C(BaseConstants):
     NAME_IN_URL = 'bargaining_tdl_intro'
-    PLAYERS_PER_GROUP = None
+    PLAYERS_PER_GROUP = None  # No groups in this app; grouping happens in bargaining_tdl_main
     NUM_ROUNDS = 1
 
 class Subsession(BaseSubsession):
@@ -181,16 +250,17 @@ class Player(BasePlayer):
 # PAGES
 
 class Welcome(Page):
+    """General Instructions (moved from bargaining_tdl_welcome)."""
     form_model = 'player'
     form_fields = ['time_on_page']
-    
+
     @staticmethod
     def before_next_page(player, timeout_happened):
-        # oTree salva automaticamente i form fields prima di chiamare before_next_page
-        # Quindi player.time_on_page dovrebbe già avere il valore dal form
         time_value = save_time_value(player.time_on_page)
         player.time_welcome = time_value
-        logger.debug(f"Welcome page - time_on_page received: {player.time_on_page}, time_welcome saved: {player.time_welcome}")
+        player.participant.vars['time_welcome'] = time_value
+        logger.debug(f"Welcome - time_welcome saved: {player.time_welcome}")
+
 
 class InstructionsPart1(Page):
     form_model = 'player'
@@ -324,26 +394,6 @@ class Goodbye(Page):
         """Termina l'esperimento dopo questa pagina."""
         return []
 
-class ChatAndSignals(Page):
-    form_model = 'player'
-    form_fields = ['signal_left', 'signal_right', 'draft_history_left', 'draft_history_right', 'first_intention_selected', 'time_on_page']
-
-    @staticmethod
-    def is_displayed(player):
-        """Mostra questa pagina solo se tutte le risposte alle control questions erano corrette."""
-        return has_passed_control_questions(player, 'intro')
-
-    @staticmethod
-    def before_next_page(player: Player, timeout_happened):
-        player.time_chat_and_signals = save_time_value(player.time_on_page)
-        logger.debug(f"ChatAndSignals - time_chat_and_signals saved: {player.time_chat_and_signals}")
-        # Save data to participant vars for the next app
-        player.participant.vars['draft_history_left'] = player.draft_history_left
-        player.participant.vars['draft_history_right'] = player.draft_history_right
-        player.participant.vars['signal_left'] = player.signal_left
-        player.participant.vars['signal_right'] = player.signal_right
-        # TEMPORANEO: Imposta failed_control_questions = False per permettere il test senza control questions
-        set_control_questions_failed(player, 'intro', failed=False)
 
 page_sequence = [
     Welcome,
@@ -354,5 +404,4 @@ page_sequence = [
     ControlQuestionsAttempt4,
     ControlQuestionsAttempt5,
     Goodbye,
-    ChatAndSignals
 ]

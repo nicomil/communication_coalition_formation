@@ -40,8 +40,21 @@ class PlayerBot(Bot):
             # Non ci dovrebbero essere altre pagine dopo questa
             return
         
-        # GroupingWaitPage - oTree gestisce automaticamente il raggruppamento
-        # I bot vengono raggruppati in gruppi di 3 automaticamente
+        # GroupingAfterControlQuestions is a WaitPage - handled automatically by oTree
+        # ChatAndSignals - fill participant.vars for DataMappingWaitPage mapping
+        chat_left = "Hi, let's work together!"
+        chat_right = "Hello, I hope we can coordinate."
+        signal_left = "I wish to split the $ 12 equally with both you and player on the right"
+        signal_right = "I wish to split the $ 12 equally with both you and player on the left"
+        yield ChatAndSignals, dict(
+            signal_left=signal_left,
+            signal_right=signal_right,
+            draft_history_left=chat_left,
+            draft_history_right=chat_right,
+            time_on_page=1.0,
+        )
+        
+        # DataMappingWaitPage is a wait page - bots handle it automatically (no yield)
         
         # Decision - la scelta varia in base al case e alla posizione nel gruppo
         id_in_group = self.player.id_in_group
@@ -96,7 +109,7 @@ class PlayerBot(Bot):
         expect(self.player.time_results, '>=', 0)
         
         # Verifica che i campi received_* siano stati popolati dopo il mapping
-        # (questi vengono popolati in after_all_players_arrive della GroupingWaitPage)
+        # (questi vengono popolati in after_all_players_arrive della DataMappingWaitPage)
         # I dati provengono da participant.vars salvati nella fase intro
         expect(self.player.received_history_left, '!=', None)
         expect(self.player.received_history_right, '!=', None)

@@ -1,0 +1,134 @@
+{{ block title }}Chat and Intentions{{ endblock }}
+{{ block content }}
+
+<style>
+    .container-columns {
+        display: flex;
+        justify_content: space-between;
+        gap: 20px;
+    }
+    .column {
+        width: 48%;
+        border: 1px solid #ccc;
+        padding: 15px;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+    .column h4 {
+        text-align: center;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+    }
+    .section-title {
+        font-weight: bold;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        text-decoration: underline;
+    }
+    textarea.form-control {
+        height: 200px;
+        resize: vertical;
+        width: 100%;
+    }
+    .signal-box {
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        border-radius: 4px;
+        background: white;
+        margin-bottom: 15px;
+    }
+    .form-check { margin-bottom: 5px; }
+    .message-hint {
+        font-size: 0.9em;
+        color: #555;
+        margin-bottom: 8px;
+        margin-top: 5px;
+    }
+    textarea.form-control::placeholder {
+        color: #999;
+        font-style: italic;
+    }
+</style>
+
+{{ include_sibling '_button_style.html' }}
+
+<p>
+    Please select an intention and <strong>write a message in the text box below</strong> for each of your partners.
+</p>
+
+<div class="container-columns">
+    <div class="column">
+        <h4>Partner Left</h4>
+        <div class="section-title">Select your intention</div>
+        <div class="signal-box">
+            {{ formfield player.signal_left label="" }}
+        </div>
+        <div class="section-title">Write Your Message</div>
+        <p class="message-hint"><em>Please write your message in the text box below:</em></p>
+        {{ formfield player.draft_history_left }}
+    </div>
+    <div class="column">
+        <h4>Partner Right</h4>
+        <div class="section-title">Select your intention</div>
+        <div class="signal-box">
+            {{ formfield player.signal_right label="" }}
+        </div>
+        <div class="section-title">Write Your Message</div>
+        <p class="message-hint"><em>Please write your message in the text box below:</em></p>
+        {{ formfield player.draft_history_right }}
+    </div>
+</div>
+
+<br>
+
+{{ include '_templates/global/_time_tracking_field.html' }}
+
+<div style="display: none;">
+    {{ formfield player.first_intention_selected }}
+</div>
+
+{{ next_button }}
+
+<script>
+    var firstIntentionSelected = null;
+    document.addEventListener('DOMContentLoaded', function() {
+        var leftTextarea = document.getElementById('id_draft_history_left') || document.querySelector('textarea[name="draft_history_left"]');
+        var rightTextarea = document.getElementById('id_draft_history_right') || document.querySelector('textarea[name="draft_history_right"]');
+        if (leftTextarea) leftTextarea.placeholder = "Type your message here for Partner Left...";
+        if (rightTextarea) rightTextarea.placeholder = "Type your message here for Partner Right...";
+        var leftRadios = document.querySelectorAll('input[name="signal_left"]');
+        var rightRadios = document.querySelectorAll('input[name="signal_right"]');
+        var hiddenField = document.getElementById('id_first_intention_selected') || document.querySelector('input[name="first_intention_selected"]');
+        function handleRadioSelection(side) {
+            if (firstIntentionSelected === null) {
+                firstIntentionSelected = side;
+                if (hiddenField) hiddenField.value = side;
+            }
+        }
+        leftRadios.forEach(function(radio) { radio.addEventListener('change', function() { handleRadioSelection('left'); }); });
+        rightRadios.forEach(function(radio) { radio.addEventListener('change', function() { handleRadioSelection('right'); }); });
+    });
+    document.addEventListener('click', function(e) {
+        var target = e.target;
+        if (target && (target.classList.contains('otree-btn-next') || target.closest('.otree-btn-next'))) {
+            var leftTextarea = document.getElementById('id_draft_history_left') || document.querySelector('textarea[name="draft_history_left"]');
+            var rightTextarea = document.getElementById('id_draft_history_right') || document.querySelector('textarea[name="draft_history_right"]');
+            if (leftTextarea && rightTextarea) {
+                var leftText = leftTextarea.value.trim();
+                var rightText = rightTextarea.value.trim();
+                if (leftText === "" || rightText === "") {
+                    var proceed = confirm("Warning: One or both of your messages are empty.\n\nClick OK to proceed anyway, or Cancel to go back and write your messages.");
+                    if (!proceed) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        return false;
+                    }
+                }
+            }
+        }
+    }, true);
+</script>
+
+{{ endblock }}
