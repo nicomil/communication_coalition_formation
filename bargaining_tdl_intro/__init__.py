@@ -1,11 +1,21 @@
-from otree.api import *
-from otree.common import get_models_module
+from otree.api import (  # type: ignore
+    models,
+    widgets,
+    BaseConstants,
+    BaseSubsession,
+    BaseGroup,
+    BasePlayer,
+    Currency as cu,
+    Page,
+    WaitPage,
+)
+from otree.common import get_models_module  # type: ignore
 
 # Patch oTree bot: response.url può essere URL object (Starlette/httpx), unquote() richiede str;
 # client.post() in nuove versioni richiede keyword (data=, follow_redirects=).
 try:
     from urllib.parse import unquote, urlsplit
-    import otree.bots.bot as _bot
+    import otree.bots.bot as _bot  # type: ignore
 
     _fget = _bot.ParticipantBot.response.fget
 
@@ -45,7 +55,7 @@ try:
     _bot.ParticipantBot.submit = _submit
 
     # client.get() in nuove versioni usa follow_redirects invece di allow_redirects
-    from otree import common as _otree_common
+    from otree import common as _otree_common  # type: ignore
 
     _orig_open_start_url = _bot.ParticipantBot.open_start_url
     def _open_start_url(self):
@@ -68,7 +78,7 @@ try:
 except Exception:
     pass
 
-from bargaining_tdl_common import (
+from bargaining_tdl_common import (  # type: ignore
     save_time_value,
     check_control_questions_intro,
     set_control_questions_failed,

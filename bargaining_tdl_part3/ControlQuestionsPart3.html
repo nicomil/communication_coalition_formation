@@ -3,87 +3,86 @@
 
 {{ include_sibling '_button_style.html' }}
 
-    <div class="card bg-light m-3">
-        <div class="card-body">
-            <p>
-                <strong>Please answer the following questions correctly to proceed with the experiment.</strong>
-                You have been matched with the player on the left and the player on the right for Part 3,
-                consider the following three examples:
-            </p>
-            
-            {% if not is_first_attempt %}
-            <div class="alert alert-warning" role="alert">
-                <strong>Attempt {{ current_attempt }} of {{ max_attempts }}</strong>
-                {% if attempts_remaining > 1 %}
-                    <br>You have {{ attempts_remaining }} attempts remaining. Please review your answers carefully.
-                {% elif attempts_remaining == 1 %}
-                    <br>You have 1 attempt remaining. Please review your answers carefully.
-                {% else %}
-                    <br>This is your last attempt. Please answer all questions correctly to continue with the experiment.
-                {% endif %}
-            </div>
+<div class="card bg-light m-3">
+    <div class="card-body">
+        <p>
+            <strong>Please answer the following questions correctly to proceed with Part 3 of the experiment.</strong>
+        <p></p>You have been matched with the player on the left and the player on the right for Part 3,
+        consider the following three examples:
+        </p>
+
+        {% if not is_first_attempt %}
+        <div class="alert alert-warning" role="alert">
+            <strong>Attempt {{ current_attempt }} of {{ max_attempts }}</strong>
+            {% if attempts_remaining > 1 %}
+            <br>You have {{ attempts_remaining }} attempts remaining. Please review your answers carefully.
+            {% elif attempts_remaining == 1 %}
+            <br>You have 1 attempt remaining. Please review your answers carefully.
+            {% else %}
+            <br>This is your last attempt. Please answer all questions correctly to continue with the experiment.
             {% endif %}
+        </div>
+        {% endif %}
 
-            <!-- Example 1 -->
-            <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
-                <h5>Example 1</h5>
-                <p class="mb-3">
-                    Imagine that you chose "Share only with the player on the left", that the
-                    player on the left chose "Share only with you", and that the player on the right chose "Share
-                    with both the player on the left and the player on the right". At the end of the experiment,
-                    the player on the right is selected as the actual decision maker for Part 3.
-                </p>
-                
-                <div class="mb-3">
-                    {{ formfield 'example1_earnings_you' }}
-                </div>
-                <div class="mb-3">
-                    {{ formfield 'example1_earnings_left' }}
-                </div>
-                <div class="mb-3">
-                    {{ formfield 'example1_earnings_right' }}
-                </div>
+        <!-- Example 1 -->
+        <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
+            <h5>Example 1</h5>
+            <p class="mb-3">
+                Imagine that you chose "Share only with the player on the left", that the
+                player on the left chose "Share only with you", and that the player on the right chose "Share
+                with both the player on the left and the player on the right". At the end of the experiment,
+                the player on the right is selected as the actual decision maker for Part 3.
+            </p>
+
+            <div class="mb-3">
+                {{ formfield 'example1_earnings_you' }}
             </div>
-
-            <!-- Example 2 -->
-            <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
-                <h5>Example 2</h5>
-                <p class="mb-3">
-                    Imagine that you chose "Share with both the player on the left and the
-                    player on the right", that the player on the left chose "Share only with the player on the
-                    right", and that the player on the right chose "Share with both you and the player on the
-                    right". At the end of the experiment, the player on the left is selected as the actual decision
-                    maker for Part 3.
-                </p>
-                
-                <div class="mb-3">
-                    {{ formfield 'example2_earnings_you' }}
-                </div>
-                <div class="mb-3">
-                    {{ formfield 'example2_earnings_left' }}
-                </div>
-                <div class="mb-3">
-                    {{ formfield 'example2_earnings_right' }}
-                </div>
+            <div class="mb-3">
+                {{ formfield 'example1_earnings_left' }}
             </div>
+            <div class="mb-3">
+                {{ formfield 'example1_earnings_right' }}
+            </div>
+        </div>
 
-            <!-- Payoff Question -->
-            <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
-                <p class="mb-3">
-                    Excluding the participation fee of $ 2, how will your total payoff be determined in this
-                    experiment?
-                </p>
-                
-                <div class="mb-3">
-                    {{ formfield 'payoff_question' }}
-                </div>
+        <!-- Example 2 -->
+        <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
+            <h5>Example 2</h5>
+            <p class="mb-3">
+                Imagine that you chose "Share with both the player on the left and the
+                player on the right", that the player on the left chose "Share only with the player on the
+                right", and that the player on the right chose "Share with both you and the player on the
+                right". At the end of the experiment, the player on the left is selected as the actual decision
+                maker for Part 3.
+            </p>
+
+            <div class="mb-3">
+                {{ formfield 'example2_earnings_you' }}
+            </div>
+            <div class="mb-3">
+                {{ formfield 'example2_earnings_left' }}
+            </div>
+            <div class="mb-3">
+                {{ formfield 'example2_earnings_right' }}
+            </div>
+        </div>
+
+        <!-- Payoff Question -->
+        <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
+            <p class="mb-3">
+                Excluding the participation fee of $ 2, how will your total payoff be determined in this
+                experiment?
+            </p>
+
+            <div class="mb-3">
+                {{ formfield 'payoff_question' }}
             </div>
         </div>
     </div>
+</div>
 
-    {{ include '_templates/global/_time_tracking_field.html' }}
+{{ include '_templates/global/_time_tracking_field.html' }}
 
-    {{ next_button }}
+{{ next_button }}
 
 {{ endblock }}
-

@@ -3,45 +3,42 @@
 
 {{ include_sibling '_button_style.html' }}
 
-    <div class="card bg-light m-3">
-        <div class="card-body">
-            <p>
-                In this part of the experiment, you and the other participants will be matched in groups of
-                three. You and the other two members of your group will choose how each of you would like
-                to divide $ 12 between the three of you.
-            </p>
+<div class="card bg-light m-3">
+    <div class="card-body">
+        <p>
+            In this part of the experiment, you and the other participants will be matched in groups of
+            three. You and the other two members of your group will choose how each of you would like
+            to divide $ 12 between the three of you.
+        </p>
 
-            <p>
-                Please note that in Part 3 of the experiment, each participant will be matched
-                with other group members than those they were matched with in Part 1.
-            </p>
+        <p>
+            <strong>Please note that in Part 3 of the experiment, each participant will be matched
+                with other group members than those they were matched with in Part 1.</strong>
+        </p>
 
-            <p>
-                Each player has three options: to share the money equally with the player on the left,
-                with the player on the right, or with both players. For example:
-            </p>
+        <p>
+            Each player has three options: to share the money equally with the player on the left,
+            with the player on the right, or with both players. For example:
+        </p>
 
-            <ul>
-                <li>Option 1: Share only with the player on the left. Both you and the player on the left
-                earn $ 6, while the player on the right earns $ 0.</li>
-                <li>Option 2: Share only with the player on the right. Both you and the player on the
-                right earn $ 6, while the player on the left earns $ 0.</li>
-                <li>Option 3: Share with both the player on the left and the player on the right. All
-                three of you earn $ 4.</li>
-            </ul>
+        <ul>
+            <li><strong>Option 1</strong>: Share only with the player on the left.</li>
+            <li><strong>Option 2</strong>: Share only with the player on the right.</li>
+            <li><strong>Option 3</strong>: Share with both the player on the left and the player on the right.</li>
+        </ul>
 
-            <p>
-                If Part 3 is randomly selected to determine the payoff of the experiment, then the choice
-                of one of the three group members would be randomly selected and implemented. In each
-                group, each participant has an equal probability of being selected as the actual decision
-                maker in Part 3.
-            </p>
-        </div>
+        <p>
+            <strong>Please note</strong>: if Part 3 is randomly selected to determine the payoff of the experiment, then
+            the choice
+            of one of the three group members would be randomly selected and implemented. In
+            each group, each participant has the same probability of being selected to implement the
+            choice made as actual payment for all the members of the group.
+        </p>
     </div>
+</div>
 
-    {{ include '_templates/global/_time_tracking_field.html' }}
+{{ include '_templates/global/_time_tracking_field.html' }}
 
-    {{ next_button }}
+{{ next_button }}
 
 {{ endblock }}
-

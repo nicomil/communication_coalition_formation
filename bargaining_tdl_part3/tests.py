@@ -1,5 +1,11 @@
-from otree.api import Currency as c, currency_range, expect, Bot
-from . import *
+from otree.api import Currency as c, currency_range, expect, Bot  # type: ignore
+from . import (  # type: ignore
+    InstructionsPart3,
+    SummaryPart3,
+    ControlQuestionsPart3Attempt1,
+    DecisionPart3,
+    ResultsPart3,
+)
 
 
 class PlayerBot(Bot):

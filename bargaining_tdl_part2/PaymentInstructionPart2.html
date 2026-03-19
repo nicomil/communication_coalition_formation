@@ -3,49 +3,44 @@
 
 {{ include_sibling '_button_style.html' }}
 
-    <div class="card bg-light m-3">
-        <div class="card-body">
-            <p>
-                In Part 2 of the experiment, you will face 12 screens where you will have to express your
-                preference between Option 1 and Option 2 for different levels of p. In 6 of these screens,
-                Option 1 will refer to the choice of a participant you interacted with in Part 1(i.e., the player
-                on the left), while in the other 6, Option 1 will refer to the choice of the other participant
-                you interacted with in Part 1(i.e., the player on the right).
-            </p>
+<div class="card bg-light m-3">
+    <div class="card-body">
+        <p>
+            In Part 2 of the experiment, you will face 12 screens where you will have to express your
+            preference between Option 1 and Option 2 for different levels of p %.In the twelve screens, Option 1 will
+            refer to the choice of one of the participants you interacted with in Part 1(left/right) in the first six
+            screens, while in the last six screens Option 1 will refer to the other participant you interact
+            with(left/right).
+        </p>
 
-            <p>
-                Once the experiment is over, one of your choices will be played out for real.
-            </p>
+        <p>
+            The computer will randomly pick with equal probability one question out of the twelve, and one line over the
+            probability values, finally check which option you chose in the experiment to determine your payment.
+        </p>
 
-            <p>
-                The computer will randomly pick with equal probability one question out of the 12 and
-                one line and check which option you chose in the experiment.
-            </p>
+        <p>
+            If you preferred the bet on Option 1, then the computer will check the choice made by the other relevant
+            participant, show it to you, and pay you accordingly. If, on the other hand, you preferred Option 2, then we
+            will play out your choice with the help of the computer: the program will randomly draw an integer between 1
+            and 100 inclusive; each number has an equal probability of being drawn. Probability p% is equivalent to the
+            probability of drawing a number less than or equal to p out of 1,2...,100. Thus, if the bet is “You win $ 5
+            with 74% probability and nothing otherwise”, then if the number drawn is less than or equal to the value of
+            74 you will win the bet, otherwise you earn $ 0.
+        </p>
 
-            <p>
-                If you preferred the bet on Option 1, then the computer will check the choice made by the
-                other relevant participant, show it to you, and pay you accordingly. If, on the other hand,
-                you preferred Option 2, then we will play out your choice with the help of the computer.
-            </p>
-
-            <p>
-                The computer will randomly draw an integer between 1 and 100 inclusive; each number
-                has an equal probability of being drawn. Probability p% is equivalent to the probability of
-                drawing a number less than or equal to p out of 1,2...,100. Thus, if the bet is "You win $5
-                with 74% probability and nothing otherwise", then if the number drawn is less than or equal
-                to the value of 74 you will win the bet.
-            </p>
-
-            <p>
-                On the next screen, we will present you with an example and two related questions to
-                ensure you understood the payment mechanism for Part 2.
-            </p>
-        </div>
+        <p>
+            On the next screen, we will present you with an example and two related questions to
+            ensure you understood the payment mechanism for Part 2.
+        </p>
+        <p>
+            <strong>Please note</strong>: Once the experiment is over, one of your choices will be played out for real.
+            Please answer the following questions to ensure you understood the payment mechanism for Part 2.
+        </p>
     </div>
+</div>
 
-    {{ include '_templates/global/_time_tracking_field.html' }}
+{{ include '_templates/global/_time_tracking_field.html' }}
 
-    {{ next_button }}
+{{ next_button }}
 
 {{ endblock }}
-

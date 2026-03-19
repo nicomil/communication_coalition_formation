@@ -3,84 +3,54 @@
 
 {{ include_sibling '_button_style.html' }}
 
-    <div class="card bg-light m-3">
-        <div class="card-body">
-            <p>
-                In Part 2, we will ask you to express your preference between bets on given probabilities and
-                bets on the choice in Part 1 of another participant (with whom you interacted in Part 1).
-                In Part 1 you are matched with the player on the left and the player on the right. 
-                In each question you will be presented with two options of the following type:
-            </p>
+<div class="card bg-light m-3">
+    <div class="card-body">
+        <p>
+            In Part 2, we will ask you to express your preference between bets on given probabilities and bets on the
+            choice made in Part 1 by the other participants of your group.
+        </p>
+        <p>
+            In Part 1 you are matched with the player on the left and the player on the right, we will present to you
+            six questions for each player; the first six questions will refer to one player and the last six to the
+            remaining one. In each question, you will be presented with two options as in the following example:
+        </p>
 
-            <ul>
-                <li><strong>Option 1:</strong> You win $5 if the player on the left chose "I would like to divide the $12 equally with player on the right" or "I would like to divide the $12 equally among all the members of the group" (and nothing otherwise).</li>
-                <li><strong>Option 2:</strong> You win $5 with p% probability (and nothing otherwise).</li>
-            </ul>
+        <ul>
+            <li><strong>Option 1 (other player choice option)</strong>: You win $ 5 if the player on the left(right)
+                chooses “I would like to divide the $ 12 equally with you only” or “I would like to
+                divide the $ 12 equally among all the members of the group”, and you win nothing
+                otherwise.</li>
+            <p></p>
+            <li><strong>Option 2 (given probability option)</strong>: You win $ 5 with various probability values
+                (p%) and nothing otherwise.</li>
+        </ul>
 
-            <p>
-                In all questions, as in the above example, you will be offered the chance to win $5. You
-                will be asked to state which one of these two options you prefer for various values p, from 0
-                to 100. Let us illustrate it with the example given above for some values of p:
-            </p>
+        <p>
+            In all questions, as in the above example, you will be offered the chance to win $ 5. You
+            will be asked to state which one of these two options you prefer for p%, from 0 to 100.
+            Let us illustrate it with the example given above for some values of p:
+        </p>
 
-            <ul>
-                <li>If p = 100, you will most likely prefer Option 2 because you are then guaranteed to win
-                $5.</li>
-                <li>If p = 0, then you will most likely prefer Option 1, as you might win something, as
-                opposed to Option 2, where there is no chance of you to win at all.</li>
-            </ul>
+        <ul>
+            <li>Imagine that the random value of the given probability option (p) selected at the end
+                of the experiment is equal to p = 100, you will most likely prefer Option 2 because you
+                are then guaranteed to win $ 5.</li>
+            <p></p>
+            <li>Imagine that the random value of random value of the given probability option (p) is
+                equal to p = 0, then you will most likely prefer Option 1, as you might win something,
+                as opposed to Option 2, where there is no chance of you to win at all.</li>
+        </ul>
 
-            <p>
-                On the next screen you will see an example of the screens you will soon interact with.
-                As you have seen in the figure, on the left you will have a description of Option 1, along
-                with a reminder of what you and the other Participant (whose choice is the subject of the
-                bets) have declared to each other.
-            </p>
+        <p>
+            On the next screen you will see an example of the screens you will soon interact with.
+        </p>
 
-            <p>
-                On the right hand side Option 2 will be presented with ascending p values. For each
-                value of p you are asked to state your preference between Option 1 and the given probability
-                option by clicking on the respective option button.
-            </p>
 
-            <p>
-                Note that if you prefer Option 1 when, for instance, the given probability option offers
-                you 75% chance of winning (that is, p = 75), then when the given probability option offers
-                an even lower chance of winning, say 60% (p = 60), then you should again choose Option
-                1 over the given probability option. Similarly, imagine that you like the given probability
-                option better than Option 1 when p = 93. Then, when the given probability option offers
-                an even better chance of winning, say p = 97, then it is expected that you still prefer the
-                given probability option to Option 1.
-            </p>
-
-            <p>
-                Accordingly, you will notice that in the figure above there is only a single switch from
-                80% to 85%. For every value of p from 0 until 80%, Option 1 is chosen, and for all values
-                of p from 85% up, Option 2 has been selected. To save you the trouble of clicking on the
-                option button for each value of p, the program has been designed to work with a single click.
-            </p>
-
-            <p>
-                You can click on Option 2 for the probability such that, for that probability and all better (higher) probabilities, you prefer Option 2, and for all worse (lower) probabilities you prefer Option 1. Similarly, you can also click on Option 1 for the probability such that, for that probability and all worse (lower) probabilities, you prefer Option 1, and for all better (higher) probabilities you prefer Option 2.
-            </p>
-
-            <p>
-                The computer will then automatically indicate all of your choices.
-                You can change your choices as many times as you want. However, once you have made
-                your final decision and clicked on the appropriate option box, you will need to click the
-                "OK" button to register your choices and move on to the next question. This button will
-                only appear after you've selected a preferred option for each line.
-            </p>
-
-            <p>
-                You will not be allowed to go back to a question once you have clicked on the "OK"
-                button.
-            </p>
-        </div>
     </div>
+</div>
 
-    {{ include '_templates/global/_time_tracking_field.html' }}
+{{ include '_templates/global/_time_tracking_field.html' }}
 
-    {{ next_button }}
+{{ next_button }}
 
 {{ endblock }}

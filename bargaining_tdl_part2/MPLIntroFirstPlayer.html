@@ -3,22 +3,23 @@
 
 {{ include_sibling '_button_style.html' }}
 
-    <div class="card bg-light m-3">
-        <div class="card-body">
-            <p>
-                You have correctly answered the questions regarding how Part 2 of the experiment works.
-            </p>
-            <p>
-                You will soon be able to proceed with Part 2.
-            </p>
-            <p>
-                The next 6 questions will refer to the choice made by <strong>{{ first_player_label }}</strong> you interacted with in Part 1 of the experiment.
-            </p>
-            
-        </div>
+<div class="card bg-light m-3">
+    <div class="card-body">
+        <p>
+            You have correctly answered the control questions regarding Part 2 of the experiment.
+        </p>
+        <p>
+            You will soon be able to proceed with Part 2.
+        </p>
+        <p>
+            The next 6 questions will refer to the choice made by <strong>{{ first_player_label }}</strong> you
+            interacted with in Part 1 of the experiment.
+        </p>
+
     </div>
+</div>
 
-    {{ include '_templates/global/_time_tracking_field.html' }}
+{{ include '_templates/global/_time_tracking_field.html' }}
 
-    {{ next_button }}
+{{ next_button }}
 {{ endblock }}

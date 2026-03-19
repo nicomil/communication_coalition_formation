@@ -5,17 +5,20 @@
     .mpl-container {
         margin: 20px 0;
     }
+
     .instructions {
         margin-bottom: 20px;
         font-size: 16px;
         line-height: 1.6;
     }
+
     .probabilities-table {
         width: 100%;
         border-collapse: collapse;
         margin: 20px 0;
         border: 1px solid #ddd;
     }
+
     .probabilities-table th {
         padding: 15px 10px;
         text-align: center;
@@ -23,55 +26,66 @@
         border: 1px solid #ddd;
         font-weight: bold;
     }
+
     .probabilities-table th.option-text {
         text-align: left;
     }
+
     .probabilities-table th:first-child {
         min-width: 500px;
     }
+
     .probabilities-table th:last-child {
         min-width: 250px;
         max-width: 300px;
         width: 250px;
     }
+
     .probabilities-table td {
         padding: 15px 10px;
         text-align: center;
         border: none;
         vertical-align: middle;
     }
+
     .probabilities-table td.option-text {
         text-align: left;
         padding: 15px 20px;
         background-color: white;
     }
+
     .probabilities-table td.option-text.option-a {
         min-width: 500px;
         max-width: none;
     }
+
     .probabilities-table td.option-text.option-b {
         min-width: 250px;
         max-width: 300px;
         width: 250px;
     }
+
     .probabilities-table td.selection-column {
         width: 90px;
         min-width: 90px;
         max-width: 90px;
         background-color: #f8f9fa;
     }
+
     .radio-group {
         display: flex;
         justify-content: center;
         gap: 15px;
         align-items: center;
     }
+
     .radio-option {
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
     }
+
     .radio-option input[type="radio"] {
         margin: 0;
         cursor: pointer;
@@ -79,23 +93,29 @@
         height: 20px;
         accent-color: black;
     }
+
     .radio-option input[type="radio"]:checked {
         accent-color: black;
         background-color: black;
     }
+
     .radio-option input[type="radio"]:checked::before {
         background-color: black;
     }
+
     .option-text-cell {
         font-size: 15px;
         line-height: 1.6;
     }
+
     .option-text-cell.option-a {
         color: #333;
     }
+
     .option-text-cell.option-b {
         color: #333;
     }
+
     .reminder-section {
         margin: 20px 0;
         padding: 15px;
@@ -106,24 +126,29 @@
         line-height: 1.8;
         color: #495057;
     }
+
     .reminder-section .reminder-intro {
         font-weight: 600;
         margin-bottom: 12px;
         color: #212529;
     }
+
     .reminder-section .reminder-item {
         margin-bottom: 10px;
         padding-left: 8px;
     }
+
     .reminder-section .reminder-label {
         font-weight: 600;
         color: #495057;
         margin-right: 5px;
     }
+
     .reminder-section .reminder-value {
         color: #212529;
         font-style: italic;
     }
+
     .ok-button {
         background-color: #6c757d;
         color: white;
@@ -136,29 +161,35 @@
         float: right;
         margin-top: 20px;
     }
+
     .ok-button:disabled {
         background-color: #ccc;
         cursor: not-allowed;
     }
+
     .prize-amount {
         font-weight: bold;
         color: #495057;
         font-size: 18px;
     }
+
     .condition-text {
         font-style: italic;
         color: #555;
         margin-top: 8px;
         display: block;
     }
+
     .probabilities-table tbody tr:first-child {
         border-top: 2px solid #6c757d;
     }
+
     .probabilities-table tbody tr:first-child td {
         padding: 20px 15px;
         font-weight: 500;
         border: 1px solid #ddd;
     }
+
     .reminder-text {
         font-size: 14px;
         line-height: 1.6;
@@ -200,30 +231,22 @@
             <tr>
                 <td class="option-text option-text-cell option-a">
                     {% if forloop.counter == 5 %}
-                        <div class="reminder-text">{{ reminder_intro }}</div>
+                    <div class="reminder-text">{{ reminder_intro }}</div>
                     {% elif forloop.counter == 7 %}
-                        <div class="reminder-text">{{ you_said_text }}</div>
+                    <div class="reminder-text">{{ you_said_text }}</div>
                     {% elif forloop.counter == 9 %}
-                        <div class="reminder-text">{{ target_said_text }}</div>
+                    <div class="reminder-text">{{ target_said_text }}</div>
                     {% endif %}
                 </td>
                 <td class="selection-column">
                     <div class="radio-group">
                         <div class="radio-option">
-                            <input type="radio" 
-                                   name="choice_{{ prob }}" 
-                                   id="radio_a_{{ prob }}" 
-                                   value="1"
-                                   data-prob="{{ prob }}"
-                                   onclick="handleChoice({{ prob }}, 1)">
+                            <input type="radio" name="choice_{{ prob }}" id="radio_a_{{ prob }}" value="1"
+                                data-prob="{{ prob }}" onclick="handleChoice({{ prob }}, 1)">
                         </div>
                         <div class="radio-option">
-                            <input type="radio" 
-                                   name="choice_{{ prob }}" 
-                                   id="radio_b_{{ prob }}" 
-                                   value="2"
-                                   data-prob="{{ prob }}"
-                                   onclick="handleChoice({{ prob }}, 2)">
+                            <input type="radio" name="choice_{{ prob }}" id="radio_b_{{ prob }}" value="2"
+                                data-prob="{{ prob }}" onclick="handleChoice({{ prob }}, 2)">
                         </div>
                     </div>
                 </td>
@@ -245,14 +268,15 @@
     <input type="hidden" id="switch_value_field" name="{{ event_field_name }}">
     <input type="hidden" id="choices_json_field" name="{{ event_choices_name }}">
     {{ include '_templates/global/_time_tracking_field.html' }}
-    <button id="ok-button" type="button" class="ok-button" onclick="submitChoices()" disabled>{{ UI_OK_BUTTON_TEXT }}</button>
+    <button id="ok-button" type="button" class="ok-button" onclick="submitChoices()" disabled>{{ UI_OK_BUTTON_TEXT
+        }}</button>
     <!-- Next button nascosto che verrà cliccato programmaticamente -->
     <button type="submit" id="hidden-next-button" style="display: none;"></button>
 </form>
 
 <script>
     let choices = {}; // {probability: option (1 or 2)}
-    const probabilities = {{ probabilities_json|safe }};
+    const probabilities = {{ probabilities_json| safe }};
 
     function handleChoice(prob, option) {
         // Single switch logic
@@ -277,7 +301,7 @@
                 }
             });
         }
-        
+
         updateDisplay();
         checkComplete();
     }
@@ -288,7 +312,7 @@
             const choice = choices[prob];
             const radioA = document.getElementById('radio_a_' + prob);
             const radioB = document.getElementById('radio_b_' + prob);
-            
+
             if (radioA && radioB) {
                 radioA.checked = (choice === 1);
                 radioB.checked = (choice === 2);
@@ -310,7 +334,7 @@
             alert('Please make a choice for all probabilities before proceeding.');
             return;
         }
-        
+
         // Find the switch point (first probability where Option 2 is selected)
         let switchValue = null;
         for (let i = 0; i < probabilities.length; i++) {
@@ -319,32 +343,32 @@
                 break;
             }
         }
-        
+
         // If no Option 2 selected, switch is at 100 (all Option 1)
         if (switchValue === null) {
             switchValue = 100;
         }
-        
+
         // Save choices as JSON
         const choicesJson = JSON.stringify(choices);
-        
+
         // Set hidden form fields
         const switchField = document.getElementById('switch_value_field');
         const choicesField = document.getElementById('choices_json_field');
-        
+
         if (!switchField || !choicesField) {
             console.error('Form fields not found!');
             alert('Error: Form fields not found. Please refresh the page.');
             return;
         }
-        
+
         // Imposta i valori nei campi hidden
         // Converti switchValue a stringa esplicitamente per assicurarsi che 0 venga salvato correttamente
         switchField.value = String(switchValue);
         choicesField.value = choicesJson;
-        
+
         // Verifica che i valori siano stati impostati correttamente (anche se switchValue è 0)
-        if (switchField.value === '' || switchField.value === null || 
+        if (switchField.value === '' || switchField.value === null ||
             choicesField.value === '' || choicesField.value === null) {
             console.error('Error: Form fields not set correctly!', {
                 switch_value: switchValue,
@@ -355,7 +379,7 @@
             alert('Error: Failed to set form values. Please refresh the page and try again.');
             return;
         }
-        
+
         // Verifica che i valori siano stati impostati
         console.log('Setting form values:', {
             switch_value: switchValue,
@@ -365,20 +389,20 @@
             switch_field_value_type: typeof switchField.value,
             choices_field_value: choicesField.value
         });
-        
+
         // Forza il browser a riconoscere i valori (trigger change event)
         switchField.dispatchEvent(new Event('change', { bubbles: true }));
         choicesField.dispatchEvent(new Event('change', { bubbles: true }));
-        
+
         // Disabilita il bottone per evitare doppi submit
         const okButton = document.getElementById('ok-button');
         if (okButton) {
             okButton.disabled = true;
             okButton.textContent = 'Submitting...';
         }
-        
+
         // Piccolo delay per assicurarsi che i valori siano processati
-        setTimeout(function() {
+        setTimeout(function () {
             // Submit form usando il bottone submit nascosto
             // Questo garantisce che oTree riconosca correttamente il submit
             const hiddenSubmitButton = document.getElementById('hidden-next-button');
@@ -396,75 +420,75 @@
             }
         }, 100);
     }
-    
+
     // Assicurati che i valori siano impostati prima del submit del form
-    document.getElementById('mpl-form').addEventListener('submit', function(e) {
+    document.getElementById('mpl-form').addEventListener('submit', function (e) {
         // Verifica che i campi siano popolati
         const switchField = document.getElementById('switch_value_field');
         const choicesField = document.getElementById('choices_json_field');
-        
+
         // Controlla esplicitamente se i campi sono vuoti o null (non usare !value perché "0" è falsy ma valido)
-        if (switchField.value === '' || switchField.value === null || 
+        if (switchField.value === '' || switchField.value === null ||
             choicesField.value === '' || choicesField.value === null) {
             e.preventDefault();
             e.stopPropagation();
             alert('Please make your choices before submitting.');
             return false;
         }
-        
+
         console.log('Form submitting with values:', {
             switch_value: switchField.value,
             choices: choicesField.value
         });
     });
-    
+
     // Formatta il testo di Option 1 per migliorare la leggibilità
     function formatOption1Text() {
         // Formatta il testo generale di Option 1 (nella prima riga)
         const option1TextDiv = document.getElementById('option1-text-general');
         if (option1TextDiv) {
             let text = option1TextDiv.textContent || option1TextDiv.innerText;
-            
+
             // Evidenzia l'importo del premio ($5)
             text = text.replace(/(\$\d+)/g, '<strong class="prize-amount">$1</strong>');
-            
+
             // Evidenzia le condizioni tra virgolette
             text = text.replace(/"([^"]+)"/g, '<strong>"$1"</strong>');
-            
+
             // Evidenzia "(and nothing otherwise)"
             text = text.replace(/\(and nothing otherwise\)/g, '<span class="condition-text">(and nothing otherwise)</span>');
-            
+
             // Sostituisci il contenuto con la versione formattata
             option1TextDiv.innerHTML = text;
         }
     }
-    
+
     // Formatta il testo del reminder per migliorare la leggibilità
     function formatReminderText() {
         const reminderTextDiv = document.getElementById('reminder-text');
         if (reminderTextDiv) {
             let text = reminderTextDiv.textContent || reminderTextDiv.innerText;
-            
+
             // Estrai l'introduzione (fino ai due punti)
             const introMatch = text.match(/^([^:]+:)/);
             let intro = '';
             let rest = text;
-            
+
             if (introMatch) {
                 intro = introMatch[1].trim();
                 rest = text.substring(introMatch[0].length).trim();
             }
-            
+
             // Formatta le dichiarazioni (You said: ... e target said: ...)
             // Pattern: "You said: ..." o "the player on the left/right said: ..."
-            rest = rest.replace(/(You said:)([^]*?)(?=the player|$)/gi, function(match, label, value) {
+            rest = rest.replace(/(You said:)([^]*?)(?=the player|$)/gi, function (match, label, value) {
                 return '<div class="reminder-item"><span class="reminder-label">' + label.trim() + '</span><span class="reminder-value">' + value.trim() + '</span></div>';
             });
-            
-            rest = rest.replace(/(the player on the (?:left|right) said:)([^]*?)(?=You said|$)/gi, function(match, label, value) {
+
+            rest = rest.replace(/(the player on the (?:left|right) said:)([^]*?)(?=You said|$)/gi, function (match, label, value) {
                 return '<div class="reminder-item"><span class="reminder-label">' + label.trim() + '</span><span class="reminder-value">' + value.trim() + '</span></div>';
             });
-            
+
             // Se non abbiamo trovato pattern, prova a separare manualmente
             if (rest === text.substring(intro.length).trim() && rest.includes('You said:') && rest.includes('said:')) {
                 const parts = rest.split(/(You said:|the player on the (?:left|right) said:)/gi);
@@ -481,20 +505,20 @@
                     rest = formatted;
                 }
             }
-            
+
             // Costruisci il HTML finale
             let html = '';
             if (intro) {
                 html += '<div class="reminder-intro">' + intro + '</div>';
             }
             html += rest;
-            
+
             reminderTextDiv.innerHTML = html;
         }
     }
-    
+
     // Inizializza: verifica che le probabilità siano caricate e formatta Option 1 e Reminder
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         if (!probabilities || probabilities.length === 0) {
             console.error('Probabilities not loaded!');
             alert('Error: Probabilities not loaded. Please refresh the page.');

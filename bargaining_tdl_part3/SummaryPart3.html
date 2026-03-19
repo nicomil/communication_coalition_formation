@@ -3,26 +3,27 @@
 
 {{ include_sibling '_button_style.html' }}
 
-    <div class="card bg-light m-3">
-        <div class="card-body">
-            <p>
-                In summary, Part 3 will proceed as follows:
-            </p>
+<div class="card bg-light m-3">
+    <div class="card-body">
 
-            <p>
-                Group members make their final decisions choosing how they would like to split the
-                available endowment.
-            </p>
+        <p>
+            In summary, Part 3 will proceed as follows:
+        </p>
+        <ol>
+            <li>All group members make their final decisions choosing how they would like to split the
+                $ 12.</li>
+            <p> </p>
+            <li>One among the group members, is randomly selected and its choice will be implemented
+                to all the members of the group.</li>
+            <p> </p>
+            <li>The choice made by the selected member will determine the payoffs of the all the group
+                members, if Part 3 is selected for the final payment.</li>
+        </ol>
 
-            <p>
-                One among the three group members is randomly selected to be the decision maker.
-                The choice made by the decision maker will determine the payoffs of all the group members.
-            </p>
-        </div>
     </div>
+</div>
 
-    {{ include '_templates/global/_time_tracking_field.html' }}
+{{ include '_templates/global/_time_tracking_field.html' }}
 
-    {{ next_button }}
+{{ next_button }}
 {{ endblock }}
-

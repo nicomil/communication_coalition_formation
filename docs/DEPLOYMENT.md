@@ -33,10 +33,12 @@ Heroku è la piattaforma più semplice per oTree, e il progetto è già configur
    # Esempio: heroku create bargaining-experiment
    ```
 
-4. **Aggiungi PostgreSQL** (database gratuito):
+4. **Aggiungi PostgreSQL**:
    ```bash
-   heroku addons:create heroku-postgresql:mini
+   # Piano entry-level (ex-mini, ~$5/mese): Essential-0
+   heroku addons:create heroku-postgresql:essential-0
    ```
+   Nota: i piani gratuiti Mini/Basic non sono più disponibili; Essential-0 è il piano più economico attuale.
 
 5. **Configura le variabili d'ambiente**:
    ```bash
@@ -241,7 +243,7 @@ Dopo aver creato la sessione, otterrai un link unico per i partecipanti:
 
 ## Costi
 
-- **Heroku**: Piano gratuito disponibile (con limitazioni), poi $7/mese per hobby
+- **Heroku**: Postgres Essential-0 da ~$5/mese; piano app hobby da $7/mese
 - **Railway**: $5 crediti gratuiti/mese, poi pay-as-you-go
 - **Render**: Piano gratuito disponibile (con limitazioni), poi $7/mese
 

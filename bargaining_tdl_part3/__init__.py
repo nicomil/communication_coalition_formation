@@ -1,5 +1,15 @@
-from otree.api import *
-from bargaining_tdl_common import (
+from otree.api import (  # type: ignore
+    models,
+    widgets,
+    BaseConstants,
+    BaseSubsession,
+    BaseGroup,
+    BasePlayer,
+    Currency as cu,
+    Page,
+    WaitPage,
+)
+from bargaining_tdl_common import (  # type: ignore
     save_time_value,
     check_control_questions_part3,
     set_control_questions_failed,
@@ -129,6 +139,13 @@ class Player(BasePlayer):
     
     # Hidden field for JavaScript to populate
     time_on_page = models.FloatField(initial=0, blank=True)
+    
+    # Selezione casuale Part 1 vs Part 3 per il pagamento finale
+    # 1 = viene pagato per Part 1, 0 = viene pagato per Part 3 (calcolato a posteriori dal ricercatore)
+    selected_part_for_payment = models.IntegerField(
+        initial=-1,
+        doc="Estrazione casuale: 1=Part1 paga, 0=Part3 paga (gruppi Part3 formati a posteriori dal ricercatore)"
+    )
 
 # HELPER FUNCTIONS
 # Le funzioni di validazione sono ora importate da bargaining_tdl_common
@@ -295,7 +312,7 @@ class ResultsPart3(Page):
         player.time_results_part3 = save_time_value(player.time_on_page)
         
         # Calcola e imposta i payoff
-        from bargaining_tdl_part2 import calculate_part2_payoff, get_part2_player
+        from bargaining_tdl_part2 import calculate_part2_payoff, get_part2_player  # type: ignore
         
         # Calcola o recupera payoff Part 2
         if 'part2_payoff_data' not in player.participant.vars:
@@ -308,27 +325,44 @@ class ResultsPart3(Page):
         part2_payoff = player.participant.vars.get('part2_payoff', cu(0))
         
         # IMPORTANTE: Salva il payoff di Part 2 anche nel player.payoff del player di Part 2
-        # Questo è necessario per l'export CSV
         part2_player = get_part2_player(player)
         if part2_player is not None:
             part2_player.payoff = part2_payoff
         
-        # Imposta player.payoff per Part 3
-        # Part 3 payoff viene calcolato solo se Part 3 viene selezionata casualmente
-        # Per ora impostiamo 0 perché Part 3 non viene sempre inclusa nel payoff finale
-        # La logica è: Part 2 (sempre) + Part 1 O Part 3 (selezionato casualmente)
-        # Per semplicità, per ora usiamo sempre Part 1, quindi Part 3 = 0
-        # TODO: Aggiungere logica di selezione casuale tra Part 1 e Part 3 se necessario
-        player.payoff = cu(0)
+        # ==============================================================
+        # SELEZIONE CASUALE 50/50: Part 1 vs Part 3
+        # 1 = viene pagato per Part 1 (payoff già calcolato)
+        # 0 = viene pagato per Part 3 (gruppi formati a posteriori dal ricercatore)
+        # ==============================================================
+        import random
+        selected = random.randint(0, 1)
+        player.selected_part_for_payment = selected
+        player.participant.vars['selected_part_for_payment'] = selected
         
-        # NOTA: oTree calcola automaticamente participant.payoff come somma di tutti i player.payoff
-        # Quindi: participant.payoff = Part1.player.payoff + Part2.player.payoff + Part3.player.payoff
-        # Questo è corretto perché Part 3 = 0 e quindi participant.payoff = Part1 + Part2 + 0 = Part1 + Part2
+        if selected == 1:
+            # Paga Part 1: il payoff di Part 1 rimane intatto in participant.vars
+            # oTree accumula: participant.payoff = Part1.payoff + Part2.payoff + Part3.payoff(=0)
+            player.payoff = cu(0)
+            logger.info(f"Player {player.participant.code}: selected Part 1 for payment")
+        else:
+            # Paga Part 3: azzera il payoff di Part 1 (gruppi Part3 formati a posteriori)
+            # Il ricercatore calcolerà il payoff Part3 offline dai dati esportati
+            try:
+                from bargaining_tdl_main import Player as MainPlayer  # type: ignore
+                for app_player in player.participant.get_players():
+                    if isinstance(app_player, MainPlayer):
+                        app_player.payoff = cu(0)
+                        break
+            except Exception as e:
+                logger.warning(f"Could not zero out Part1 payoff: {e}")
+            player.participant.vars['part1_payoff'] = cu(0)
+            player.payoff = cu(0)
+            logger.info(f"Player {player.participant.code}: selected Part 3 for payment (payoff TBD by researcher)")
     
     @staticmethod
     def vars_for_template(player):
         """Recupera i payoff per la visualizzazione e calcola il payoff di Part 2 se necessario."""
-        from bargaining_tdl_part2 import calculate_part2_payoff, get_part2_player
+        from bargaining_tdl_part2 import calculate_part2_payoff, get_part2_player  # type: ignore
         
         # Prova a recuperare il payoff dalla Part 1 (bargaining_tdl_main)
         part1_payoff = cu(0)

@@ -11,9 +11,11 @@
         border-radius: 4px;
         max-height: 200px;
         overflow-y: auto;
-        white-space: pre-line; /* Preserves newlines */
+        white-space: pre-line;
+        /* Preserves newlines */
         font-family: monospace;
     }
+
     .signal-box {
         font-weight: bold;
         color: #495057;
@@ -22,11 +24,16 @@
         background-color: #e9ecef;
         border-radius: 4px;
     }
+
+    .read-only-chat .otree-chat__input,
+    .read-only-chat .otree-chat__btn-send {
+        display: none !important;
+    }
 </style>
 
 <p>
-Here are your intensions and the messages sent to you by the other participants, and the intensions and the messages receveid by the other participants. 
-Based on this information, please make your decision.
+    Here are the Chat between you and your partners, and the intentions received by each of them.
+    Based on this information, please make your decision.
 
 </p>
 
@@ -34,19 +41,15 @@ Based on this information, please make your decision.
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                From <strong>Left</strong> Participant
+                From <strong>Left</strong> Partner
             </div>
             <div class="card-body">
                 <div class="signal-box">
-                    Signal: {{ player.received_signal_left }}
+                    Intensions: {{ player.received_signal_left }}
                 </div>
-                <h6>Message Log:</h6>
-                <div class="message-box">
-                    {% if player.received_history_left %}
-                        {{ player.received_history_left }}
-                    {% else %}
-                        (No messages)
-                    {% endif %}
+                <h6>Chat Log (Read-Only):</h6>
+                <div class="message-box read-only-chat">
+                    {{ chat channel=channel_left nickname="RightPartner" }}
                 </div>
             </div>
         </div>
@@ -54,19 +57,15 @@ Based on this information, please make your decision.
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                From <strong>Right</strong> Participant
+                From <strong>Right</strong> Partner
             </div>
             <div class="card-body">
                 <div class="signal-box">
-                    Signal: {{ player.received_signal_right }}
+                    Intensions: {{ player.received_signal_right }}
                 </div>
-                <h6>Message Log:</h6>
-                <div class="message-box">
-                    {% if player.received_history_right %}
-                        {{ player.received_history_right }}
-                    {% else %}
-                        (No messages)
-                    {% endif %}
+                <h6>Chat Log (Read-Only):</h6>
+                <div class="message-box read-only-chat">
+                    {{ chat channel=channel_right nickname="LeftPartner" }}
                 </div>
             </div>
         </div>
@@ -81,7 +80,7 @@ Based on this information, please make your decision.
     </div>
     <div class="card-body">
         <p>
-        Please choose how you would like to divide the $12.
+            Please choose how you would like to divide the $12.
         </p>
         {{ formfield player.decision_choice }}
     </div>
@@ -92,5 +91,6 @@ Based on this information, please make your decision.
 
 {{ next_button }}
 
-{{ endblock }}
+{{ include_sibling '_chat_customization.html' }}
 
+{{ endblock }}

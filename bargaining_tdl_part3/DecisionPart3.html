@@ -3,37 +3,30 @@
 
 {{ include_sibling '_button_style.html' }}
 
-    <div class="card bg-light m-3">
-        <div class="card-body">
-            <p>
-                How would you like to divide $12 between the three of you?
-            </p>
+<div class="card bg-light m-3">
+    <div class="card-body">
+        <p>
+            How would you like to divide $12 between the three of you?
+        </p>
 
-            <p class="mb-3">
-                Please select one of the following options:
-            </p>
+        <p class="mb-3">
+            Please select one of the following options:
+        </p>
 
-            <div class="mb-4">
-                {{ formfield 'decision' }}
-            </div>
-
-            {{ include '_templates/global/_time_tracking_field.html' }}
-
-            <div class="alert alert-secondary">
-                <strong>Payoff information:</strong>
-                <ul class="mb-0 mt-2">
-                    <li><strong>Share only with the player on the left:</strong> You earn $6, Left earns $6, Right earns $0</li>
-                    <li><strong>Share only with the player on the right:</strong> You earn $6, Left earns $0, Right earns $6</li>
-                    <li><strong>Share with both:</strong> You earn $4, Left earns $4, Right earns $4</li>
-                </ul>
-            </div>
-
-            <p class="text-muted mt-3">
-                <em>Note: If Part 3 is randomly selected to determine the payoff, one of the three group members' choices will be randomly selected and implemented for all the groups members.</em>
-            </p>
+        <div class="mb-4">
+            {{ formfield 'decision' }}
         </div>
+
+        {{ include '_templates/global/_time_tracking_field.html' }}
+
+
+
+        <p class="text-muted mt-3">
+            <em>Note: If Part 3 is randomly selected to determine the payoff, one of the three group members' choices
+                will be randomly selected and implemented for all the groups members.</em>
+        </p>
     </div>
+</div>
 
-    {{ next_button }}
+{{ next_button }}
 {{ endblock }}
-

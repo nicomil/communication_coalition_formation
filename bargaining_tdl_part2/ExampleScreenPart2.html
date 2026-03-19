@@ -1,0 +1,41 @@
+{{ block title }}
+    Example screen for Part 2
+{{ endblock }}
+
+{{ block content }}
+
+<p>
+    As you can see in the figure, on the left side you will have a description of Option 1, along with a reminder of what you and the other player (whose choice is the subject of the bet) have said to each other. On the right side, Option 2 will be presented with ascending probability values. For each probability value from 0 to 100, you are asked to state which Option you prefer between Option 1 and Option 2 by clicking on the probability button. Clicking on the respective probability button will represent your willingness to switch your preference from one Option to the other. Accordingly, you will notice that in the figure there is only a single switch from 50% to 55%. For every value of p from 0 until 50%, Option 1 is chosen, and for all values of p from 55% up, Option 2 has been selected. 
+</p>
+
+<p>
+    To save you the trouble of clicking on the option button for each value of p, the program has been designed to work with a single click. The computer will then automatically indicate all your choices. You can click on Option 2 for the probability such that, for that probability and all better (higher) probabilities, you prefer Option 2, and for all worse (lower) probabilities you prefer Option 1. Similarly, you can also click on Option 1 for the probability such that, for that probability and all worse (lower) probabilities, you prefer Option 1, and for all better (higher) probabilities, you prefer Option 2. 
+</p>
+
+<p>
+    The computer will then automatically indicate all of your choices. For example, in the figure, the subject has only clicked on the option button for the p value 55%, and then all the option boxes for the other values of p have been automatically filled out by the program itself. You can change your choices as many times as you want before moving on to the next question. You will not be allowed to go back to a question once you have clicked on the “OK” button. However, once you have made your final decision and clicked on the appropriate option box, you will need to click the “OK” button to register your choices and move on to the next question.
+</p>
+
+<!-- Immagine fornita/presente o placeholder se non trovata -->
+<div class="text-center my-4">
+    <img src="{{ static 'example_part2.png' }}" alt="Example screen for Part 2" class="img-fluid" style="max-width: 100%; border: 1px solid #ccc;" onerror="this.src='https://via.placeholder.com/800x400?text=Example+Screen+Image+Not+Found'">
+</div>
+
+<div class="text-center mt-4">
+    {% next_button %}
+</div>
+
+<!-- Autoplay to calculate time_on_page properly -->
+<input type="hidden" name="time_on_page" id="time_on_page" value="0">
+<script>
+    let startTime = Date.now();
+    document.querySelector('form').addEventListener('submit', function() {
+        let elapsedTime = (Date.now() - startTime) / 1000;
+        let timeInput = document.getElementById('time_on_page');
+        if (timeInput) {
+            timeInput.value = elapsedTime;
+        }
+    });
+</script>
+
+{{ endblock }}

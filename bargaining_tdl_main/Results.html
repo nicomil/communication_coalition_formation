@@ -3,26 +3,29 @@
 
 {{ include_sibling '_button_style.html' }}
 
-    <div class="card">
-        <div class="card-body">
-            <p>
-                You chose: <strong>{{ player.decision_choice }}</strong>
-            </p>
+<div class="card">
+    <div class="card-body">
+        <p>
+            You chose: <strong>{{ player.decision_choice }}</strong>
+        </p>
 
-            <p class="lead">
-                Your payoff for this part is: <strong>{{ player.payoff }}</strong>
-            </p>
-            
-            <hr>
-            <p class="text-muted">
-                <em>(Note: The experiment consists of multiple parts. Only one part will be selected for payment.)</em>
-            </p>
-        </div>
+        <p class="lead">
+            Your payoff for this part is: <strong>{{ player.payoff }}</strong>
+        </p>
+
+        <hr>
+        <p class="text-muted">
+            <em>(Note: The experiment consists of multiple parts. Only one part will be selected for payment.)</em>
+        </p>
     </div>
+</div>
 
-    {{ include '_templates/global/_time_tracking_field.html' }}
+<p style="margin-top: 15px;">
+    Thank you! You finish Part 1 of the experiment. Please click on the next button to proceed with Part 2.
+</p>
 
-    {{ next_button }}
+{{ include '_templates/global/_time_tracking_field.html' }}
+
+{{ next_button }}
 
 {{ endblock }}
-

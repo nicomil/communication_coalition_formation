@@ -1,0 +1,186 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function customizeNicknames(element) {
+            if (!element || !element.classList) return;
+            
+            // Trova tutti gli span contenenti il nickname
+            const nicknameSpans = element.classList.contains('otree-chat__nickname') ? 
+                                  [element] : 
+                                  element.querySelectorAll('.otree-chat__nickname');
+                                  
+            nicknameSpans.forEach(function(span) {
+                // oTree appends " (Me)" to your own messages.
+                // It also literally uses the nickname without spaces like "RightPartner" or "LeftPartner"
+                let text = span.textContent;
+                
+                if (text.includes('(Me)')) {
+                    span.textContent = 'You';
+                    const msgNode = span.closest('.otree-chat__msg');
+                    if (msgNode) msgNode.classList.add('my-own-message');
+                } else if (text.trim() === 'RightPartner') {
+                    span.textContent = 'Right partner';
+                } else if (text.trim() === 'LeftPartner') {
+                    span.textContent = 'Left partner';
+                }
+            });
+        }
+
+        // 1. Eseguiamo subito il controllo sui messaggi già presenti in pagina 
+        // (utile ad es. per la pagina Decision o quando la pagina ricarica)
+        customizeNicknames(document.body);
+
+        // 2. Osserviamo per i nuovi messaggi aggiunti in tempo reale tramite websocket
+        const observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                mutation.addedNodes.forEach(function (node) {
+                    if (node.nodeType === 1) { // Solo nodi Element HTML
+                        if (node.classList && node.classList.contains('otree-chat__msg')) {
+                            customizeNicknames(node);
+                        } else {
+                            // Se i messaggi fossero annidati nel nodo appena aggiunto
+                            const msgs = node.querySelectorAll ? node.querySelectorAll('.otree-chat__msg') : [];
+                            msgs.forEach(customizeNicknames);
+                        }
+
+                        // Sostituisci anche eventuali nuovi input di chat montati dinamicamente
+                        upgradeInputsIn(node);
+                    }
+                });
+            });
+        });
+
+        // Avviamo l'osservatore sui contenitori dei messaggi
+        const chatWidgets = document.querySelectorAll('.otree-chat__messages');
+        chatWidgets.forEach(function(chatWidget) {
+            // Selezioniamo il container interno o la chat intera
+            observer.observe(chatWidget, { childList: true, subtree: true });
+        });
+        
+        // Seleziono per sicurezza anche l'intero corpo nel caso oTree creasse i container dopo
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // ── AUTO-RESIZE TEXTAREA ─────────────────────────────────────────
+
+        /**
+         * Sostituisce un <input type="text"> del widget chat oTree
+         * con una <textarea> auto-ridimensionabile.
+         */
+        function upgradeInput(input) {
+            // Evita di processare lo stesso elemento due volte
+            if (input.dataset.upgraded) return;
+            input.dataset.upgraded = 'true';
+
+            const textarea = document.createElement('textarea');
+
+            // Copia attributi rilevanti
+            textarea.placeholder = input.placeholder || '';
+            textarea.className   = input.className;
+
+            // Stile base per l'auto-resize
+            textarea.style.resize     = 'none';
+            textarea.style.overflowY  = 'hidden';
+            textarea.style.minHeight  = '2.4em';
+            textarea.style.lineHeight = '1.4';
+            textarea.style.boxSizing  = 'border-box';
+            textarea.style.width      = '100%';
+
+            // Funzione di auto-resize
+            function autoResize() {
+                textarea.style.height = 'auto';
+                textarea.style.height = (textarea.scrollHeight) + 'px';
+            }
+            textarea.addEventListener('input', autoResize);
+
+            // Enter invia, Shift+Enter va a capo
+            textarea.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    // Trova e clicca il bottone Send nel widget oTree
+                    const chatRoot = textarea.closest('otree-chat') || textarea.parentElement;
+                    const sendBtn  = chatRoot ? chatRoot.querySelector('button') : null;
+                    if (sendBtn) {
+                        sendBtn.click();
+                    }
+                    // Reset altezza dopo invio
+                    setTimeout(function () {
+                        textarea.style.height = 'auto';
+                    }, 50);
+                }
+            });
+
+            // Sincronizza il valore della textarea → input originale (oTree legge da quello)
+            textarea.addEventListener('input', function () {
+                const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                    window.HTMLInputElement.prototype, 'value'
+                ).set;
+                nativeInputValueSetter.call(input, textarea.value);
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+
+            // Nasconde l'input originale e inserisce la textarea al suo posto
+            input.style.display = 'none';
+            input.parentNode.insertBefore(textarea, input.nextSibling);
+
+            // Polling leggero: rileva quando oTree resetta input.value = '' dopo l'invio
+            let lastVal = '';
+            setInterval(function () {
+                if (input.value !== lastVal) {
+                    if (input.value === '' && lastVal !== '') {
+                        textarea.value = '';
+                        textarea.style.height = 'auto';
+                    }
+                    lastVal = input.value;
+                }
+            }, 200);
+        }
+
+        /** Cerca e aggiorna tutti gli input chat dentro un nodo radice */
+        function upgradeInputsIn(root) {
+            const selector = 'otree-chat input[type="text"], .otree-chat input[type="text"]';
+            const inputs = (root.querySelectorAll ? root.querySelectorAll(selector) : []);
+            inputs.forEach(upgradeInput);
+            if (root.tagName === 'INPUT' && root.type === 'text') upgradeInput(root);
+        }
+
+        // Esegui subito su quanto già presente in pagina
+        upgradeInputsIn(document.body);
+    });
+</script>
+
+<style>
+    /* Rende "You" in grassetto e blu */
+    .my-own-message .otree-chat__nickname {
+        font-weight: bold;
+        color: #0056b3;
+    }
+
+    /* Layout row: textarea + bottone Send allineati in basso */
+    otree-chat .otree-chat__input-row,
+    .otree-chat .otree-chat__input-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+    }
+
+    /* Stile della textarea sostitutiva */
+    otree-chat textarea,
+    .otree-chat textarea {
+        flex: 1;
+        font-family: inherit;
+        font-size: inherit;
+        padding: 6px 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        background: #fff;
+        min-height: 2.4em;
+        line-height: 1.4;
+        box-sizing: border-box;
+    }
+
+    otree-chat textarea:focus,
+    .otree-chat textarea:focus {
+        outline: none;
+        border-color: #80bdff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+</style>

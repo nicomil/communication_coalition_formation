@@ -1,5 +1,15 @@
-from otree.api import *
-from bargaining_tdl_common import (
+from otree.api import (  # type: ignore
+    models,
+    widgets,
+    BaseConstants,
+    BaseSubsession,
+    BaseGroup,
+    BasePlayer,
+    Currency as cu,
+    Page,
+    WaitPage,
+)
+from bargaining_tdl_common import (  # type: ignore
     save_time_value,
     has_failed_control_questions,
     set_control_questions_failed,
@@ -31,8 +41,6 @@ class Group(BaseGroup):
 
 class Player(BasePlayer):
     # Chat/Signals (from former intro_groups)
-    draft_history_left = models.LongStringField(blank=True)
-    draft_history_right = models.LongStringField(blank=True)
     signal_left = models.StringField(
         choices=[
             "I wish to split the $ 12 equally with you only, player on the left.",
@@ -73,8 +81,6 @@ class Player(BasePlayer):
     )
 
     # Mapped Fields (Populated from participant.vars)
-    received_history_left = models.LongStringField(initial="")
-    received_history_right = models.LongStringField(initial="")
     received_signal_left = models.StringField(initial="")
     received_signal_right = models.StringField(initial="")
     
@@ -114,7 +120,7 @@ def map_player_data_in_group(group: Group):
     - P1 riceve da Left (P3): quello che P3 ha inviato a Right (P1)
     - P1 riceve da Right (P2): quello che P2 ha inviato a Left (P1)
     
-    I dati vengono letti da participant.vars (salvati in intro) e mappati
+    I dati (segnali) vengono letti da participant.vars (salvati in intro) e mappati
     nei campi received_* del Player model in main.
     
     Args:
@@ -122,7 +128,6 @@ def map_player_data_in_group(group: Group):
     
     Side Effects:
         - Modifica i campi received_* di tutti i player nel gruppo:
-          * received_history_left/right
           * received_signal_left/right
         - Imposta i campi id_player_on_the_left/right per ogni player:
           * id_player_on_the_left: participant.code del player a sinistra
@@ -132,8 +137,6 @@ def map_player_data_in_group(group: Group):
         >>> map_player_data_in_group(group)
         >>> p1.received_signal_left
         "I wish to split the $ 12 equally with you only."
-        >>> p1.received_history_right
-        "Message from P2..."
     
     Note:
         - Richiede che i dati siano già presenti in participant.vars
@@ -181,18 +184,16 @@ def map_player_data_in_group(group: Group):
         receiver.id_player_on_the_right = players[right_player_id].participant.code
         
         for direction in ['left', 'right']:
-            sender_id, sender_direction = topology[(receiver_id, direction)]
-            sender = players[sender_id]
+            sender_id, sender_direction = topology[(receiver_id, direction)]  # type: ignore
+            sender = players[sender_id]  # type: ignore
             
             # Recupera i dati dal sender
             sender_vars = get_vars(sender)
             
             # Mappa history e signal
             if direction == 'left':
-                receiver.received_history_left = sender_vars.get(f'draft_history_{sender_direction}', "")
                 receiver.received_signal_left = sender_vars.get(f'signal_{sender_direction}', "")
             else:  # right
-                receiver.received_history_right = sender_vars.get(f'draft_history_{sender_direction}', "")
                 receiver.received_signal_right = sender_vars.get(f'signal_{sender_direction}', "")
 
 # PAGES
@@ -216,14 +217,36 @@ class GroupingAfterControlQuestions(WaitPage):
 
 class Chat(Page):
     form_model = 'player'
-    form_fields = ['draft_history_left', 'draft_history_right', 'time_on_page']
+    form_fields = ['time_on_page']
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        my_id = player.id_in_group
+        
+        # Mapping topology: P1->Left=P3, Right=P2; P2->Left=P1, Right=P3; P3->Left=P2, Right=P1
+        if my_id == 1:
+            left_id = 3
+            right_id = 2
+        elif my_id == 2:
+            left_id = 1
+            right_id = 3
+        else: # my_id == 3
+            left_id = 2
+            right_id = 1
+            
+        group_id = player.group.id
+        channel_left = f"{group_id}_{min(my_id, left_id)}_{max(my_id, left_id)}"
+        channel_right = f"{group_id}_{min(my_id, right_id)}_{max(my_id, right_id)}"
+        
+        return dict(
+            channel_left=channel_left,
+            channel_right=channel_right,
+        )
 
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_chat = save_time_value(player.time_on_page)
         logger.debug(f"Chat - time_chat saved: {player.time_chat}")
-        player.participant.vars['draft_history_left'] = player.draft_history_left
-        player.participant.vars['draft_history_right'] = player.draft_history_right
 
 
 class Signals(Page):
@@ -275,6 +298,30 @@ class DataMappingWaitPage(WaitPage):
 class Decision(Page):
     form_model = 'player'
     form_fields = ['decision_choice', 'time_on_page']
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        my_id = player.id_in_group
+        
+        # Mapping topology: P1->Left=P3, Right=P2; P2->Left=P1, Right=P3; P3->Left=P2, Right=P1
+        if my_id == 1:
+            left_id = 3
+            right_id = 2
+        elif my_id == 2:
+            left_id = 1
+            right_id = 3
+        else: # my_id == 3
+            left_id = 2
+            right_id = 1
+            
+        group_id = player.group.id
+        channel_left = f"{group_id}_{min(my_id, left_id)}_{max(my_id, left_id)}"
+        channel_right = f"{group_id}_{min(my_id, right_id)}_{max(my_id, right_id)}"
+        
+        return dict(
+            channel_left=channel_left,
+            channel_right=channel_right,
+        )
 
     @staticmethod
     def is_displayed(player):

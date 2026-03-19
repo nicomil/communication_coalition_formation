@@ -3,94 +3,98 @@
 
 {{ include_sibling '_button_style.html' }}
 
-    <div class="card bg-light m-3">
-        <div class="card-body">
-            <p>
-                <strong>Please answer the following questions correctly to proceed with the experiment.</strong>
-                You must answer all questions correctly to continue.
-            </p>
-            
-            {% if not is_first_attempt %}
-            <div class="alert alert-warning" role="alert">
-                <strong>Attempt {{ current_attempt }} of {{ max_attempts }}</strong>
-                {% if attempts_remaining > 1 %}
-                    <br>You have {{ attempts_remaining }} attempts remaining. Please review your answers carefully.
-                {% elif attempts_remaining == 1 %}
-                    <br>You have 1 attempt remaining. Please review your answers carefully.
-                {% else %}
-                    <br>This is your last attempt. Please answer all questions correctly to continue with the experiment.
-                {% endif %}
-            </div>
+<div class="card bg-light m-3">
+    <div class="card-body">
+        <p>
+            Please answer the following questions correctly to proceed with Part 1 of the experiment.
+        </p>
+        <p> You must answer all questions correctly to continue. </p>
+        <strong>Please note:</strong> After two wrong answers, you will not be able to continue with the experiment.<p>
+        </p>
+
+
+
+        {% if not is_first_attempt %}
+        <div class="alert alert-warning" role="alert">
+            <strong>Attempt {{ current_attempt }} of {{ max_attempts }}</strong>
+            {% if attempts_remaining > 1 %}
+            <br>You have {{ attempts_remaining }} attempts remaining. Please review your answers carefully.
+            {% elif attempts_remaining == 1 %}
+            <br>You have 1 attempt remaining. Please review your answers carefully.
+            {% else %}
+            <br>This is your last attempt. Please answer all questions correctly to continue with the experiment.
             {% endif %}
+        </div>
+        {% endif %}
 
-            <!-- Example 1 -->
-            <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
-                <h5>Example 1</h5>
-                <p class="mb-3"><em>{{ example1_scenario }}</em></p>
-                
-                <div class="mb-3">
-                    {{ formfield player.example1_earnings_you }}
-                </div>
-                
-                <div class="mb-3">
-                    {{ formfield player.example1_earnings_left }}
-                </div>
-                
-                <div class="mb-3">
-                    {{ formfield player.example1_earnings_right }}
-                </div>
+        <!-- Example 1 -->
+        <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
+            <h5>Example 1</h5>
+            <p class="mb-3"><em>{{ example1_scenario }}</em></p>
+
+            <div class="mb-3">
+                {{ formfield player.example1_earnings_you }}
             </div>
 
-            <!-- Example 2 -->
-            <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
-                <h5>Example 2</h5>
-                <p class="mb-3"><em>{{ example2_scenario }}</em></p>
-                
-                <div class="mb-3">
-                    {{ formfield player.example2_earnings_you }}
-                </div>
-                
-                <div class="mb-3">
-                    {{ formfield player.example2_earnings_left }}
-                </div>
-                
-                <div class="mb-3">
-                    {{ formfield player.example2_earnings_right }}
-                </div>
+            <div class="mb-3">
+                {{ formfield player.example1_earnings_left }}
             </div>
 
-            <!-- Example 3 -->
-            <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
-                <h5>Example 3</h5>
-                <p class="mb-3"><em>{{ example3_scenario }}</em></p>
-                
-                <div class="mb-3">
-                    {{ formfield player.example3_earnings_you }}
-                </div>
-                
-                <div class="mb-3">
-                    {{ formfield player.example3_earnings_left }}
-                </div>
-                
-                <div class="mb-3">
-                    {{ formfield player.example3_earnings_right }}
-                </div>
+            <div class="mb-3">
+                {{ formfield player.example1_earnings_right }}
+            </div>
+        </div>
+
+        <!-- Example 2 -->
+        <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
+            <h5>Example 2</h5>
+            <p class="mb-3"><em>{{ example2_scenario }}</em></p>
+
+            <div class="mb-3">
+                {{ formfield player.example2_earnings_you }}
             </div>
 
-            <!-- Final Question -->
-            <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
-                <h5>Payoff Determination</h5>
-                <div class="mb-3">
-                    {{ formfield player.payoff_determination }}
-                </div>
+            <div class="mb-3">
+                {{ formfield player.example2_earnings_left }}
+            </div>
+
+            <div class="mb-3">
+                {{ formfield player.example2_earnings_right }}
+            </div>
+        </div>
+
+        <!-- Example 3 -->
+        <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
+            <h5>Example 3</h5>
+            <p class="mb-3"><em>{{ example3_scenario }}</em></p>
+
+            <div class="mb-3">
+                {{ formfield player.example3_earnings_you }}
+            </div>
+
+            <div class="mb-3">
+                {{ formfield player.example3_earnings_left }}
+            </div>
+
+            <div class="mb-3">
+                {{ formfield player.example3_earnings_right }}
+            </div>
+        </div>
+
+        <!-- Final Question -->
+        <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
+            <h5>Payoff Determination</h5>
+            <div class="mb-3">
+                {{ formfield player.payoff_determination }}
             </div>
         </div>
     </div>
+</div>
 
-    <div style="display: none;">
-        {{ formfield "time_on_page" }}
-    </div>
+<div style="display: none;">
+    {{ formfield "time_on_page" }}
+</div>
 
-    {{ next_button }}
+{{ next_button }}
 
 {{ endblock }}

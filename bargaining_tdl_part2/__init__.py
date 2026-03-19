@@ -1,5 +1,15 @@
-from otree.api import *
-from bargaining_tdl_common import (
+from otree.api import (  # type: ignore
+    models,
+    widgets,
+    BaseConstants,
+    BaseSubsession,
+    BaseGroup,
+    BasePlayer,
+    Currency as cu,
+    Page,
+    WaitPage,
+)
+from bargaining_tdl_common import (  # type: ignore
     save_time_value,
     check_control_questions_part2,
     set_control_questions_failed,
@@ -192,15 +202,15 @@ class Player(BasePlayer):
 
 # get_participant_role_in_group è ora importato da bargaining_tdl_common
 
-def get_target_player_label(player: Player, target_code: str) -> str:
+def get_target_player_label(player: Player, target_code: str) -> str: # type: ignore
     """
     Converte un codice target (A/B/C) in "player on the left" o "player on the right"
     basandosi sul ruolo del player corrente nel gruppo.
     
     Mapping:
     - Se subject = A (P1 nel gruppo):
-    #   B (P2) → player on the left
-    #   C (P3) → player on the right
+    #   B (P2) → player on the right   ← P2 è il RIGHT partner di P1
+    #   C (P3) → player on the left    ← P3 è il LEFT partner di P1
     
     - Se subject = B (P2 nel gruppo):
     #   A (P1) → player on the left
@@ -212,14 +222,14 @@ def get_target_player_label(player: Player, target_code: str) -> str:
     """
     role = get_participant_role_in_group(player)
     if role is None:
-        return None
+        return role  # type: ignore
     
     # Mapping basato sul ruolo
     if role == 'A':
         if target_code == 'B':
-            return "the player on the left"
+            return "the player on the right"  # P2 è il RIGHT partner di P1
         elif target_code == 'C':
-            return "the player on the right"
+            return "the player on the left"   # P3 è il LEFT partner di P1
     elif role == 'B':
         if target_code == 'A':
             return "the player on the left"
@@ -231,7 +241,7 @@ def get_target_player_label(player: Player, target_code: str) -> str:
         elif target_code == 'B':
             return "the player on the right"
     
-    return None
+    return "the other player"  # type: ignore
 
 def is_question_for_left_player(player: Player, target_code: str) -> bool:
     """
@@ -309,7 +319,7 @@ def get_second_player_label(player: Player) -> str:
 
 def generate_option1_single_event(
     player: Player,
-    target_code: str,
+    target_code: str, # type: ignore
     event_code: str
 ) -> str:
     """
@@ -339,8 +349,8 @@ def generate_option1_single_event(
 
 def generate_option1_composite_event(
     player: Player,
-    target_code: str,
-    event_codes: list[str]
+    target_code: str, # type: ignore
+    event_codes: list[str] # type: ignore
 ) -> str:
     """
     Genera il testo di Option 1 per un Composite Event (OR logico).
@@ -394,7 +404,7 @@ def generate_option1_composite_event(
             event_text_2=event_text_2
         )
 
-def load_part1_data_for_mpl(player: Player, target_code: str) -> dict:
+def load_part1_data_for_mpl(player: Player, target_code: str) -> dict: # type: ignore
     """
     Carica i dati della Parte 1 relativi a un target participant specifico.
     
@@ -636,10 +646,10 @@ def get_event_description(player: Player, target_code: str, event_codes: list[st
         return ""
     
     # Cerca la descrizione nel mapping
-    role_mapping = event_descriptions.get(role, {})
+    role_mapping = event_descriptions.get(role, {})  # type: ignore
     description = role_mapping.get(key, "")
     
-    return description
+    return description # type: ignore  # type: ignore  # type: ignore  # type: ignore
 
 def get_event_field_name(player: Player, question_num: int) -> str:
     """
@@ -1184,9 +1194,12 @@ def calculate_part2_payoff(player) -> dict:
     # Step 1: Selezione casuale domanda (1-12)
     selected_question_num = random.randint(1, 12)
     
-    # Recupera metadati della domanda (serve sempre per il testo)
     questions = generate_mpl_questions(player)
-    selected_question = questions[selected_question_num - 1] if selected_question_num <= len(questions) else None
+    # Accesso per question_num originale (non per indice randomizzato)
+    # Garantisce che metadati (target_code, event_codes) e switching_point
+    # si riferiscano sempre alla stessa domanda originale numero N
+    questions_by_num = {q['question_num']: q for q in questions}
+    selected_question = questions_by_num.get(selected_question_num)
     
     # Recupera switching point usando il nuovo nome del campo
     event_field_name = get_event_field_name(player, selected_question_num)
@@ -1510,7 +1523,7 @@ class MPLQuestion(BasePagePart2):
         player.participant.vars['current_question_num_original'] = question_num
         
         # Determina il nome del campo evento per il form
-        event_field_name = get_event_field_name(player, question_num)
+        event_field_name = get_event_field_name(player, question_num)  # type: ignore
         # Per le choices, usa lo stesso pattern ma con _choices invece di _switch_value
         event_choices_name = event_field_name.replace('_switch_value', '_choices')
         
@@ -1583,7 +1596,7 @@ class ResultsPart2(BasePagePart2):
             part2_payoff_data = player.participant.vars['part2_payoff_data']
         
         # Imposta player.payoff con il valore calcolato (o già salvato)
-        player.payoff = player.participant.vars.get('part2_payoff', cu(0))
+        player.payoff = player.participant.vars.get('part2_payoff', cu(0))  # type: ignore
     
     @staticmethod
     def vars_for_template(player):
@@ -1706,8 +1719,13 @@ MPLQuestion10 = create_mpl_question_class(10)
 MPLQuestion11 = create_mpl_question_class(11)
 MPLQuestion12 = create_mpl_question_class(12)
 
+class ExampleScreenPart2(Page):
+    form_model = 'player'
+    form_fields = ['time_on_page']
+
 page_sequence = [
     InstructionsPart2,
+    ExampleScreenPart2,
     PaymentInstructionPart2,
     ControlQuestionsPart2Attempt1,
     ControlQuestionsPart2Attempt2,

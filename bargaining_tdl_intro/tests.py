@@ -7,8 +7,12 @@ Tests cover:
 - Data persistence in participant.vars
 """
 
-from otree.api import Currency as c, currency_range, expect, Bot
-from . import *
+from otree.api import Currency as c, currency_range, expect, Bot  # type: ignore
+from . import (  # type: ignore
+    Welcome,
+    InstructionsPart1,
+    ControlQuestionsAttempt1,
+)
 import random
 
 

@@ -41,12 +41,8 @@ class PlayerBot(Bot):
             return
         
         # GroupingAfterControlQuestions is a WaitPage - handled automatically by oTree
-        # Chat - save draft messages to participant.vars
-        chat_left = "Hi, let's work together!"
-        chat_right = "Hello, I hope we can coordinate."
+        # Chat - native chat is not simulated by bots
         yield Chat, dict(
-            draft_history_left=chat_left,
-            draft_history_right=chat_right,
             time_on_page=1.0,
         )
         # Signals - save intentions to participant.vars for DataMappingWaitPage mapping
@@ -114,9 +110,6 @@ class PlayerBot(Bot):
         
         # Verifica che i campi received_* siano stati popolati dopo il mapping
         # (questi vengono popolati in after_all_players_arrive della DataMappingWaitPage)
-        # I dati provengono da participant.vars salvati nella fase intro
-        expect(self.player.received_history_left, '!=', None)
-        expect(self.player.received_history_right, '!=', None)
         expect(self.player.received_signal_left, '!=', None)
         expect(self.player.received_signal_right, '!=', None)
         
