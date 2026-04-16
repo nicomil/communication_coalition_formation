@@ -296,6 +296,7 @@ def create_control_questions_class(attempt_number):
     class ControlQuestionsPage(Page):
         template_name = 'bargaining_tdl_intro/ControlQuestions.html'
         form_model = 'player'
+        preserve_unsubmitted_inputs = True
         form_fields = [
             'example1_earnings_you',
             'example1_earnings_left',

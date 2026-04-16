@@ -30,6 +30,59 @@ Individual task - each participant makes a decision independently.
 The experimenter will create groups with new triads a posteriori.
 """
 
+
+def get_part2_payoff_data(player):
+    """
+    Restituisce dati payoff Part 2 se disponibili.
+    Se app Part 2 non è in sessione, ritorna payoff zero.
+    """
+    def _normalize_part2_payoff_data(data):
+        defaults = {
+            'payoff': cu(0),
+            'selected_question': None,
+            'switching_point': None,
+            'pr1': None,
+            'pr2': None,
+            'option_selected': None,
+            'event_occurred': None,
+            'payoff_amount': 0,
+            'question_text': '',
+            'reminder_text': '',
+            'target_code': '',
+            'event_codes': [],
+            'question_type': '',
+            'error': None,
+        }
+        normalized = dict(defaults)
+        if isinstance(data, dict):
+            normalized.update(data)
+        return normalized
+
+    if 'part2_payoff_data' in player.participant.vars:
+        normalized = _normalize_part2_payoff_data(player.participant.vars['part2_payoff_data'])
+        player.participant.vars['part2_payoff_data'] = normalized
+        player.participant.vars['part2_payoff'] = normalized.get('payoff', cu(0))
+        return normalized
+
+    try:
+        from bargaining_tdl_part2 import calculate_part2_payoff, get_part2_player  # type: ignore
+    except Exception:
+        part2_payoff_data = _normalize_part2_payoff_data({'error': 'Part 2 app not available'})
+        player.participant.vars['part2_payoff_data'] = part2_payoff_data
+        player.participant.vars['part2_payoff'] = cu(0)
+        return part2_payoff_data
+
+    part2_payoff_data = _normalize_part2_payoff_data(calculate_part2_payoff(player))
+    player.participant.vars['part2_payoff_data'] = part2_payoff_data
+    player.participant.vars['part2_payoff'] = part2_payoff_data.get('payoff', cu(0))
+
+    # Se player Part2 esiste, sincronizza payoff per export
+    part2_player = get_part2_player(player)
+    if part2_player is not None:
+        part2_player.payoff = player.participant.vars['part2_payoff']
+
+    return part2_payoff_data
+
 class C(BaseConstants):
     NAME_IN_URL = 'bargaining_tdl_part3'
     PLAYERS_PER_GROUP = None  # Individual task
@@ -183,6 +236,7 @@ def create_control_questions_part3_class(attempt_number):
     class ControlQuestionsPart3Page(Page):
         template_name = 'bargaining_tdl_part3/ControlQuestionsPart3.html'
         form_model = 'player'
+        preserve_unsubmitted_inputs = True
         form_fields = [
             'example1_earnings_you',
             'example1_earnings_left',
@@ -310,24 +364,7 @@ class ResultsPart3(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_results_part3 = save_time_value(player.time_on_page)
-        
-        # Calcola e imposta i payoff
-        from bargaining_tdl_part2 import calculate_part2_payoff, get_part2_player  # type: ignore
-        
-        # Calcola o recupera payoff Part 2
-        if 'part2_payoff_data' not in player.participant.vars:
-            part2_payoff_data = calculate_part2_payoff(player)
-            player.participant.vars['part2_payoff_data'] = part2_payoff_data
-            player.participant.vars['part2_payoff'] = part2_payoff_data['payoff']
-        else:
-            part2_payoff_data = player.participant.vars['part2_payoff_data']
-        
-        part2_payoff = player.participant.vars.get('part2_payoff', cu(0))
-        
-        # IMPORTANTE: Salva il payoff di Part 2 anche nel player.payoff del player di Part 2
-        part2_player = get_part2_player(player)
-        if part2_player is not None:
-            part2_player.payoff = part2_payoff
+        get_part2_payoff_data(player)
         
         # ==============================================================
         # SELEZIONE CASUALE 50/50: Part 1 vs Part 3
@@ -362,41 +399,12 @@ class ResultsPart3(Page):
     @staticmethod
     def vars_for_template(player):
         """Recupera i payoff per la visualizzazione e calcola il payoff di Part 2 se necessario."""
-        from bargaining_tdl_part2 import calculate_part2_payoff, get_part2_player  # type: ignore
-        
         # Prova a recuperare il payoff dalla Part 1 (bargaining_tdl_main)
         part1_payoff = cu(0)
         if 'part1_payoff' in player.participant.vars:
             part1_payoff = player.participant.vars['part1_payoff']
-        
-        # Calcola o recupera payoff Part 2
-        # Se non è già stato calcolato, calcolalo ora
-        if 'part2_payoff_data' not in player.participant.vars:
-            # Calcola payoff Part 2 (la funzione gestisce automaticamente il recupero del player di Part 2)
-            part2_payoff_data = calculate_part2_payoff(player)
-            
-            # Salva in participant.vars per uso futuro
-            player.participant.vars['part2_payoff_data'] = part2_payoff_data
-            player.participant.vars['part2_payoff'] = part2_payoff_data['payoff']
-            
-            # IMPORTANTE: Salva anche nel player.payoff del player di Part 2 per l'export CSV
-            # Questo garantisce che il valore sia salvato anche se ResultsPart2.before_next_page 
-            # non viene chiamato o se viene chiamato dopo vars_for_template
-            part2_player = get_part2_player(player)
-            if part2_player is not None:
-                part2_player.payoff = part2_payoff_data['payoff']
-        else:
-            # Recupera i dati già calcolati
-            part2_payoff_data = player.participant.vars['part2_payoff_data']
-            
-            # Assicurati che il payoff sia salvato anche nel player di Part 2
-            # (nel caso in cui sia stato calcolato in vars_for_template prima di before_next_page)
-            part2_player = get_part2_player(player)
-            if part2_player is not None and part2_player.payoff == cu(0):
-                part2_payoff = player.participant.vars.get('part2_payoff', cu(0))
-                if part2_payoff != cu(0):
-                    part2_player.payoff = part2_payoff
-        
+
+        part2_payoff_data = get_part2_payoff_data(player)
         part2_payoff = player.participant.vars.get('part2_payoff', cu(0))
         
         return dict(

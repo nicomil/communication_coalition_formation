@@ -1320,6 +1320,7 @@ def create_control_questions_part2_class(attempt_number):
     class ControlQuestionsPart2Page(BasePagePart2):
         template_name = 'bargaining_tdl_part2/ControlQuestionsPart2.html'
         form_model = 'player'
+        preserve_unsubmitted_inputs = True
         form_fields = ['control_question_1', 'control_question_2', 'time_on_page']
         
         @staticmethod

@@ -1,0 +1,97 @@
+<script>
+    (function () {
+        if (!window.localStorage) return;
+
+        const form = document.getElementById('form');
+        if (!form) return;
+
+        const storageKey = `control-questions-state:${window.location.pathname}`;
+
+        function isTrackableControl(control) {
+            if (!control || !control.name) return false;
+            if (control.type === 'hidden') return false;
+            if (control.name === 'csrfmiddlewaretoken') return false;
+            if (control.name === 'time_on_page') return false;
+            return true;
+        }
+
+        function getTrackableControls() {
+            return Array.from(form.querySelectorAll('input, select, textarea')).filter(isTrackableControl);
+        }
+
+        function saveState() {
+            const state = {};
+
+            getTrackableControls().forEach(function (control) {
+                if (control.type === 'radio') {
+                    if (control.checked) {
+                        state[control.name] = control.value;
+                    }
+                    return;
+                }
+
+                if (control.type === 'checkbox') {
+                    state[control.name] = control.checked;
+                    return;
+                }
+
+                state[control.name] = control.value;
+            });
+
+            localStorage.setItem(storageKey, JSON.stringify(state));
+        }
+
+        function restoreState() {
+            const rawState = localStorage.getItem(storageKey);
+            if (!rawState) return;
+
+            let savedState;
+            try {
+                savedState = JSON.parse(rawState);
+            } catch (error) {
+                localStorage.removeItem(storageKey);
+                return;
+            }
+
+            Object.keys(savedState).forEach(function (name) {
+                const value = savedState[name];
+                const controls = form.querySelectorAll(`[name="${name}"]`);
+                if (!controls.length) return;
+
+                const first = controls[0];
+
+                if (first.type === 'radio') {
+                    controls.forEach(function (radio) {
+                        radio.checked = radio.value === value;
+                    });
+                    return;
+                }
+
+                if (first.type === 'checkbox') {
+                    first.checked = Boolean(value);
+                    return;
+                }
+
+                first.value = value;
+            });
+        }
+
+        restoreState();
+
+        form.addEventListener('change', function (event) {
+            if (isTrackableControl(event.target)) {
+                saveState();
+            }
+        }, true);
+
+        form.addEventListener('input', function (event) {
+            if (isTrackableControl(event.target)) {
+                saveState();
+            }
+        }, true);
+
+        form.addEventListener('submit', function () {
+            localStorage.removeItem(storageKey);
+        }, true);
+    })();
+</script>
