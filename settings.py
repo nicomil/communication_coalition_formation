@@ -5,7 +5,7 @@ SESSION_CONFIGS = [
     dict(
         name='bargaining_tdl',
         display_name="Bargaining Game (TDL + Async)",
-        app_sequence=['bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_part2', 'bargaining_tdl_part3'],
+        app_sequence=['bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_part3'],
         num_demo_participants=9,
     ),
 ]
@@ -70,5 +70,25 @@ try:
         self.html = response.content.decode('utf-8')
 
     _bot.ParticipantBot.response = property(_fget, _response_setter)
+except Exception:
+    pass
+
+# Patch oTree chat history: SQLAlchemy recente non accetta .values('nickname', ...)
+try:
+    from otree.channels import consumers as _consumers  # type: ignore
+    from otree.models_concrete import ChatMessage as _ChatMessage  # type: ignore
+
+    def _wschat_get_history(self, channel):
+        rows = list(_ChatMessage.objects_filter(channel=channel).order_by('timestamp'))
+        return [
+            {
+                'nickname': row.nickname,
+                'body': row.body,
+                'participant_id': row.participant_id,
+            }
+            for row in rows
+        ]
+
+    _consumers.WSChat._get_history = _wschat_get_history
 except Exception:
     pass

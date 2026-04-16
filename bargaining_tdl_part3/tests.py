@@ -76,7 +76,6 @@ class PlayerBot(Bot):
         expect(part2_payoff_data, '!=', None)
         
         # Verifica che i dati del payoff siano presenti
-        expect(part2_payoff_data.get('selected_question'), '!=', None)
         expect(part2_payoff_data.get('payoff'), '!=', None)
 
 

@@ -67,6 +67,30 @@
 
 {{ next_button }}
 
+<script>
+    (function () {
+        const form = document.querySelector('form');
+        if (!form) return;
+
+        form.addEventListener(
+            'submit',
+            function (e) {
+                const ok = window.confirm(
+                    'Are you sure you want to move to the next screen? You will not be able to go back to this chat.'
+                );
+                if (!ok) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    e.stopPropagation();
+                    return false;
+                }
+                // se confermato, lasciamo procedere normale handler oTree
+            },
+            true // capture: intercetta prima di handler oTree
+        );
+    })();
+</script>
+
 {{ include_sibling '_chat_customization.html' }}
 
 {{ endblock }}

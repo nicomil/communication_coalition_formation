@@ -18,6 +18,27 @@ from bargaining_tdl_common import (  # type: ignore
 
 logger = get_logger('main')
 
+# Compat patch SQLAlchemy>=2.x: oTree WSChat._get_history usa .values(*str)
+# che rompe con "Textual column expression 'nickname'..."
+try:
+    from otree.channels import consumers as _consumers  # type: ignore
+    from otree.models_concrete import ChatMessage as _ChatMessage  # type: ignore
+
+    def _patched_chat_history(self, channel):
+        rows = list(_ChatMessage.objects_filter(channel=channel).order_by('timestamp'))
+        return [
+            {
+                'nickname': row.nickname,
+                'body': row.body,
+                'participant_id': row.participant_id,
+            }
+            for row in rows
+        ]
+
+    _consumers.WSChat._get_history = _patched_chat_history
+except Exception:
+    pass
+
 doc = """
 Bargaining Game (Part 1: Grouping, Chat/Signals & Decision)
 First page = group_by_arrival_time (form triads); then Chat, Signals, data mapping, Decision, Results.
