@@ -14,6 +14,11 @@ from bargaining_tdl_common import (  # type: ignore
     has_failed_control_questions,
     set_control_questions_failed,
     get_logger,
+    get_player_color,
+    COLOR_MAPPING,
+    TOPOLOGY,
+    get_left_partner_id,
+    get_right_partner_id,
 )
 
 logger = get_logger('main')
@@ -61,24 +66,28 @@ class Group(BaseGroup):
     grp_triadicsplit = models.IntegerField(initial=0)  # 1 if at least two players vote for "equally split among all the members of the group" (Both)
 
 class Player(BasePlayer):
-    # Chat/Signals (from former intro_groups)
+    # Color assigned to this player (Red/Green/Blue), stored for CSV export clarity
+    player_color = models.StringField(blank=True)
+
+    # Chat/Signals — internal values are short codes; display labels are rendered
+    # in templates using the per-player color context variables.
     signal_left = models.StringField(
         choices=[
-            "I wish to split the $ 12 equally with you only, player on the left.",
-            "I wish to split the $ 12 equally with the other player only, the one on the right.",
-            "I wish to split the $ 12 equally with both you and player on the right"
+            ['split_you', 'split_you'],
+            ['split_other', 'split_other'],
+            ['split_both', 'split_both'],
         ],
         widget=widgets.RadioSelect,
-        label="Select intention for the participant on your LEFT:"
+        label=""
     )
     signal_right = models.StringField(
         choices=[
-            "I wish to split the $ 12 equally with you only, player on the right.",
-            "I wish to split the $ 12 equally with the other player only, the one on the left.",
-            "I wish to split the $ 12 equally with both you and player on the left"
+            ['split_you', 'split_you'],
+            ['split_other', 'split_other'],
+            ['split_both', 'split_both'],
         ],
         widget=widgets.RadioSelect,
-        label="Select intention for the participant on your RIGHT:"
+        label=""
     )
     first_intention_selected = models.StringField(
         choices=[['left', 'Left'], ['right', 'Right']],
@@ -90,12 +99,12 @@ class Player(BasePlayer):
     time_signals = models.FloatField(initial=0)
     time_chat_and_signals = models.FloatField(initial=0)
 
-    # Decision
+    # Decision — internal values Left/Right/Both; display labels rendered in template
     decision_choice = models.StringField(
         choices=[
-            ('Left', 'I would like to divide the $12 equally with player on the left'),
-            ('Right', 'I would like to divide the $12 equally with player on the right'),
-            ('Both', 'I would like to divide the $12 equally among all the members of the group')
+            ('Left', 'Left'),
+            ('Right', 'Right'),
+            ('Both', 'Both'),
         ],
         widget=widgets.RadioSelect,
         label="Select your choice:"
@@ -105,11 +114,10 @@ class Player(BasePlayer):
     received_signal_left = models.StringField(initial="")
     received_signal_right = models.StringField(initial="")
     
-    # Player identification fields (for CSV export compatibility)
-    # These fields store the participant.code of players on left and right
-    # Topology: P1->Left=P3, Right=P2; P2->Left=P1, Right=P3; P3->Left=P2, Right=P1
-    id_player_on_the_left = models.StringField(blank=True)  # participant.code of player on the left
-    id_player_on_the_right = models.StringField(blank=True)  # participant.code of player on the right
+    # Player identification fields (for CSV export compatibility).
+    # Internal meaning: topological first/second partner in the fixed ring topology.
+    id_player_on_the_left = models.StringField(blank=True)  # partner code in internal 'left' coordinate
+    id_player_on_the_right = models.StringField(blank=True)  # partner code in internal 'right' coordinate
     
     # Time tracking fields (in seconds)
     time_experiment_terminated = models.FloatField(initial=0)
@@ -122,6 +130,29 @@ class Player(BasePlayer):
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
+
+def _color_context(player):
+    """Build color labels for UI from stable internal topology coordinates."""
+    my_id = player.id_in_group
+    left_id = get_left_partner_id(my_id)
+    right_id = get_right_partner_id(my_id)
+    return dict(
+        my_color=COLOR_MAPPING[my_id],
+        left_partner_color=COLOR_MAPPING[left_id],
+        right_partner_color=COLOR_MAPPING[right_id],
+    )
+
+
+def _signal_display_text(code, target_color, other_color):
+    """Human-readable text for a signal internal code."""
+    if code == 'split_you':
+        return f"I wish to split the $12 equally with you only, the {target_color} player."
+    elif code == 'split_other':
+        return f"I wish to split the $12 equally with the other player only, the {other_color} player."
+    elif code == 'split_both':
+        return f"I wish to split the $12 equally with both you and the {other_color} player."
+    return code or ""
+
 
 def map_player_data_in_group(group: Group):
     """
@@ -164,58 +195,24 @@ def map_player_data_in_group(group: Group):
         - Funziona solo con gruppi di esattamente 3 player
         - I dati mancanti vengono sostituiti con stringa vuota ("")
     """
-    p1 = group.get_player_by_id(1)
-    p2 = group.get_player_by_id(2)
-    p3 = group.get_player_by_id(3)
-    
-    # Helper per accedere ai participant.vars in modo sicuro
-    def get_vars(p):
-        return p.participant.vars
-    
-    # Mapping topology: (receiver_id, direction) -> (sender_id, sender_direction)
-    # receiver riceve da direction quello che sender ha inviato a sender_direction
-    topology = {
-        (1, 'left'): (3, 'right'),   # P1 riceve da Left (P3) quello che P3 ha inviato a Right
-        (1, 'right'): (2, 'left'),   # P1 riceve da Right (P2) quello che P2 ha inviato a Left
-        (2, 'left'): (1, 'right'),   # P2 riceve da Left (P1) quello che P1 ha inviato a Right
-        (2, 'right'): (3, 'left'),   # P2 riceve da Right (P3) quello che P3 ha inviato a Left
-        (3, 'left'): (2, 'right'),   # P3 riceve da Left (P2) quello che P2 ha inviato a Right
-        (3, 'right'): (1, 'left'),   # P3 riceve da Right (P1) quello che P1 ha inviato a Left
-    }
-    
-    # Mapping player objects per accesso rapido
-    players = {1: p1, 2: p2, 3: p3}
-    
-    # Mapping degli id dei player left/right per ogni player
-    # Topology: P1->Left=P3, Right=P2; P2->Left=P1, Right=P3; P3->Left=P2, Right=P1
-    player_id_mapping = {
-        1: {'left': 3, 'right': 2},  # P1: Left=P3, Right=P2
-        2: {'left': 1, 'right': 3},  # P2: Left=P1, Right=P3
-        3: {'left': 2, 'right': 1},  # P3: Left=P2, Right=P1
-    }
-    
-    # Applica il mapping per ogni player e direzione
+    players = {p.id_in_group: p for p in group.get_players()}
+
     for receiver_id in [1, 2, 3]:
         receiver = players[receiver_id]
-        
-        # Imposta i participant.code dei player left/right
-        left_player_id = player_id_mapping[receiver_id]['left']
-        right_player_id = player_id_mapping[receiver_id]['right']
+        left_player_id = get_left_partner_id(receiver_id)
+        right_player_id = get_right_partner_id(receiver_id)
+
         receiver.id_player_on_the_left = players[left_player_id].participant.code
         receiver.id_player_on_the_right = players[right_player_id].participant.code
-        
-        for direction in ['left', 'right']:
-            sender_id, sender_direction = topology[(receiver_id, direction)]  # type: ignore
-            sender = players[sender_id]  # type: ignore
-            
-            # Recupera i dati dal sender
-            sender_vars = get_vars(sender)
-            
-            # Mappa history e signal
-            if direction == 'left':
-                receiver.received_signal_left = sender_vars.get(f'signal_{sender_direction}', "")
-            else:  # right
-                receiver.received_signal_right = sender_vars.get(f'signal_{sender_direction}', "")
+
+        left_sender = players[left_player_id]
+        right_sender = players[right_player_id]
+
+        # Internal convention:
+        # - receiver.received_signal_left stores the signal that left partner sent to receiver
+        # - receiver.received_signal_right stores the signal that right partner sent to receiver
+        receiver.received_signal_left = left_sender.participant.vars.get('signal_right', "")
+        receiver.received_signal_right = right_sender.participant.vars.get('signal_left', "")
 
 # PAGES
 
@@ -229,6 +226,7 @@ class GroupingAfterControlQuestions(WaitPage):
     def after_all_players_arrive(group: Group):
         for p in group.get_players():
             p.time_welcome = p.participant.vars.get('time_welcome', 0)
+            p.player_color = get_player_color(p.id_in_group)
         triad_pids = [p.participant.id for p in group.get_players()]
         intro_groups = group.session.vars.setdefault('intro_groups', [])
         if triad_pids not in intro_groups:
@@ -243,25 +241,19 @@ class Chat(Page):
     @staticmethod
     def vars_for_template(player: Player):
         my_id = player.id_in_group
-        
-        # Mapping topology: P1->Left=P3, Right=P2; P2->Left=P1, Right=P3; P3->Left=P2, Right=P1
-        if my_id == 1:
-            left_id = 3
-            right_id = 2
-        elif my_id == 2:
-            left_id = 1
-            right_id = 3
-        else: # my_id == 3
-            left_id = 2
-            right_id = 1
+        partners = TOPOLOGY[my_id]
+        left_id = partners['left']
+        right_id = partners['right']
             
         group_id = player.group.id
         channel_left = f"{group_id}_{min(my_id, left_id)}_{max(my_id, left_id)}"
         channel_right = f"{group_id}_{min(my_id, right_id)}_{max(my_id, right_id)}"
         
+        colors = _color_context(player)
         return dict(
             channel_left=channel_left,
             channel_right=channel_right,
+            **colors,
         )
 
     @staticmethod
@@ -273,6 +265,11 @@ class Chat(Page):
 class Signals(Page):
     form_model = 'player'
     form_fields = ['signal_left', 'signal_right', 'first_intention_selected', 'time_on_page']
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        colors = _color_context(player)
+        return dict(**colors)
 
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -323,25 +320,31 @@ class Decision(Page):
     @staticmethod
     def vars_for_template(player: Player):
         my_id = player.id_in_group
-        
-        # Mapping topology: P1->Left=P3, Right=P2; P2->Left=P1, Right=P3; P3->Left=P2, Right=P1
-        if my_id == 1:
-            left_id = 3
-            right_id = 2
-        elif my_id == 2:
-            left_id = 1
-            right_id = 3
-        else: # my_id == 3
-            left_id = 2
-            right_id = 1
+        partners = TOPOLOGY[my_id]
+        left_id = partners['left']
+        right_id = partners['right']
             
         group_id = player.group.id
         channel_left = f"{group_id}_{min(my_id, left_id)}_{max(my_id, left_id)}"
         channel_right = f"{group_id}_{min(my_id, right_id)}_{max(my_id, right_id)}"
         
+        colors = _color_context(player)
+        received_left_display = _signal_display_text(
+            player.received_signal_left,
+            colors['left_partner_color'],
+            colors['right_partner_color'],
+        )
+        received_right_display = _signal_display_text(
+            player.received_signal_right,
+            colors['right_partner_color'],
+            colors['left_partner_color'],
+        )
         return dict(
             channel_left=channel_left,
             channel_right=channel_right,
+            received_signal_left_display=received_left_display,
+            received_signal_right_display=received_right_display,
+            **colors,
         )
 
     @staticmethod
@@ -422,11 +425,22 @@ class Results(Page):
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         return not has_failed_control_questions(player, 'intro')
-    
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        colors = _color_context(player)
+        choice = player.decision_choice
+        if choice == 'Left':
+            choice_display = f"I would like to divide the $12 equally with the {colors['left_partner_color']} player"
+        elif choice == 'Right':
+            choice_display = f"I would like to divide the $12 equally with the {colors['right_partner_color']} player"
+        else:
+            choice_display = "I would like to divide the $12 equally among all the members of the group"
+        return dict(choice_display=choice_display, **colors)
+
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_results = save_time_value(player.time_on_page)
-        """Salva il payoff della Part 1 in participant.vars per uso futuro."""
         player.participant.vars['part1_payoff'] = player.payoff
 
 page_sequence = [

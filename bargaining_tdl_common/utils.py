@@ -178,11 +178,90 @@ def get_participant_role_in_group(player):
     
     # Il ruolo è determinato da id_in_group nel gruppo di main
     id_in_group = main_player.id_in_group
-    role_mapping = {1: 'A', 2: 'B', 3: 'C'}
-    role = role_mapping.get(id_in_group)
+    role = get_role_from_id(id_in_group)
     
     if role:
         logger.debug(f"Player {player.id} has role {role} (id_in_group={id_in_group})")
     
     return role
+
+
+# ============================================================================
+# COLOR-BASED PLAYER IDENTIFICATION
+# Each player in a triad is identified by a color: Red, Green, Blue.
+# Always referenced as written text for colorblind accessibility.
+# ============================================================================
+
+COLOR_MAPPING = {1: 'Red', 2: 'Green', 3: 'Blue'}
+ROLE_TO_ID = {'A': 1, 'B': 2, 'C': 3}
+ID_TO_ROLE = {1: 'A', 2: 'B', 3: 'C'}
+
+TOPOLOGY = {
+    1: {'left': 3, 'right': 2},
+    2: {'left': 1, 'right': 3},
+    3: {'left': 2, 'right': 1},
+}
+
+
+def get_player_color(id_in_group):
+    """Returns the color name for a given id_in_group (1=Red, 2=Green, 3=Blue)."""
+    return COLOR_MAPPING.get(id_in_group, 'Unknown')
+
+
+def get_role_from_id(id_in_group):
+    """Returns role code (A/B/C) from id_in_group."""
+    return ID_TO_ROLE.get(id_in_group)
+
+
+def get_id_from_role(role_code):
+    """Returns id_in_group (1/2/3) from role code A/B/C."""
+    return ROLE_TO_ID.get(role_code)
+
+
+def get_left_partner_id(id_in_group):
+    """Returns the internal 'left' partner id for a player id_in_group."""
+    partners = TOPOLOGY.get(id_in_group, {})
+    return partners.get('left')
+
+
+def get_right_partner_id(id_in_group):
+    """Returns the internal 'right' partner id for a player id_in_group."""
+    partners = TOPOLOGY.get(id_in_group, {})
+    return partners.get('right')
+
+
+def get_partner_side(current_id, target_id):
+    """
+    Returns partner side from internal topology: 'left', 'right', or None.
+    """
+    if get_left_partner_id(current_id) == target_id:
+        return 'left'
+    if get_right_partner_id(current_id) == target_id:
+        return 'right'
+    return None
+
+
+def get_partner_colors(player):
+    """
+    Returns a dict with 'my_color', 'left_partner_color', 'right_partner_color'
+    based on the main group topology.
+
+    Works from any app (intro, main, part2, part3) by resolving the
+    player's id_in_group in bargaining_tdl_main.
+    """
+    main_player = get_main_group_player(player)
+    if main_player is None:
+        return {
+            'my_color': 'Unknown',
+            'left_partner_color': 'Unknown',
+            'right_partner_color': 'Unknown',
+        }
+
+    my_id = main_player.id_in_group
+    partners = TOPOLOGY[my_id]
+    return {
+        'my_color': COLOR_MAPPING[my_id],
+        'left_partner_color': COLOR_MAPPING[partners['left']],
+        'right_partner_color': COLOR_MAPPING[partners['right']],
+    }
 

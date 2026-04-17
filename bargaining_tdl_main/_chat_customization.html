@@ -1,26 +1,26 @@
 <script>
+    var _leftPartnerColor = '{{ left_partner_color }}';
+    var _rightPartnerColor = '{{ right_partner_color }}';
+
     document.addEventListener('DOMContentLoaded', function () {
         function customizeNicknames(element) {
             if (!element || !element.classList) return;
             
-            // Trova tutti gli span contenenti il nickname
-            const nicknameSpans = element.classList.contains('otree-chat__nickname') ? 
+            var nicknameSpans = element.classList.contains('otree-chat__nickname') ? 
                                   [element] : 
                                   element.querySelectorAll('.otree-chat__nickname');
                                   
             nicknameSpans.forEach(function(span) {
-                // oTree appends " (Me)" to your own messages.
-                // It also literally uses the nickname without spaces like "RightPartner" or "LeftPartner"
-                let text = span.textContent;
+                var text = span.textContent;
                 
                 if (text.includes('(Me)')) {
                     span.textContent = 'You';
-                    const msgNode = span.closest('.otree-chat__msg');
+                    var msgNode = span.closest('.otree-chat__msg');
                     if (msgNode) msgNode.classList.add('my-own-message');
                 } else if (text.trim() === 'RightPartner') {
-                    span.textContent = 'Right partner';
+                    span.textContent = _rightPartnerColor + ' player';
                 } else if (text.trim() === 'LeftPartner') {
-                    span.textContent = 'Left partner';
+                    span.textContent = _leftPartnerColor + ' player';
                 }
             });
         }

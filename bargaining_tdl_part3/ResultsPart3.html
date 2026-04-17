@@ -8,15 +8,7 @@
             <h4>Your Payoffs</h4>
             
             <p>
-                You chose: <strong>
-                {% if player.decision == 'share_left' %}
-                    Share only with the player on the left
-                {% elif player.decision == 'share_right' %}
-                    Share only with the player on the right
-                {% elif player.decision == 'share_both' %}
-                    Share with both the player on the left and the player on the right
-                {% endif %}
-                </strong>
+                You chose: <strong>{{ decision_display }}</strong>
             </p>
 
             <hr>

@@ -20,6 +20,7 @@ from bargaining_tdl_common import (  # type: ignore
     has_passed_control_questions,
     set_control_questions_passed,
     get_logger,
+    get_partner_colors,
 )
 
 logger = get_logger('part3')
@@ -95,18 +96,18 @@ class Group(BaseGroup):
     pass
 
 class Player(BasePlayer):
-    # Decision
+    # Decision — internal values share_left/share_right/share_both; display labels in template
     decision = models.StringField(
         choices=[
-            ['share_left', 'Share only with the player on the left'],
-            ['share_right', 'Share only with the player on the right'],
-            ['share_both', 'Share with both the player on the left and the player on the right']
+            ['share_left', 'share_left'],
+            ['share_right', 'share_right'],
+            ['share_both', 'share_both'],
         ],
         widget=widgets.RadioSelect,
         label="How would you like to divide $12?"
     )
     
-    # Control Questions - Example 1
+    # Control Questions - Example 1 (scenario uses fixed color names from vars_for_template)
     example1_earnings_you = models.StringField(
         choices=[
             ['4', '$4'],
@@ -123,7 +124,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the player on the left be for Part 3 in this case?"
+        label="What would the earnings for the second player be for Part 3 in this case?"
     )
     example1_earnings_right = models.StringField(
         choices=[
@@ -132,7 +133,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the player on the right be for Part 3 in this case?"
+        label="What would the earnings for the third player be for Part 3 in this case?"
     )
     
     # Control Questions - Example 2
@@ -152,7 +153,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the player on the left be for Part 3 in this case?"
+        label="What would the earnings for the second player be for Part 3 in this case?"
     )
     example2_earnings_right = models.StringField(
         choices=[
@@ -161,7 +162,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the player on the right be for Part 3 in this case?"
+        label="What would the earnings for the third player be for Part 3 in this case?"
     )
     
     # Control Questions - Payoff determination
@@ -205,10 +206,36 @@ class Player(BasePlayer):
 
 # PAGES
 
+def _part3_color_context(player):
+    """Build color context for Part 3 pages, falling back to generic names."""
+    colors = get_partner_colors(player)
+    return colors
+
+
+def _decision_display_text(decision_code, colors):
+    """
+    Convert internal decision code (share_left/right/both) to participant-facing text.
+    """
+    if decision_code == 'share_left':
+        return f"Share only with the {colors['left_partner_color']} player"
+    if decision_code == 'share_right':
+        return f"Share only with the {colors['right_partner_color']} player"
+    if decision_code == 'share_both':
+        return (
+            f"Share with both the {colors['left_partner_color']} player "
+            f"and the {colors['right_partner_color']} player"
+        )
+    return ""
+
+
 class InstructionsPart3(Page):
     form_model = 'player'
     form_fields = ['time_on_page']
-    
+
+    @staticmethod
+    def vars_for_template(player):
+        return _part3_color_context(player)
+
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_instructions_part3 = save_time_value(player.time_on_page)
@@ -216,7 +243,11 @@ class InstructionsPart3(Page):
 class SummaryPart3(Page):
     form_model = 'player'
     form_fields = ['time_on_page']
-    
+
+    @staticmethod
+    def vars_for_template(player):
+        return _part3_color_context(player)
+
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_summary_part3 = save_time_value(player.time_on_page)
@@ -269,12 +300,14 @@ def create_control_questions_part3_class(attempt_number):
         @staticmethod
         def vars_for_template(player):
             max_attempts = get_max_attempts(player.session)
+            colors = _part3_color_context(player)
             
             return {
                 'max_attempts': max_attempts,
                 'current_attempt': attempt_number,
                 'attempts_remaining': max_attempts - attempt_number,
                 'is_first_attempt': attempt_number == 1,
+                **colors,
             }
         
         @staticmethod
@@ -346,7 +379,11 @@ class DecisionPart3(Page):
     def is_displayed(player):
         """Mostra questa pagina solo se le control questions sono corrette."""
         return has_passed_control_questions(player, 'part3')
-    
+
+    @staticmethod
+    def vars_for_template(player):
+        return _part3_color_context(player)
+
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_decision_part3 = save_time_value(player.time_on_page)
@@ -399,18 +436,22 @@ class ResultsPart3(Page):
     @staticmethod
     def vars_for_template(player):
         """Recupera i payoff per la visualizzazione e calcola il payoff di Part 2 se necessario."""
-        # Prova a recuperare il payoff dalla Part 1 (bargaining_tdl_main)
         part1_payoff = cu(0)
         if 'part1_payoff' in player.participant.vars:
             part1_payoff = player.participant.vars['part1_payoff']
 
         part2_payoff_data = get_part2_payoff_data(player)
         part2_payoff = player.participant.vars.get('part2_payoff', cu(0))
-        
+
+        colors = _part3_color_context(player)
+        decision_display = _decision_display_text(player.decision, colors)
+
         return dict(
             part1_payoff=part1_payoff,
             part2_payoff=part2_payoff,
             part2_payoff_data=part2_payoff_data,
+            decision_display=decision_display,
+            **colors,
         )
 
 page_sequence = [

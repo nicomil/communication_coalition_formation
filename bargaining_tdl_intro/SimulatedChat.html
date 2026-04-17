@@ -50,9 +50,9 @@
 <input type="hidden" name="draft_history_right" id="id_draft_history_right">
 
 <div class="chat-container">
-    <!-- Left Partner Chat -->
+    <!-- First Partner Chat -->
     <div class="chat-column">
-        <h4>Message to Left Partner</h4>
+        <h4>Message to {{ left_partner_color }} Partner</h4>
         <div id="history-left" class="chat-history"></div>
         <div class="chat-input-area">
             <input type="text" id="input-left" class="form-control" placeholder="Type a message...">
@@ -60,9 +60,9 @@
         </div>
     </div>
 
-    <!-- Right Partner Chat -->
+    <!-- Second Partner Chat -->
     <div class="chat-column">
-        <h4>Message to Right Partner</h4>
+        <h4>Message to {{ right_partner_color }} Partner</h4>
         <div id="history-right" class="chat-history"></div>
         <div class="chat-input-area">
             <input type="text" id="input-right" class="form-control" placeholder="Type a message...">

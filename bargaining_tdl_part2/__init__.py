@@ -21,6 +21,10 @@ from bargaining_tdl_common import (  # type: ignore
     set_control_questions_passed,
     get_main_group_player,
     get_participant_role_in_group,
+    get_player_color,
+    get_partner_colors,
+    get_id_from_role,
+    get_partner_side,
     get_logger,
 )
 
@@ -40,30 +44,52 @@ Genera 12 MPL questions per ogni partecipante basandosi sui dati della Parte 1.
 # Usiamo le nuove etichette descrittive che corrispondono a quelle in bargaining_tdl_main
 # Mapping basato su EVENT_TO_DECISION per determinare quale etichetta usare
 
-# Nuove etichette descrittive (allineate con bargaining_tdl_main)
-DECISION_LABEL_LEFT = "I would like to divide the $12 equally with player on the left"
-DECISION_LABEL_RIGHT = "I would like to divide the $12 equally with player on the right"
+# Decision labels use a {target_color} placeholder resolved at runtime per player
+DECISION_LABEL_LEFT_TPL = "I would like to divide the $12 equally with the {target_color} player"
+DECISION_LABEL_RIGHT_TPL = "I would like to divide the $12 equally with the {target_color} player"
 DECISION_LABEL_BOTH = "I would like to divide the $12 equally among all the members of the group"
 
-# Mapping Eventi → Testi (usando le nuove etichette descrittive)
-EVENT_TO_TEXT = {
-    'EB1': DECISION_LABEL_RIGHT,  # B divide with C only → Right
-    'EB2': DECISION_LABEL_LEFT,   # B divide with A only → Left
-    'EB3': DECISION_LABEL_BOTH,   # B divide among all three → Both
-    'EC1': DECISION_LABEL_LEFT,   # C divide with B only → Left
-    'EC2': DECISION_LABEL_RIGHT,  # C divide with A only → Right
-    'EC3': DECISION_LABEL_BOTH,   # C divide among all three → Both
-    'EA1': DECISION_LABEL_RIGHT,  # A divide with C only (per B) o A divide with B only (per C) → Right
-    'EA2': DECISION_LABEL_LEFT,   # A divide with B only (per B) o A divide with C only (per C) → Left
-    'EA3': DECISION_LABEL_BOTH,   # A divide among all three → Both
+# EVENT_TO_TEXT_CODE maps event codes to short codes ('left'/'right'/'both')
+# so we can resolve the actual color-based text at runtime.
+EVENT_TO_TEXT_CODE = {
+    'EB1': 'right',   # B divide with C only
+    'EB2': 'left',    # B divide with A only
+    'EB3': 'both',    # B divide among all three
+    'EC1': 'left',    # C divide with B only
+    'EC2': 'right',   # C divide with A only
+    'EC3': 'both',    # C divide among all three
+    'EA1': 'right',   # A divide with C only (per B) o A divide with B only (per C)
+    'EA2': 'left',    # A divide with B only (per B) o A divide with C only (per C)
+    'EA3': 'both',    # A divide among all three
 }
 
-# Struttura Testo Option 1 (Sezione 📄 5)
-# Nota: Usiamo $5 invece di €5 perché REAL_WORLD_CURRENCY_CODE = 'GBP'
-OPTION1_SINGLE_TEMPLATE_LEFT = "You win $5 if the player on the left chose \"{event_text}\" (and nothing otherwise)."
-OPTION1_SINGLE_TEMPLATE_RIGHT = "You win $5 if the player on the right chose \"{event_text}\" (and nothing otherwise)."
-OPTION1_COMPOSITE_TEMPLATE_LEFT = "You win $5 if the player on the left chose \"{event_text_1}\" or \"{event_text_2}\" (and nothing otherwise)."
-OPTION1_COMPOSITE_TEMPLATE_RIGHT = "You win $5 if the player on the right chose \"{event_text_1}\" or \"{event_text_2}\" (and nothing otherwise)."
+
+def _resolve_event_text(event_code, left_color, right_color):
+    """Resolve an event code to its display text using player-specific colors."""
+    code = EVENT_TO_TEXT_CODE.get(event_code)
+    if code == 'left':
+        return DECISION_LABEL_LEFT_TPL.format(target_color=left_color)
+    elif code == 'right':
+        return DECISION_LABEL_RIGHT_TPL.format(target_color=right_color)
+    elif code == 'both':
+        return DECISION_LABEL_BOTH
+    return ""
+
+
+# Struttura Testo Option 1 (Sezione 📄 5) — now uses {target_label} for the color name
+OPTION1_SINGLE_TEMPLATE = "You win $5 if {target_label} chose \"{event_text}\" (and nothing otherwise)."
+OPTION1_COMPOSITE_TEMPLATE = "You win $5 if {target_label} chose \"{event_text_1}\" or \"{event_text_2}\" (and nothing otherwise)."
+
+
+def _format_signal_for_reminder(signal_code, target_color, other_color):
+    """Convert a short signal code (split_you/split_other/split_both) to display text."""
+    if signal_code == 'split_you':
+        return f"I wish to split the $12 equally with you only, the {target_color} player."
+    elif signal_code == 'split_other':
+        return f"I wish to split the $12 equally with the other player only, the {other_color} player."
+    elif signal_code == 'split_both':
+        return f"I wish to split the $12 equally with both you and the {other_color} player."
+    return signal_code or ""
 
 # Struttura Testo Option 2 (Sezione 📄 6)
 OPTION2_TEXT = "You win $5 with the following probability (and nothing otherwise)."
@@ -204,115 +230,63 @@ class Player(BasePlayer):
 
 def get_target_player_label(player: Player, target_code: str) -> str: # type: ignore
     """
-    Converte un codice target (A/B/C) in "player on the left" o "player on the right"
+    Converte un codice target (A/B/C) in "the <Color> player"
     basandosi sul ruolo del player corrente nel gruppo.
-    
-    Mapping:
-    - Se subject = A (P1 nel gruppo):
-    #   B (P2) → player on the right   ← P2 è il RIGHT partner di P1
-    #   C (P3) → player on the left    ← P3 è il LEFT partner di P1
-    
-    - Se subject = B (P2 nel gruppo):
-    #   A (P1) → player on the left
-    #   C (P3) → player on the right
-    
-    - Se subject = C (P3 nel gruppo):
-    #   A (P1) → player on the left
-    #   B (P2) → player on the right
     """
-    role = get_participant_role_in_group(player)
-    if role is None:
-        return role  # type: ignore
-    
-    # Mapping basato sul ruolo
-    if role == 'A':
-        if target_code == 'B':
-            return "the player on the right"  # P2 è il RIGHT partner di P1
-        elif target_code == 'C':
-            return "the player on the left"   # P3 è il LEFT partner di P1
-    elif role == 'B':
-        if target_code == 'A':
-            return "the player on the left"
-        elif target_code == 'C':
-            return "the player on the right"
-    elif role == 'C':
-        if target_code == 'A':
-            return "the player on the left"
-        elif target_code == 'B':
-            return "the player on the right"
-    
-    return "the other player"  # type: ignore
+    target_id = get_id_from_role(target_code)
+    if target_id is None:
+        return "the other player"  # type: ignore
+    color = get_player_color(target_id)
+    if color == 'Unknown':
+        return "the other player"  # type: ignore
+    return f"the {color} player"
 
 def is_question_for_left_player(player: Player, target_code: str) -> bool:
     """
-    Determina se una domanda è relativa al "player on the left" o "player on the right".
-    
-    Args:
-        player: Player corrente
-        target_code: 'A', 'B', o 'C' (il target della domanda)
-    
+    Determina se una domanda è relativa al partner 'left' nella topology interna.
+
     Returns:
-        True se la domanda è per "the player on the left", False se è per "the player on the right"
+        True se il target occupa la posizione 'left' nella topology del player corrente.
     """
-    target_label = get_target_player_label(player, target_code)
-    if target_label is None:
+    role = get_participant_role_in_group(player)
+    if role is None:
         return False
-    return "left" in target_label
+    current_id = get_id_from_role(role)
+    target_id = get_id_from_role(target_code)
+    if current_id is None or target_id is None:
+        return False
+    return get_partner_side(current_id, target_id) == 'left'
 
 def get_first_player_label(player: Player) -> str:
-    """
-    Determina il nome del player che viene mostrato per primo nelle MPL questions.
-    
-    Args:
-        player: Player corrente
-    
-    Returns:
-        "the player on the left" o "the player on the right" a seconda di quale viene mostrato per primo
-    """
-    # Assicurati che le domande siano state generate
+    """Returns color-based label of the partner shown first in MPL questions."""
     generate_mpl_questions(player)
-    
-    # Leggi l'ordine dei player
+    colors = get_partner_colors(player)
     player_order = player.field_maybe_none('mpl_player_order')
     if player_order == 'left_first':
-        return "the player on the left"
+        return f"the {colors['left_partner_color']} player"
     elif player_order == 'right_first':
-        return "the player on the right"
+        return f"the {colors['right_partner_color']} player"
     else:
-        # Fallback: determina guardando le prime domande generate
         all_questions = generate_mpl_questions(player)
         if all_questions and len(all_questions) > 0:
-            first_question = all_questions[0]
-            target_code = first_question.get('target_code')
+            target_code = all_questions[0].get('target_code')
             if target_code:
                 return get_target_player_label(player, target_code) or "the other player"
         return "the other player"
 
 def get_second_player_label(player: Player) -> str:
-    """
-    Determina il nome del player che viene mostrato per secondo nelle MPL questions.
-    
-    Args:
-        player: Player corrente
-    
-    Returns:
-        "the player on the left" o "the player on the right" a seconda di quale viene mostrato per secondo
-    """
-    # Assicurati che le domande siano state generate
+    """Returns color-based label of the partner shown second in MPL questions."""
     generate_mpl_questions(player)
-    
-    # Leggi l'ordine dei player
+    colors = get_partner_colors(player)
     player_order = player.field_maybe_none('mpl_player_order')
     if player_order == 'left_first':
-        return "the player on the right"
+        return f"the {colors['right_partner_color']} player"
     elif player_order == 'right_first':
-        return "the player on the left"
+        return f"the {colors['left_partner_color']} player"
     else:
-        # Fallback: determina guardando le domande dopo la sesta
         all_questions = generate_mpl_questions(player)
         if all_questions and len(all_questions) > 6:
-            second_question = all_questions[6]
-            target_code = second_question.get('target_code')
+            target_code = all_questions[6].get('target_code')
             if target_code:
                 return get_target_player_label(player, target_code) or "the other player"
         return "the other player"
@@ -324,28 +298,22 @@ def generate_option1_single_event(
 ) -> str:
     """
     Genera il testo di Option 1 per un Single Event.
-    
-    Args:
-        player: Player corrente
-        target_code: 'A', 'B', o 'C' (chi ha fatto la scelta)
-        event_code: Codice evento (es. 'EB1', 'EC1')
-    
-    Returns:
-        Stringa con il testo completo di Option 1
     """
     target_label = get_target_player_label(player, target_code)
     if target_label is None:
         return ""
-    
-    event_text = EVENT_TO_TEXT.get(event_code, "")
+
+    colors = get_partner_colors(player)
+    left_color = colors['left_partner_color']
+    right_color = colors['right_partner_color']
+    event_text = _resolve_event_text(event_code, left_color, right_color)
     if not event_text:
         return ""
-    
-    # Determina se il target è "left" o "right"
-    if "left" in target_label:
-        return OPTION1_SINGLE_TEMPLATE_LEFT.format(event_text=event_text)
-    else:
-        return OPTION1_SINGLE_TEMPLATE_RIGHT.format(event_text=event_text)
+
+    return OPTION1_SINGLE_TEMPLATE.format(
+        target_label=target_label,
+        event_text=event_text,
+    )
 
 def generate_option1_composite_event(
     player: Player,
@@ -356,8 +324,8 @@ def generate_option1_composite_event(
     Genera il testo di Option 1 per un Composite Event (OR logico).
     
     Un composite event rappresenta l'unione logica (OR) di due eventi.
-    Il testo generato segue il formato:
-    "You win $5 if the player on the left/right chose \"{event1}\" or \"{event2}\" (and nothing otherwise)."
+    Il testo generato usa etichette colore lato UI, mentre internamente
+    left/right resta una coordinata topologica.
     
     Args:
         player: Player corrente (da bargaining_tdl_part2)
@@ -373,7 +341,7 @@ def generate_option1_composite_event(
     Example:
         >>> text = generate_option1_composite_event(player, 'B', ['EB2', 'EB1'])
         >>> text
-        "You win $5 if the player on the left chose \"Share only with you\" or \"Share only with the player on the right\" (and nothing otherwise)."
+        "You win $5 if the Green player chose ..."
     
     Note:
         - Richiede esattamente 2 event_codes
@@ -385,24 +353,21 @@ def generate_option1_composite_event(
     
     if len(event_codes) != 2:
         return ""
-    
-    event_text_1 = EVENT_TO_TEXT.get(event_codes[0], "")
-    event_text_2 = EVENT_TO_TEXT.get(event_codes[1], "")
+
+    colors = get_partner_colors(player)
+    left_color = colors['left_partner_color']
+    right_color = colors['right_partner_color']
+    event_text_1 = _resolve_event_text(event_codes[0], left_color, right_color)
+    event_text_2 = _resolve_event_text(event_codes[1], left_color, right_color)
     
     if not event_text_1 or not event_text_2:
         return ""
-    
-    # Determina se il target è "left" o "right"
-    if "left" in target_label:
-        return OPTION1_COMPOSITE_TEMPLATE_LEFT.format(
-            event_text_1=event_text_1,
-            event_text_2=event_text_2
-        )
-    else:
-        return OPTION1_COMPOSITE_TEMPLATE_RIGHT.format(
-            event_text_1=event_text_1,
-            event_text_2=event_text_2
-        )
+
+    return OPTION1_COMPOSITE_TEMPLATE.format(
+        target_label=target_label,
+        event_text_1=event_text_1,
+        event_text_2=event_text_2,
+    )
 
 def load_part1_data_for_mpl(player: Player, target_code: str) -> dict: # type: ignore
     """
@@ -469,14 +434,7 @@ def load_part1_data_for_mpl(player: Player, target_code: str) -> dict: # type: i
         }
     
     # Determina l'id_in_group del target
-    target_id = None
-    if target_code == 'A':
-        target_id = 1
-    elif target_code == 'B':
-        target_id = 2
-    elif target_code == 'C':
-        target_id = 3
-    
+    target_id = get_id_from_role(target_code)
     if target_id is None:
         return {
             'you_said': '',
@@ -493,68 +451,26 @@ def load_part1_data_for_mpl(player: Player, target_code: str) -> dict: # type: i
             'target_decision': ''
         }
     
-    # Determina quale signal recuperare in base al target
-    # Topology in main:
-    # P1: Left=P3, Right=P2
-    # P2: Left=P1, Right=P3
-    # P3: Left=P2, Right=P1
-    
     current_id = main_player.id_in_group
-    
-    # Determina se il target è "left" o "right" per il player corrente
-    target_is_left = False
-    target_is_right = False
-    
-    if current_id == 1:  # P1 (A)
-        if target_id == 3:  # P3 (C) è left
-            target_is_left = True
-        elif target_id == 2:  # P2 (B) è right
-            target_is_right = True
-    elif current_id == 2:  # P2 (B)
-        if target_id == 1:  # P1 (A) è left
-            target_is_left = True
-        elif target_id == 3:  # P3 (C) è right
-            target_is_right = True
-    elif current_id == 3:  # P3 (C)
-        if target_id == 2:  # P2 (B) è left
-            target_is_left = True
-        elif target_id == 1:  # P1 (A) è right
-            target_is_right = True
-    
+    target_side_for_current = get_partner_side(current_id, target_id)
+
     # Recupera "you_said" - intenzione del player corrente al target
-    # Dati da participant.vars (salvati da intro)
+    # (internamente signal_left/signal_right sono coordinate topologiche)
     you_said = ""
-    if target_is_left:
+    if target_side_for_current == 'left':
         you_said = player.participant.vars.get('signal_left', '')
-    elif target_is_right:
+    elif target_side_for_current == 'right':
         you_said = player.participant.vars.get('signal_right', '')
     
     # Recupera "target_said" - intenzione del target al player corrente
-    # Dati da participant.vars del target (salvati da intro)
+    # coordinate inverse nella topologia: se current è left per target, target usa signal_left.
     target_said = ""
     target_vars = target_player.participant.vars
-    
-    # Determina quale signal del target è rivolto al player corrente
-    # Topology inversa:
-    # Se current è left per target, allora target ha inviato signal_right a current
-    # Se current è right per target, allora target ha inviato signal_left a current
-    
-    # Per il target, determiniamo se current è left o right
-    if target_id == 1:  # P1 (A)
-        if current_id == 3:  # P3 (C) è left per P1, quindi P1 ha inviato signal_left a P3
-            target_said = target_vars.get('signal_left', '')
-        elif current_id == 2:  # P2 (B) è right per P1, quindi P1 ha inviato signal_right a P2
-            target_said = target_vars.get('signal_right', '')
-    elif target_id == 2:  # P2 (B)
-        if current_id == 1:  # P1 (A) è left per P2, quindi P2 ha inviato signal_left a P1
-            target_said = target_vars.get('signal_left', '')
-        elif current_id == 3:  # P3 (C) è right per P2, quindi P2 ha inviato signal_right a P3
-            target_said = target_vars.get('signal_right', '')
-    elif target_id == 3:  # P3 (C)
-        if current_id == 2:  # P2 (B) è left per P3, quindi P3 ha inviato signal_left a P2
-            target_said = target_vars.get('signal_left', '')
-        elif current_id == 1:  # P1 (A) è right per P3, quindi P3 ha inviato signal_right a P1
-            target_said = target_vars.get('signal_right', '')
+    current_side_for_target = get_partner_side(target_id, current_id)
+    if current_side_for_target == 'left':
+        target_said = target_vars.get('signal_left', '')
+    elif current_side_for_target == 'right':
+        target_said = target_vars.get('signal_right', '')
     
     # Recupera "target_decision" - scelta finale del target
     # Dati dal campo decision_choice del target player in main
@@ -751,8 +667,8 @@ def generate_mpl_questions(player: Player) -> list[dict]:
        - L'ordine finale è salvato in mpl_question_order per persistenza
     
     Struttura delle domande:
-    - 6 domande per "player on the left" (3 single + 3 composite)
-    - 6 domande per "player on the right" (3 single + 3 composite)
+    - 6 domande per partner interno 'left' (3 single + 3 composite)
+    - 6 domande per partner interno 'right' (3 single + 3 composite)
     - Ogni domanda è mappata a un evento specifico (EB1, EC2, etc.)
     
     Args:
@@ -870,15 +786,29 @@ def generate_mpl_questions(player: Player) -> list[dict]:
         # Carica i dati della Parte 1 per il reminder
         part1_data = load_part1_data_for_mpl(player, q['target_code'])
         target_label = get_target_player_label(player, q['target_code'])
+        colors = get_partner_colors(player)
+        # Determine which color is the target and which is the "other"
+        target_is_left = is_question_for_left_player(player, q['target_code'])
+        if target_is_left:
+            t_color = colors['left_partner_color']
+            o_color = colors['right_partner_color']
+        else:
+            t_color = colors['right_partner_color']
+            o_color = colors['left_partner_color']
+        you_said_display = _format_signal_for_reminder(
+            part1_data['you_said'], t_color, o_color
+        )
+        target_said_display = _format_signal_for_reminder(
+            part1_data['target_said'], colors['my_color'], o_color
+        )
         reminder_text = REMINDER_TEMPLATE.format(
             target_label=target_label or "the other participant",
-            you_said=part1_data['you_said'],
-            target_said=part1_data['target_said']
+            you_said=you_said_display,
+            target_said=target_said_display,
         )
-        # Preparo anche le parti separate per inserirle nella tabella
         reminder_intro = f"We remind you of the following information regarding what you and {target_label or 'the other participant'} have declared to each other:"
-        you_said_text = f"You said: {part1_data['you_said']}"
-        target_said_text = f"{target_label or 'the other participant'} said: {part1_data['target_said']}"
+        you_said_text = f"You said: {you_said_display}"
+        target_said_text = f"{target_label or 'the other participant'} said: {target_said_display}"
         
         # Determina le probabilità in base al tipo
         probabilities = PROBABILITIES_SINGLE_EVENT if q['type'] == 'single' else PROBABILITIES_COMPOSITE_EVENT
@@ -974,13 +904,13 @@ def generate_mpl_questions(player: Player) -> list[dict]:
 # Questo mapping definisce quale decision_choice ('Left', 'Right', 'Both') 
 # corrisponde a ciascun evento, dal punto di vista del target player.
 EVENT_TO_DECISION = {
-    'EB1': 'Right',  # B divide with C only (Share only with the player on the right)
+    'EB1': 'Right',  # B divide with C only (internal right coordinate)
     'EB2': 'Left',   # B divide with A only (Share only with you = Left per A)
     'EB3': 'Both',   # B divide among all three
-    'EC1': 'Left',   # C divide with B only (Share only with the player on the left)
+    'EC1': 'Left',   # C divide with B only (internal left coordinate)
     'EC2': 'Right',  # C divide with A only (Share only with you = Right per A)
     'EC3': 'Both',   # C divide among all three
-    'EA1': 'Right',  # A divide with C only (Share only with the player on the right)
+    'EA1': 'Right',  # A divide with C only (internal right coordinate)
     'EA2': 'Left',   # A divide with B only (Share only with you = Left per B)
     'EA3': 'Both',   # A divide among all three
 }

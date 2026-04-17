@@ -70,9 +70,9 @@
 </p>
 
 <div class="container-columns">
-    <!-- Left Partner Column -->
+    <!-- First Partner Column -->
     <div class="column">
-        <h4>Partner Left</h4>
+        <h4>{{ left_partner_color }} Partner</h4>
 
         <div class="section-title">Select your intention</div>
         <div class="signal-box">
@@ -84,9 +84,9 @@
         {{ formfield player.draft_history_left }}
     </div>
 
-    <!-- Right Partner Column -->
+    <!-- Second Partner Column -->
     <div class="column">
-        <h4>Partner Right</h4>
+        <h4>{{ right_partner_color }} Partner</h4>
 
         <div class="section-title">Select your intention</div>
         <div class="signal-box">
@@ -122,10 +122,10 @@
             document.querySelector('textarea[name="draft_history_right"]');
 
         if (leftTextarea) {
-            leftTextarea.placeholder = "Type your message here for Partner Left...";
+            leftTextarea.placeholder = "Type your message here for your partner...";
         }
         if (rightTextarea) {
-            rightTextarea.placeholder = "Type your message here for Partner Right...";
+            rightTextarea.placeholder = "Type your message here for your partner...";
         }
 
         // Add event listeners to radio buttons to track first selection

@@ -12,7 +12,6 @@
         max-height: 200px;
         overflow-y: auto;
         white-space: pre-line;
-        /* Preserves newlines */
         font-family: monospace;
     }
 
@@ -34,18 +33,17 @@
 <p>
     Here are the Chat between you and your partners, and the intentions received by each of them.
     Based on this information, please make your decision.
-
 </p>
 
 <div class="row">
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                From <strong>Left</strong> Partner
+                From <strong>{{ left_partner_color }}</strong> Partner
             </div>
             <div class="card-body">
                 <div class="signal-box">
-                    Intensions: {{ player.received_signal_left }}
+                    Intentions: {{ received_signal_left_display }}
                 </div>
                 <h6>Chat Log (Read-Only):</h6>
                 <div class="message-box read-only-chat">
@@ -57,11 +55,11 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                From <strong>Right</strong> Partner
+                From <strong>{{ right_partner_color }}</strong> Partner
             </div>
             <div class="card-body">
                 <div class="signal-box">
-                    Intensions: {{ player.received_signal_right }}
+                    Intentions: {{ received_signal_right_display }}
                 </div>
                 <h6>Chat Log (Read-Only):</h6>
                 <div class="message-box read-only-chat">
@@ -82,7 +80,27 @@
         <p>
             Please choose how you would like to divide the $12.
         </p>
-        {{ formfield player.decision_choice }}
+        <div class="form-group">
+            <label><strong>Select your choice:</strong></label>
+            <div class="form-check">
+                <input type="radio" name="decision_choice" value="Left" id="dc_left" class="form-check-input" required>
+                <label class="form-check-label" for="dc_left">
+                    I would like to divide the $12 equally with the {{ left_partner_color }} player
+                </label>
+            </div>
+            <div class="form-check">
+                <input type="radio" name="decision_choice" value="Right" id="dc_right" class="form-check-input">
+                <label class="form-check-label" for="dc_right">
+                    I would like to divide the $12 equally with the {{ right_partner_color }} player
+                </label>
+            </div>
+            <div class="form-check">
+                <input type="radio" name="decision_choice" value="Both" id="dc_both" class="form-check-input">
+                <label class="form-check-label" for="dc_both">
+                    I would like to divide the $12 equally among all the members of the group
+                </label>
+            </div>
+        </div>
     </div>
 </div>
 <br>

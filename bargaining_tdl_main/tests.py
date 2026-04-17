@@ -46,8 +46,16 @@ class PlayerBot(Bot):
             time_on_page=1.0,
         )
         # Signals - save intentions to participant.vars for DataMappingWaitPage mapping
-        signal_left = "I wish to split the $ 12 equally with both you and player on the right"
-        signal_right = "I wish to split the $ 12 equally with both you and player on the left"
+        id_in_group = self.player.id_in_group
+        if id_in_group == 1:
+            signal_left = "split_you"
+            signal_right = "split_other"
+        elif id_in_group == 2:
+            signal_left = "split_other"
+            signal_right = "split_both"
+        else:
+            signal_left = "split_both"
+            signal_right = "split_you"
         yield Signals, dict(
             signal_left=signal_left,
             signal_right=signal_right,
@@ -57,8 +65,6 @@ class PlayerBot(Bot):
         # DataMappingWaitPage is a wait page - bots handle it automatically (no yield)
         
         # Decision - la scelta varia in base al case e alla posizione nel gruppo
-        id_in_group = self.player.id_in_group
-        
         if case == 'all_both':
             decision = 'Both'
         elif case == 'match_12':
@@ -112,6 +118,14 @@ class PlayerBot(Bot):
         # (questi vengono popolati in after_all_players_arrive della DataMappingWaitPage)
         expect(self.player.received_signal_left, '!=', None)
         expect(self.player.received_signal_right, '!=', None)
+        expected_received = {
+            1: ("split_you", "split_other"),
+            2: ("split_other", "split_both"),
+            3: ("split_both", "split_you"),
+        }
+        exp_left, exp_right = expected_received[id_in_group]
+        expect(self.player.received_signal_left, exp_left)
+        expect(self.player.received_signal_right, exp_right)
         
         # Verifica che il payoff sia stato calcolato correttamente
         expect(self.player.payoff, '!=', None)

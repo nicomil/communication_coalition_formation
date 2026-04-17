@@ -14,12 +14,29 @@
         </p>
 
         <div class="mb-4">
-            {{ formfield 'decision' }}
+            <div class="form-group">
+                <div class="form-check">
+                    <input type="radio" name="decision" value="share_left" id="decision_left" class="form-check-input" required>
+                    <label class="form-check-label" for="decision_left">
+                        Share only with the {{ left_partner_color }} player
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" name="decision" value="share_right" id="decision_right" class="form-check-input">
+                    <label class="form-check-label" for="decision_right">
+                        Share only with the {{ right_partner_color }} player
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" name="decision" value="share_both" id="decision_both" class="form-check-input">
+                    <label class="form-check-label" for="decision_both">
+                        Share with both the {{ left_partner_color }} player and the {{ right_partner_color }} player
+                    </label>
+                </div>
+            </div>
         </div>
 
         {{ include '_templates/global/_time_tracking_field.html' }}
-
-
 
         <p class="text-muted mt-3">
             <em>Note: If Part 3 is randomly selected to determine the payoff, one of the three group members' choices
