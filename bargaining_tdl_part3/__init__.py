@@ -110,30 +110,30 @@ class Player(BasePlayer):
     # Control Questions - Example 1 (scenario uses fixed color names from vars_for_template)
     example1_earnings_you = models.StringField(
         choices=[
+            ['0', '$0'],
             ['4', '$4'],
             ['6', '$6'],
-            ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earning be for Part 3 in this case?"
+        label="What would be the earnings for the SENDER ?"
     )
     example1_earnings_left = models.StringField(
         choices=[
+            ['0', '$0'],
             ['4', '$4'],
             ['6', '$6'],
-            ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the second player be for Part 3 in this case?"
+        label="What would be the earnings for the first of the two RECEIVERS ?"
     )
     example1_earnings_right = models.StringField(
         choices=[
+            ['0', '$0'],
             ['4', '$4'],
             ['6', '$6'],
-            ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the third player be for Part 3 in this case?"
+        label="What would be the earnings for the second of the two RECEIVERS ?"
     )
     
     # Control Questions - Example 2
@@ -144,41 +144,28 @@ class Player(BasePlayer):
             ['6', '$6'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earnings be for Part 3 in this case?"
+        label="What would be the earnings for the SENDER ?"
     )
     example2_earnings_left = models.StringField(
         choices=[
-            ['6', '$6'],
-            ['4', '$4'],
             ['0', '$0'],
+            ['4', '$4'],
+            ['6', '$6'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the second player be for Part 3 in this case?"
+        label="What would be the earnings for the first of the two RECEIVERS ?"
     )
     example2_earnings_right = models.StringField(
         choices=[
-            ['6', '$6'],
-            ['4', '$4'],
             ['0', '$0'],
+            ['4', '$4'],
+            ['6', '$6'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the third player be for Part 3 in this case?"
+        label="What would be the earnings for the second of the two RECEIVERS ?"
     )
     
-    # Control Questions - Payoff determination
-    payoff_question = models.StringField(
-        choices=[
-            ['I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3.', 
-             'I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3.'],
-            ['I will only get paid for one of the following parts: Part 1, Part 2, or Part 3.', 
-             'I will only get paid for one of the following parts: Part 1, Part 2, or Part 3.'],
-            ['I will be paid an amount equal to the sum of the earnings achieved in each part of the experiment.', 
-             'I will be paid an amount equal to the sum of the earnings achieved in each part of the experiment.'],
-            ["I don't know.", "I don't know."],
-        ],
-        widget=widgets.RadioSelect,
-        label="Excluding the participation fee of $2, how will your total payoff be determined in this experiment?"
-    )
+
     
     # Flag validazione
     all_control_questions_correct = models.BooleanField(initial=False)
@@ -275,7 +262,6 @@ def create_control_questions_part3_class(attempt_number):
             'example2_earnings_you',
             'example2_earnings_left',
             'example2_earnings_right',
-            'payoff_question',
             'time_on_page'
         ]
         

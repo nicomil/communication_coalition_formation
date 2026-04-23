@@ -148,8 +148,7 @@ def check_control_questions_intro(player):
         not player.example2_earnings_right or
         not player.example3_earnings_you or 
         not player.example3_earnings_left or 
-        not player.example3_earnings_right or
-        not player.payoff_determination):
+        not player.example3_earnings_right):
         return False
     
     correct = (
@@ -161,8 +160,7 @@ def check_control_questions_intro(player):
         player.example2_earnings_right == "4" and
         player.example3_earnings_you == "0" and
         player.example3_earnings_left == "0" and
-        player.example3_earnings_right == "0" and
-        player.payoff_determination == "I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3."
+        player.example3_earnings_right == "0"
     )
     return correct
 
@@ -204,8 +202,7 @@ def check_control_questions_part3(player):
         not player.example1_earnings_right or
         not player.example2_earnings_you or 
         not player.example2_earnings_left or 
-        not player.example2_earnings_right or
-        not player.payoff_question):
+        not player.example2_earnings_right):
         return False
     
     # Example 1: tutte le risposte devono essere '4'
@@ -215,10 +212,9 @@ def check_control_questions_part3(player):
         player.example1_earnings_you == '4' and
         player.example1_earnings_left == '4' and
         player.example1_earnings_right == '4' and
-        player.example2_earnings_you == '0' and
-        player.example2_earnings_left == '6' and
-        player.example2_earnings_right == '6' and
-        player.payoff_question == 'I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3.'
+        player.example2_earnings_you == '6' and
+        player.example2_earnings_left == '0' and
+        player.example2_earnings_right == '6'
     )
     return correct
 

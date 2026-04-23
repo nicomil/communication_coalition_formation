@@ -46,7 +46,6 @@ class PlayerBot(Bot):
             example3_earnings_you='0',
             example3_earnings_left='0',
             example3_earnings_right='0',
-            payoff_determination='I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3.'
         )
 
         # Intro ends here for passers; next app is main (GroupingAfterControlQuestions then ChatAndSignals, etc.)

@@ -41,7 +41,6 @@ class PlayerBot(Bot):
             example2_earnings_you='0',
             example2_earnings_left='6',
             example2_earnings_right='6',
-            payoff_question='I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3.'
         )
         
         # Verifica che le control questions siano corrette

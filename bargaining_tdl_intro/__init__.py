@@ -146,8 +146,8 @@ class Player(BasePlayer):
     )
     
     # Control Questions - Example 1
-    # Scenario: You (Red) share with Green only. Green shares with both. Blue shares with you (Red).
-    # Result: Red=6, Green=0, Blue=6
+    # Scenario: You (green) share with red only. Blue shares with both. Red shares with you (green).
+    # Result: Green=6, Red=6, Blue=0
     example1_earnings_you = models.StringField(
         choices=[
             ['6', '$6'],
@@ -155,7 +155,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earnings be for Part 1 in this case?"
+        label="What would your earnings be ?"
     )
     example1_earnings_left = models.StringField(
         choices=[
@@ -164,7 +164,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the Green player be for Part 1 in this case?"
+        label="What would be the earnings for the BLUE player ?"
     )
     example1_earnings_right = models.StringField(
         choices=[
@@ -173,11 +173,11 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the Blue player be for Part 1 in this case?"
+        label="What would be the earnings for the RED player?"
     )
     
     # Control Questions - Example 2
-    # Scenario: You (Red) share with both. Green shares with Blue only. Blue shares with both.
+    # Scenario: You (Green) share with both. Blue shares with Red only. Red shares with both.
     # Result: Red=4, Green=4, Blue=4
     example2_earnings_you = models.StringField(
         choices=[
@@ -186,7 +186,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earnings be for Part 1 in this case?"
+        label="What would your earnings be ?"
     )
     example2_earnings_left = models.StringField(
         choices=[
@@ -195,7 +195,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the Green player be for Part 1 in this case?"
+        label="What would be the earnings for the BLUE player ?"
     )
     example2_earnings_right = models.StringField(
         choices=[
@@ -204,11 +204,11 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the Blue player be for Part 1 in this case?"
+        label="What would be the earnings for the RED player ?"
     )
     
     # Control Questions - Example 3
-    # Scenario: You (Red) share with both. Green shares with you (Red) only. Blue shares with Green only.
+    # Scenario: You (Green) share with both. Blue shares with you (Green) only. Red shares with Blue only.
     # Result: Red=0, Green=0, Blue=0
     example3_earnings_you = models.StringField(
         choices=[
@@ -217,7 +217,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earnings be for Part 1 in this case?"
+        label="What would your earnings be ?"
     )
     example3_earnings_left = models.StringField(
         choices=[
@@ -226,7 +226,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the Green player be for Part 1 in this case?"
+        label="What would be the earnings for the BLUE player ?"
     )
     example3_earnings_right = models.StringField(
         choices=[
@@ -235,23 +235,10 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would the earnings for the Blue player be for Part 1 in this case?"
+        label="What would be the earnings for the RED player ?"
     )
     
-    # Control Questions - Payoff determination
-    payoff_determination = models.StringField(
-        choices=[
-            ['I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3.', 
-             'I will be paid an amount equal to the sum of my earnings in Part 2 and my earnings in either Part 1 or Part 3.'],  # Corretta
-            ['I will only get paid for one of the following parts: Part 1, Part 2, or Part 3.', 
-             'I will only get paid for one of the following parts: Part 1, Part 2, or Part 3.'],  # Sbagliata 1
-            ['I will be paid an amount equal to the sum of the earnings achieved in each part of the experiment.', 
-             'I will be paid an amount equal to the sum of the earnings achieved in each part of the experiment.'],  # Sbagliata 2
-            ["I don't know.", "I don't know."],  # Sbagliata 3
-        ],
-        widget=widgets.RadioSelect,
-        label="Excluding the participation fee of $2, how will your total payoff be determined in this experiment?"
-    )
+
     
     # Time tracking fields (in seconds)
     time_welcome = models.FloatField(initial=0)
@@ -313,7 +300,6 @@ def create_control_questions_class(attempt_number):
             'example3_earnings_you',
             'example3_earnings_left',
             'example3_earnings_right',
-            'payoff_determination',
             'time_on_page'
         ]
 
@@ -342,9 +328,9 @@ def create_control_questions_class(attempt_number):
             attempts_remaining = max_attempts - current_attempts
             
             return {
-                'example1_scenario': "Imagine that you (the Red player) chose 'Share only with the Blue player', that the Green player chose 'Share with both the Red and the Blue player', and that the Blue player chose 'Share only with the Red player'.",
-                'example2_scenario': "Imagine that you (the Red player) chose 'Share with both the Green and the Blue player', that the Green player chose 'Share only with the Blue player', and that the Blue player chose 'Share with both the Red and the Green player'.",
-                'example3_scenario': "Imagine that you (the Red player) chose 'Share with both the Green and the Blue player', that the Green player chose 'Share only with the Red player', and that the Blue player chose 'Share only with the Green player'.",
+                'example1_scenario': "Imagine that you (GREEN player) chose to split equally the $ 12 with the RED player choosing the option: 'Split equally the $ 12 only with the RED player'; the BLUE player chooses the option: 'Split equally the $ 12 with both the two players'; the RED player chooses the option: 'Split equally the $ 12 only with the GREEN player'.",
+                'example2_scenario': "Imagine that you (GREEN player) chose to split equally the $ 12 with the two players choosing the option: 'Split equally the $ 12 with both the two players'; the BLUE player chooses the option: 'Split equally the $ 12 only with the RED player'; the RED player chooses the option: 'Split equally the $ 12 with both the two players'.",
+                'example3_scenario': "Imagine that you (GREEN player) chose to split equally the $ 12 with the two players choosing the option: 'Split equally the $ 12 with both the two players'; the BLUE player chooses the option: 'Split equally the $ 12 only with the GREEN player'; the RED player chooses the option: 'Split equally the $ 12 only with the BLUE player'.",
                 'max_attempts': max_attempts,
                 'current_attempt': attempt_number,
                 'attempts_remaining': max_attempts - attempt_number,

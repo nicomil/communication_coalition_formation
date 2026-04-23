@@ -1,4 +1,4 @@
-{{ block title }}Control questions for Part 3{{ endblock }}
+{{ block title }}Control questions for Part 2{{ endblock }}
 {{ block content }}
 
 {{ include_sibling '_button_style.html' }}
@@ -6,9 +6,8 @@
 <div class="card bg-light m-3">
     <div class="card-body">
         <p>
-            <strong>Please answer the following questions correctly to proceed with Part 3 of the experiment.</strong>
-        <p></p>You have been matched with the {{ left_partner_color }} player and the {{ right_partner_color }} player for Part 3,
-        consider the following two examples:
+            <strong>Please answer the following questions correctly to proceed with Part 2 of the experiment.</strong>
+
         </p>
 
         {% if not is_first_attempt %}
@@ -28,10 +27,13 @@
         <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
             <h5>Example 1</h5>
             <p class="mb-3">
-                Imagine that you (the {{ my_color }} player) chose "Share only with the {{ left_partner_color }} player", that the
-                {{ left_partner_color }} player chose "Share only with you", and that the {{ right_partner_color }} player chose "Share
-                with both the {{ left_partner_color }} player and the {{ my_color }} player". At the end of the experiment,
-                the {{ right_partner_color }} player is selected as the actual decision maker for Part 3.
+                Imagine that you chose "Equally split the $ 12 with only one of the two players", that one of the other
+                two players chose "Equally split the $ 12 with only one of the two players", and that the last player
+                chose "Equally split the $ 12 between myself and the other two players".
+            </p>
+            <p>
+                At the end of the experiment, the choice of the last player in the Example 1, is selected for payment
+                and implemented for all the group members.
             </p>
 
             <div class="mb-3">
@@ -49,9 +51,12 @@
         <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
             <h5>Example 2</h5>
             <p class="mb-3">
-                Imagine that you (the {{ my_color }} player) chose "Share with both the {{ left_partner_color }} player and the
-                {{ right_partner_color }} player", that the {{ left_partner_color }} player chose "Share only with the {{ right_partner_color }} player", and that the {{ right_partner_color }} player chose "Share with both the {{ my_color }} player and the {{ left_partner_color }} player". At the end of the experiment, the {{ left_partner_color }} player is selected as the actual decision
-                maker for Part 3.
+                Imagine that you chose "Equally split the $ 12 with only one of the two players", and that both of the
+                other two players chose "Equally split the $ 12 between myself and the other two players".
+            </p>
+            <p>
+                At the end of the experiment, your choice is selected for payment and implemented for all the group
+                members.
             </p>
 
             <div class="mb-3">
@@ -62,18 +67,6 @@
             </div>
             <div class="mb-3">
                 {{ formfield 'example2_earnings_right' }}
-            </div>
-        </div>
-
-        <!-- Payoff Question -->
-        <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
-            <p class="mb-3">
-                Excluding the participation fee of $ 2, how will your total payoff be determined in this
-                experiment?
-            </p>
-
-            <div class="mb-3">
-                {{ formfield 'payoff_question' }}
             </div>
         </div>
     </div>
