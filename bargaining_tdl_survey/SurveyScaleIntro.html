@@ -1,0 +1,36 @@
+{{ block title }}Survey – Instructions{{ endblock }}
+{{ block content }}
+
+{{ include_sibling '_button_style.html' }}
+
+<div class="card bg-light m-3">
+    <div class="card-body">
+
+        <p>
+            In the next questions, &ldquo;Willingness to act&rdquo; refers to the following type of question:
+            we ask for your <strong>willingness to act</strong> in a certain way in different scenarios.
+            Please indicate your answer on a scale from <strong>0</strong> to <strong>10</strong>, where
+            <strong>0 means you are &ldquo;completely unwilling to do so&rdquo;</strong> and
+            <strong>10 means you are &ldquo;very willing to do so&rdquo;</strong>.
+        </p>
+
+        <p class="mt-4">
+            In the next questions, &ldquo;Self-assessments&rdquo; refers to the following type of questions:
+            how well do the following statements describe you as a person?
+            Please indicate your answer on a scale from <strong>0</strong> to <strong>10</strong>, where
+            <strong>0 means &ldquo;does not describe me at all&rdquo;</strong> and
+            <strong>10 means &ldquo;describes me perfectly&rdquo;</strong>.
+        </p>
+
+        <p class="mt-4">
+            <strong>Please note:</strong> You can also use any numbers between 0 and 10 to indicate
+            where you fall on the scale, like 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.
+        </p>
+
+    </div>
+</div>
+
+{{ include '_templates/global/_time_tracking_field.html' }}
+
+{{ next_button }}
+{{ endblock }}

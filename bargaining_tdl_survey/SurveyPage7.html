@@ -1,0 +1,74 @@
+{{ block title }}Survey{{ endblock }}
+{{ block content }}
+
+{{ include_sibling '_button_style.html' }}
+
+<style>
+    .scale-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 4px;
+        margin-top: 1rem;
+    }
+
+    .scale-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+    }
+
+    .scale-item .scale-number {
+        font-weight: bold;
+        font-size: 1rem;
+        margin-bottom: 6px;
+    }
+
+    .scale-item input[type="radio"] {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+    }
+
+    .scale-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        font-size: 0.8rem;
+        color: #555;
+    }
+</style>
+
+<div class="card bg-light m-3">
+    <div class="card-body">
+
+        <p class="fw-bold mb-1">
+            If I am treated very unjustly, I will take revenge at the first occasion,
+            even if there is a cost to do so.
+        </p>
+        <p class="text-muted mb-3" style="font-size:0.9rem;">
+            (0 = does not describe me at all, 10 = describes me perfectly)
+        </p>
+
+        <div class="scale-container">
+            {{ for value in scale_values }}
+            <div class="scale-item">
+                <span class="scale-number">{{ value }}</span>
+                <input type="radio" name="reciprocity_negative" value="{{ value }}" id="rn_{{ value }}" required>
+            </div>
+            {{ endfor }}
+        </div>
+
+        <div class="scale-labels">
+            <span>Does not describe me at all</span>
+            <span>Describes me perfectly</span>
+        </div>
+
+    </div>
+</div>
+
+{{ include '_templates/global/_time_tracking_field.html' }}
+
+{{ next_button }}
+{{ endblock }}

@@ -1,0 +1,60 @@
+{{ block title }}Survey{{ endblock }}
+{{ block content }}
+
+{{ include_sibling '_button_style.html' }}
+
+<div class="card bg-light m-3">
+    <div class="card-body">
+
+        <p>
+            <strong>Please note:</strong> With this question, you and the other participants can earn an additional
+            $&nbsp;2.
+        </p>
+
+        <p class="mt-3">
+            Each player <strong>selects an integer number between 0 and 100</strong>, the computer calculates
+            the average of all selected numbers (i.e., the numbers are summed up and divided by the number of
+            participants). Then, the average is multiplied by 0.6 to determine the winning value. The participant
+            whose number is closest to the winning value wins and receives $&nbsp;2. If the numbers of several
+            participants are equally close to the winning value, the winner will be randomly selected by the computer
+            among those participants.
+        </p>
+
+        <p class="mt-3">
+            <strong>Example with five participants:</strong>
+        </p>
+
+        <p>
+            Participant One chooses 70, Participant Two chooses 20, Participant Three chooses 30,
+            Participant Four chooses 45, and Participant Five chooses 60. The average of the five chosen
+            numbers is 45. The average multiplied by 0.60 yields 27. The number of Participant Three (30) is
+            closest to 27. Participant Three wins and receives $&nbsp;2.
+        </p>
+
+        <p class="mt-2">
+            Participant One chooses 80, Participant Two chooses 31, Participant Three chooses 35,
+            Participant Four chooses 60, and Participant Five chooses 44. The average of the five chosen
+            numbers is 50. The average multiplied by 0.60 yields 33. The numbers of Participant Two (31)
+            and Participant Three (35) are equally close to 33. A random draw will determine the winner
+            between the two participants, who will receive $&nbsp;2.
+        </p>
+
+        <hr class="mt-4">
+
+        <div class="mt-3">
+            <label for="id_beauty_contest_guess" class="fw-bold">
+                Please select a number between 0 and 100:
+            </label>
+            <div class="mt-2">
+                <input type="number" name="beauty_contest_guess" id="id_beauty_contest_guess" class="form-control"
+                    style="max-width: 200px;" min="0" max="100" step="any" placeholder="e.g. 42" required>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{{ include '_templates/global/_time_tracking_field.html' }}
+
+{{ next_button }}
+{{ endblock }}

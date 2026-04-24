@@ -1,0 +1,61 @@
+{{ block title }}Survey – Questions{{ endblock }}
+{{ block content }}
+
+{{ include_sibling '_button_style.html' }}
+
+<div class="card bg-light m-3">
+    <div class="card-body">
+
+        <h5 class="mb-4">Please answer the following questions:</h5>
+
+        <!-- Gender -->
+        <div class="mb-4">
+            <p class="fw-bold mb-2">{{ form.gender.label }}</p>
+            {{ formfield 'gender' }}
+        </div>
+
+        <hr>
+
+        <!-- Age -->
+        <div class="mb-4">
+            <label for="id_age" class="fw-bold">{{ form.age.label }}</label>
+            <div class="mt-2">
+                {{ formfield 'age' }}
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Field of study -->
+        <div class="mb-4">
+            <label for="id_field_of_study" class="fw-bold">{{ form.field_of_study.label }}</label>
+            <div class="mt-2">
+                {{ formfield 'field_of_study' }}
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- University years -->
+        <div class="mb-4">
+            <label for="id_university_years" class="fw-bold">{{ form.university_years.label }}</label>
+            <div class="mt-2">
+                {{ formfield 'university_years' }}
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Job status -->
+        <div class="mb-4">
+            <p class="fw-bold mb-2">{{ form.job_status.label }}</p>
+            {{ formfield 'job_status' }}
+        </div>
+
+    </div>
+</div>
+
+{{ include '_templates/global/_time_tracking_field.html' }}
+
+{{ next_button }}
+{{ endblock }}

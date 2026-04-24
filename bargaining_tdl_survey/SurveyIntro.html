@@ -1,0 +1,29 @@
+{{ block title }}Survey{{ endblock }}
+{{ block content }}
+
+{{ include_sibling '_button_style.html' }}
+
+<div class="card bg-light m-3">
+    <div class="card-body">
+
+        <hh2 class="mb-4">Thank you for taking part in this experiment!</h2>
+
+            <p class="mt-3">
+                In this part of the experiment, we will ask you to answer
+                <strong>some questions related to yourself</strong> and
+                <strong>one question related</strong> to the
+                <strong>other participant choice</strong> in the experiment.
+                All the information will be recorded in a complete anonymous way,
+                and are not conductible to yourself.
+                Answering all questions related to yourself awards you $&nbsp;5,
+                while answering the question related to the other participant choice
+                gives you the chance to win an additional $&nbsp;2.
+            </p>
+
+    </div>
+</div>
+
+{{ include '_templates/global/_time_tracking_field.html' }}
+
+{{ next_button }}
+{{ endblock }}

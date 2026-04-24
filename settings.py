@@ -5,7 +5,7 @@ SESSION_CONFIGS = [
     dict(
         name='bargaining_tdl',
         display_name="Bargaining Game (TDL + Async)",
-        app_sequence=['bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_part3'],
+        app_sequence=['bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_part3', 'bargaining_tdl_survey'],
         num_demo_participants=9,
     ),
 ]
