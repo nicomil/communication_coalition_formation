@@ -1,80 +1,18 @@
-{{ block title }}Results{{ endblock }}
+{{ block title }}Part 3 Completed{{ endblock }}
 {{ block content }}
 
 {{ include_sibling '_button_style.html' }}
 
     <div class="card">
         <div class="card-body">
-            <h4>Your Payoffs</h4>
+            <h4>Thank You</h4>
             
             <p>
-                You chose: <strong>{{ decision_display }}</strong>
+                Your choice for Part 3 has been recorded: <strong>{{ decision_display }}</strong>
             </p>
 
-            <hr>
-
-            <p class="lead">
-                Your payoff for Part 1 is: <strong>{{ part1_payoff }}</strong>
-            </p>
-
-            {% if part2_payoff_data %}
-            <hr>
-            
-            <h5>Part 2 Payoff Calculation</h5>
-            
-            <div class="card bg-light mt-3">
-                <div class="card-body">
-                    <p><strong>Selected Question:</strong> Question {{ part2_payoff_data.selected_question }}</p>
-                    
-                    {% if part2_payoff_data.reminder_text %}
-                    <div class="alert alert-secondary mt-3 mb-3">
-                        <strong>Reminder from Part 1:</strong><br>
-                        {{ part2_payoff_data.reminder_text|safe }}
-                    </div>
-                    {% endif %}
-                    
-                    <div class="card bg-white mt-3 mb-3">
-                        <div class="card-body">
-                            <h6 class="card-title">Option 1:</h6>
-                            <p class="mb-0">{{ part2_payoff_data.question_text|safe }}</p>
-                        </div>
-                    </div>
-                    
-                    <p><strong>Switching Point:</strong> {{ part2_payoff_data.switching_point }}%</p>
-                    <p><strong>Random Probability (pr1):</strong> {{ part2_payoff_data.pr1 }}%</p>
-                    
-                    {% if part2_payoff_data.option_selected == 'Option 1' %}
-                        <p><strong>Option Selected:</strong> <span class="badge bg-secondary">Option 1</span></p>
-                        <p><strong>Event Occurred:</strong> 
-                            {% if part2_payoff_data.event_occurred %}
-                                <span class="badge bg-secondary">Yes</span>
-                            {% else %}
-                                <span class="badge bg-dark">No</span>
-                            {% endif %}
-                        </p>
-                    {% elif part2_payoff_data.option_selected == 'Option 2' %}
-                        <p><strong>Option Selected:</strong> <span class="badge bg-secondary">Option 2</span></p>
-                        <p><strong>Random Probability (pr2):</strong> {{ part2_payoff_data.pr2 }}%</p>
-                        <p><strong>Condition:</strong> pr2 ({{ part2_payoff_data.pr2 }}%) 
-                            {% if part2_payoff_data.pr2 <= part2_payoff_data.pr1 %}
-                                ≤ pr1 ({{ part2_payoff_data.pr1 }}%)
-                            {% else %}
-                                > pr1 ({{ part2_payoff_data.pr1 }}%)
-                            {% endif %}
-                        </p>
-                    {% endif %}
-                    
-                    <hr>
-                    <p class="lead mb-0">
-                        <strong>Your payoff for Part 2 is: {{ part2_payoff }}</strong>
-                    </p>
-                </div>
-            </div>
-            {% endif %}
-            
-            <hr>
-            <p class="text-muted mt-3">
-                <em>Note: Your total payoff will be determined by the sum of your earnings in Part 2 and your earnings in either Part 1 or Part 3.</em>
+            <p>
+                Please proceed to the final survey.
             </p>
         </div>
     </div>

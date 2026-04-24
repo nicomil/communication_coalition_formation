@@ -1,0 +1,86 @@
+{{ block title }}Final Results{{ endblock }}
+{{ block content }}
+
+{{ include_sibling '_button_style.html' }}
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="text-success mb-4">Thank you! Your participation is now complete.</h4>
+
+        <p class="mb-4">
+            Your payment for this experiment will be the sum of: $2 as participation fee, plus your payoff for either
+            Part 1 or Part 2 (only one will be randomly selected for the payment), plus $5 to complete the final survey,
+            plus $2 for answering an additional question.
+        </p>
+
+        <hr>
+
+        <h5>Part 1 & 2 Selection</h5>
+        <p>Your group number in Part 1: <strong>#{{ part1_group_id }}</strong></p>
+
+        <p>For your group, the draw selected:
+            <strong>
+                {% if selected == 1 %}
+                Part 1
+                {% else %}
+                Part 2
+                {% endif %}
+            </strong>
+        </p>
+
+        <div class="alert alert-info">
+            {% if selected == 1 %}
+            Your payoff from Part 1 is: <strong>{{ part1_payoff }}</strong>
+            {% else %}
+            Your Part 2 payoff will be determined by the researcher after data collection.
+            {% endif %}
+        </div>
+
+        <hr>
+
+        <h5>Confirmed Payment Summary</h5>
+        <table class="table table-bordered table-sm" style="max-width: 400px;">
+            <tbody>
+                <tr>
+                    <td>Show-up fee:</td>
+                    <td class="text-end">{{ show_up_fee }}</td>
+                </tr>
+                <tr>
+                    <td>Part 1 payoff:</td>
+                    <td class="text-end">
+                        {% if selected == 1 %}
+                        {{ part1_payoff }}
+                        {% else %}
+                        0
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Survey completion:</td>
+                    <td class="text-end">{{ survey_fee }}</td>
+                </tr>
+                <tr class="table-active font-weight-bold">
+                    <td><strong>Subtotal (confirmed):</strong></td>
+                    <td class="text-end"><strong>{{ subtotal }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h5>Amounts to be determined</h5>
+        <p>The following amounts will be communicated to you after the experiment concludes:</p>
+        <ul>
+            <li><strong>$2</strong> for the additional question (beauty contest): the winner will be determined after
+                all participants have completed the experiment.</li>
+            {% if selected == 0 %}
+            <li><strong>Part 2 payoff</strong>: after data collection, the researcher will randomly form groups and
+                determine your payoff based on the selected SENDER's choice.</li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+
+{{ include '_templates/global/_time_tracking_field.html' }}
+
+{{ endblock }}

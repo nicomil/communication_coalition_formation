@@ -134,6 +134,7 @@ class Player(BasePlayer):
     time_survey_page8 = models.FloatField(initial=0)
     time_survey_page9 = models.FloatField(initial=0)
     time_survey_page10 = models.FloatField(initial=0)
+    time_final_results = models.FloatField(initial=0)
 
 
 # ──────────────────────────────────────────────
@@ -271,6 +272,42 @@ class SurveyPage10(Page):
         player.time_survey_page10 = player.time_on_page or 0
 
 
+class FinalResults(Page):
+    """Final screen of the experiment summarizing payoffs."""
+    form_model = 'player'
+    form_fields = ['time_on_page']
+
+    @staticmethod
+    def vars_for_template(player):
+        from otree.api import Currency as cu
+        
+        part1_group_id = player.participant.vars.get('part1_group_id')
+        selected = player.participant.vars.get('selected_part_for_payment', 1)
+            
+        show_up_fee = cu(2)
+        survey_fee = cu(5)
+        part1_payoff_val = player.participant.vars.get('part1_payoff', cu(0))
+        
+        if selected == 1:
+            subtotal = show_up_fee + part1_payoff_val + survey_fee
+        else:
+            subtotal = show_up_fee + survey_fee
+            part1_payoff_val = "TBD"
+
+        return {
+            'part1_group_id': part1_group_id,
+            'selected': selected,
+            'part1_payoff': part1_payoff_val,
+            'subtotal': subtotal,
+            'show_up_fee': show_up_fee,
+            'survey_fee': survey_fee,
+        }
+
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        player.time_final_results = player.time_on_page or 0
+
+
 page_sequence = [
     SurveyIntro,
     SurveyQuestions,
@@ -282,4 +319,5 @@ page_sequence = [
     SurveyPage8,
     SurveyPage9,
     SurveyPage10,
+    FinalResults,
 ]

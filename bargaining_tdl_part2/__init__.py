@@ -1514,20 +1514,8 @@ class ResultsPart2(BasePagePart2):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_results_part2 = save_time_value(player.time_on_page)
-        # Calcola il payoff di Part 2 e impostalo
-        # Verifica se è già stato calcolato (per evitare ricalcoli con valori casuali diversi)
-        if 'part2_payoff_data' not in player.participant.vars:
-            # Calcola il payoff usando la funzione calculate_part2_payoff
-            part2_payoff_data = calculate_part2_payoff(player)
-            # Salva in participant.vars per uso futuro
-            player.participant.vars['part2_payoff_data'] = part2_payoff_data
-            player.participant.vars['part2_payoff'] = part2_payoff_data['payoff']
-        else:
-            # Usa il valore già calcolato
-            part2_payoff_data = player.participant.vars['part2_payoff_data']
-        
-        # Imposta player.payoff con il valore calcolato (o già salvato)
-        player.payoff = player.participant.vars.get('part2_payoff', cu(0))  # type: ignore
+        # Rimuovi dal DB player.payoff di Part 2 (impostato a 0)
+        player.payoff = cu(0)
     
     @staticmethod
     def vars_for_template(player):

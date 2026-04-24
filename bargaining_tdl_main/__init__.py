@@ -64,10 +64,17 @@ class Group(BaseGroup):
     # Group-level variables for CSV export
     grp_coordinate = models.IntegerField(initial=0)  # 1 if group payoff is different from disagreement (at least one player has payoff > 0)
     grp_triadicsplit = models.IntegerField(initial=0)  # 1 if at least two players vote for "equally split among all the members of the group" (Both)
+    selected_part_for_payment = models.IntegerField(initial=-1) # -1 = non ancora estratto, 0 = Part 3 paga, 1 = Part 1 paga
 
 class Player(BasePlayer):
     # Color assigned to this player (Red/Green/Blue), stored for CSV export clarity
     player_color = models.StringField(blank=True)
+    
+    # Campo per salvare il vero payoff calcolato per tracciabilità nel DB
+    part1_calculated_payoff = models.CurrencyField(
+        initial=0,
+        doc="Il vero payoff calcolato per Part 1, salvato per tracciabilità anche se Part 3 viene estratta per il pagamento."
+    )
 
     # Chat/Signals — internal values are short codes; display labels are rendered
     # in templates using the per-player color context variables.
@@ -417,6 +424,24 @@ class ResultsWaitPage(WaitPage):
         # grp_triadicsplit: 1 if at least two players voted for "Both" (equally split among all members)
         group.grp_triadicsplit = 1 if both_count >= 2 else 0
 
+        # ======= SELEZIONE CASUALE PARTE 1 O PARTE 3 =======
+        import random
+        selected = random.randint(0, 1)
+        group.selected_part_for_payment = selected
+        
+        for p in players:
+            # Salva il vero payoff calcolato nel DB per tracciabilità
+            p.part1_calculated_payoff = p.payoff
+            
+            # Salva i valori originali in participant.vars
+            p.participant.vars['part1_payoff'] = p.payoff
+            p.participant.vars['selected_part_for_payment'] = selected
+            p.participant.vars['part1_group_id'] = group.id
+            
+            # Se Part 3 è estratta, azzera il payoff UFFICIALE di Part 1 per non farlo sommare da oTree al totale
+            if selected == 0:
+                p.payoff = cu(0)
+
 class Results(Page):
     form_model = 'player'
     form_fields = ['time_on_page']
@@ -441,7 +466,6 @@ class Results(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_results = save_time_value(player.time_on_page)
-        player.participant.vars['part1_payoff'] = player.payoff
 
 page_sequence = [
     GroupingAfterControlQuestions,  # Must be first (oTree: group_by_arrival_time)

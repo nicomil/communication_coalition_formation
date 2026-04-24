@@ -32,57 +32,7 @@ The experimenter will create groups with new triads a posteriori.
 """
 
 
-def get_part2_payoff_data(player):
-    """
-    Restituisce dati payoff Part 2 se disponibili.
-    Se app Part 2 non è in sessione, ritorna payoff zero.
-    """
-    def _normalize_part2_payoff_data(data):
-        defaults = {
-            'payoff': cu(0),
-            'selected_question': None,
-            'switching_point': None,
-            'pr1': None,
-            'pr2': None,
-            'option_selected': None,
-            'event_occurred': None,
-            'payoff_amount': 0,
-            'question_text': '',
-            'reminder_text': '',
-            'target_code': '',
-            'event_codes': [],
-            'question_type': '',
-            'error': None,
-        }
-        normalized = dict(defaults)
-        if isinstance(data, dict):
-            normalized.update(data)
-        return normalized
 
-    if 'part2_payoff_data' in player.participant.vars:
-        normalized = _normalize_part2_payoff_data(player.participant.vars['part2_payoff_data'])
-        player.participant.vars['part2_payoff_data'] = normalized
-        player.participant.vars['part2_payoff'] = normalized.get('payoff', cu(0))
-        return normalized
-
-    try:
-        from bargaining_tdl_part2 import calculate_part2_payoff, get_part2_player  # type: ignore
-    except Exception:
-        part2_payoff_data = _normalize_part2_payoff_data({'error': 'Part 2 app not available'})
-        player.participant.vars['part2_payoff_data'] = part2_payoff_data
-        player.participant.vars['part2_payoff'] = cu(0)
-        return part2_payoff_data
-
-    part2_payoff_data = _normalize_part2_payoff_data(calculate_part2_payoff(player))
-    player.participant.vars['part2_payoff_data'] = part2_payoff_data
-    player.participant.vars['part2_payoff'] = part2_payoff_data.get('payoff', cu(0))
-
-    # Se player Part2 esiste, sincronizza payoff per export
-    part2_player = get_part2_player(player)
-    if part2_player is not None:
-        part2_player.payoff = player.participant.vars['part2_payoff']
-
-    return part2_payoff_data
 
 class C(BaseConstants):
     NAME_IN_URL = 'bargaining_tdl_part3'
@@ -398,55 +348,16 @@ class ResultsPart3(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_results_part3 = save_time_value(player.time_on_page)
-        get_part2_payoff_data(player)
-        
-        # ==============================================================
-        # SELEZIONE CASUALE 50/50: Part 1 vs Part 3
-        # 1 = viene pagato per Part 1 (payoff già calcolato)
-        # 0 = viene pagato per Part 3 (gruppi formati a posteriori dal ricercatore)
-        # ==============================================================
-        import random
-        selected = random.randint(0, 1)
-        player.selected_part_for_payment = selected
-        player.participant.vars['selected_part_for_payment'] = selected
-        
-        if selected == 1:
-            # Paga Part 1: il payoff di Part 1 rimane intatto in participant.vars
-            # oTree accumula: participant.payoff = Part1.payoff + Part2.payoff + Part3.payoff(=0)
-            player.payoff = cu(0)
-            logger.info(f"Player {player.participant.code}: selected Part 1 for payment")
-        else:
-            # Paga Part 3: azzera il payoff di Part 1 (gruppi Part3 formati a posteriori)
-            # Il ricercatore calcolerà il payoff Part3 offline dai dati esportati
-            try:
-                from bargaining_tdl_main import Player as MainPlayer  # type: ignore
-                for app_player in player.participant.get_players():
-                    if isinstance(app_player, MainPlayer):
-                        app_player.payoff = cu(0)
-                        break
-            except Exception as e:
-                logger.warning(f"Could not zero out Part1 payoff: {e}")
-            player.participant.vars['part1_payoff'] = cu(0)
-            player.payoff = cu(0)
-            logger.info(f"Player {player.participant.code}: selected Part 3 for payment (payoff TBD by researcher)")
+        # Il draw e i calcoli finali vengono fatti in FinalResults nella Survey.
+        # Rimosso logica draw e Part 2.
     
     @staticmethod
     def vars_for_template(player):
         """Recupera i payoff per la visualizzazione e calcola il payoff di Part 2 se necessario."""
-        part1_payoff = cu(0)
-        if 'part1_payoff' in player.participant.vars:
-            part1_payoff = player.participant.vars['part1_payoff']
-
-        part2_payoff_data = get_part2_payoff_data(player)
-        part2_payoff = player.participant.vars.get('part2_payoff', cu(0))
-
         colors = _part3_color_context(player)
         decision_display = _decision_display_text(player.decision, colors)
 
         return dict(
-            part1_payoff=part1_payoff,
-            part2_payoff=part2_payoff,
-            part2_payoff_data=part2_payoff_data,
             decision_display=decision_display,
             **colors,
         )
