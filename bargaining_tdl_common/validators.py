@@ -13,7 +13,7 @@ def get_max_attempts(session):
     Returns:
         int: Numero massimo di tentativi (default: 2)
     """
-    return session.config.get('control_questions_max_attempts', 2)
+    return session.config.get('control_questions_max_attempts', 5)
 
 
 def get_control_questions_attempts(player, part_name):
@@ -206,15 +206,20 @@ def check_control_questions_part3(player):
         return False
     
     # Example 1: tutte le risposte devono essere '4'
-    # Example 2: you='0', left='6', right='6'
-    # Payoff question: risposta corretta specifica
+    # Example 2: you='6', e poi (left='0', right='6') OPPURE (left='6', right='0')
+    example2_correct = (
+        player.example2_earnings_you == '6' and
+        (
+            (player.example2_earnings_left == '0' and player.example2_earnings_right == '6') or
+            (player.example2_earnings_left == '6' and player.example2_earnings_right == '0')
+        )
+    )
+
     correct = (
         player.example1_earnings_you == '4' and
         player.example1_earnings_left == '4' and
         player.example1_earnings_right == '4' and
-        player.example2_earnings_you == '6' and
-        player.example2_earnings_left == '0' and
-        player.example2_earnings_right == '6'
+        example2_correct
     )
     return correct
 

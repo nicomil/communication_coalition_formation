@@ -96,11 +96,10 @@ class Group(BaseGroup):
     pass
 
 class Player(BasePlayer):
-    # Decision — internal values share_left/share_right/share_both; display labels in template
+    # Decision — internal values share_one / share_both; display labels built in vars_for_template
     decision = models.StringField(
         choices=[
-            ['share_left', 'share_left'],
-            ['share_right', 'share_right'],
+            ['share_one', 'share_one'],
             ['share_both', 'share_both'],
         ],
         widget=widgets.RadioSelect,
@@ -201,17 +200,12 @@ def _part3_color_context(player):
 
 def _decision_display_text(decision_code, colors):
     """
-    Convert internal decision code (share_left/right/both) to participant-facing text.
+    Convert internal decision code (share_one/share_both) to participant-facing text.
     """
-    if decision_code == 'share_left':
-        return f"Share only with the {colors['left_partner_color']} player"
-    if decision_code == 'share_right':
-        return f"Share only with the {colors['right_partner_color']} player"
+    if decision_code == 'share_one':
+        return "Equally split the $12 with only one of the two RECEIVERS"
     if decision_code == 'share_both':
-        return (
-            f"Share with both the {colors['left_partner_color']} player "
-            f"and the {colors['right_partner_color']} player"
-        )
+        return "Equally split the $12 between myself and the other two RECEIVERS"
     return ""
 
 
@@ -368,7 +362,24 @@ class DecisionPart3(Page):
 
     @staticmethod
     def vars_for_template(player):
-        return _part3_color_context(player)
+        import random
+
+        # Genera l'ordine delle opzioni una sola volta per soggetto e lo persiste
+        # per evitare che cambi se il partecipante ricarica la pagina.
+        order_key = 'decision_part3_option_order'
+        if order_key not in player.participant.vars:
+            options = [
+                {'value': 'share_one',  'label': 'Equally split the $12 with only one of the two RECEIVERS'},
+                {'value': 'share_both', 'label': 'Equally split the $12 between myself and the other two RECEIVERS'},
+            ]
+            random.shuffle(options)
+            player.participant.vars[order_key] = options
+
+        colors = _part3_color_context(player)
+        return {
+            'decision_options': player.participant.vars[order_key],
+            **colors,
+        }
 
     @staticmethod
     def before_next_page(player, timeout_happened):

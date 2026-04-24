@@ -15,10 +15,9 @@ class PlayerBot(Bot):
     """
     
     cases = [
-        'share_left',      # Condivide solo con left
-        'share_right',     # Condivide solo con right
-        'share_both',      # Condivide con entrambi
-        'selfish',         # Strategia egoista (share_left o share_right)
+        'share_one',       # Condivide con un solo receiver
+        'share_both',      # Condivide con entrambi i receivers
+        'selfish',         # Strategia egoista (share_one)
         'cooperative',     # Strategia cooperativa (share_both)
     ]
     
@@ -38,8 +37,8 @@ class PlayerBot(Bot):
             example1_earnings_you='4',
             example1_earnings_left='4',
             example1_earnings_right='4',
-            example2_earnings_you='0',
-            example2_earnings_left='6',
+            example2_earnings_you='6',
+            example2_earnings_left='0',
             example2_earnings_right='6',
         )
         
@@ -49,15 +48,12 @@ class PlayerBot(Bot):
         # Decision - la scelta varia in base al case
         case = self.case
         
-        if case == 'share_left':
-            decision = 'share_left'
-        elif case == 'share_right':
-            decision = 'share_right'
+        if case == 'share_one':
+            decision = 'share_one'
         elif case == 'share_both':
             decision = 'share_both'
         elif case == 'selfish':
-            # Strategia egoista: sceglie share_left o share_right
-            decision = 'share_left'  # o 'share_right', a scelta
+            decision = 'share_one'
         else:  # cooperative
             decision = 'share_both'
         
