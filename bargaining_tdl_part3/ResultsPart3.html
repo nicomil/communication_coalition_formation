@@ -1,24 +1,24 @@
-{{ block title }}Part 3 Completed{{ endblock }}
+{{ block title }}Part 2 Completed{{ endblock }}
 {{ block content }}
 
 {{ include_sibling '_button_style.html' }}
 
-    <div class="card">
-        <div class="card-body">
-            <h4>Thank You</h4>
-            
-            <p>
-                Your choice for Part 3 has been recorded: <strong>{{ decision_display }}</strong>
-            </p>
+<div class="card">
+    <div class="card-body">
+        <h4>Thank You</h4>
 
-            <p>
-                Please proceed to the final survey.
-            </p>
-        </div>
+        <p>
+            Your choice for Part 2 has been recorded: <strong>{{ decision_display }}</strong>
+        </p>
+
+        <p>
+            Please proceed to the final survey.
+        </p>
     </div>
+</div>
 
-    {{ include '_templates/global/_time_tracking_field.html' }}
+{{ include '_templates/global/_time_tracking_field.html' }}
 
-    {{ next_button }}
+{{ next_button }}
 
 {{ endblock }}
