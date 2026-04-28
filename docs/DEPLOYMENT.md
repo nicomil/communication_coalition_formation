@@ -29,7 +29,7 @@ Heroku è la piattaforma più semplice per oTree, e il progetto è già configur
 
    **Versione Python consigliata**:
    - Crea file `.python-version` nella root progetto con contenuto `3.11`
-   - Mantieni `runtime.txt` con `python-3.11` per compatibilita' con setup esistenti
+   - Non usare `runtime.txt` (deprecato da Heroku)
 
 3. **Crea una nuova app Heroku**:
    ```bash
