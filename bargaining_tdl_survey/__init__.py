@@ -164,6 +164,12 @@ class SurveyQuestions(Page):
     ]
 
     @staticmethod
+    def field_of_study_error_message(player, value):
+        """Reject values that contain no alphabetic characters (e.g. pure numbers)."""
+        if value and not any(c.isalpha() for c in value):
+            return 'Please enter a valid field of study (text only, no numbers).'
+
+    @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_questions = player.time_on_page or 0
 

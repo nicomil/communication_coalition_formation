@@ -32,7 +32,36 @@
             <div class="mt-2">
                 {{ formfield 'field_of_study' }}
             </div>
+            <div id="field_of_study_hint" class="form-text text-danger" style="display:none;">
+                Please enter a valid field of study (text only, no numbers).
+            </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var input = document.getElementById('id_field_of_study');
+                var hint = document.getElementById('field_of_study_hint');
+                if (input) {
+                    // Block digit characters on keypress
+                    input.addEventListener('keypress', function (e) {
+                        if (/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                            hint.style.display = 'block';
+                        }
+                    });
+                    // Strip any digits that might be pasted in
+                    input.addEventListener('input', function () {
+                        var clean = this.value.replace(/[0-9]/g, '');
+                        if (clean !== this.value) {
+                            this.value = clean;
+                            hint.style.display = 'block';
+                        } else {
+                            hint.style.display = 'none';
+                        }
+                    });
+                }
+            });
+        </script>
 
         <hr>
 
