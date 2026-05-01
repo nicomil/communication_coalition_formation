@@ -29,7 +29,7 @@
         display: none !important;
     }
 </style>
-<h4> You are the {{ my_color }}.</h4>
+<h4> You are the {{ my_color }} Participant.</h4>
 <p>
     Here are the Chat between you and your partners, and the intentions
     received by each of
@@ -41,7 +41,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                From <strong>{{ left_partner_color }}</strong> Partner
+                From <strong>{{ left_partner_color }}</strong> Participant
             </div>
             <div class="card-body">
                 <div class="signal-box">
@@ -57,7 +57,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                From <strong>{{ right_partner_color }}</strong> Partner
+                From <strong>{{ right_partner_color }}</strong> Participant
             </div>
             <div class="card-body">
                 <div class="signal-box">
@@ -87,19 +87,28 @@
             <div class="form-check">
                 <input type="radio" name="decision_choice" value="Left" id="dc_left" class="form-check-input" required>
                 <label class="form-check-label" for="dc_left">
-                    I would like to divide the $12 equally with the {{ left_partner_color }} player
+                    I would like to divide the $12 equally with the {{ left_partner_color }} Participant ( $ 6 to
+                    {{my_color}} Participant, $ 6 to the {{left_partner_color}} Participant, $ 0 to the
+                    {{right_partner_color}}
+                    Participant).
                 </label>
             </div>
             <div class="form-check">
                 <input type="radio" name="decision_choice" value="Right" id="dc_right" class="form-check-input">
                 <label class="form-check-label" for="dc_right">
-                    I would like to divide the $12 equally with the {{ right_partner_color }} player
+                    I would like to divide the $12 equally with the {{ right_partner_color }} Participant ( $ 6 to
+                    {{my_color}} Participant, $ 6 to the {{right_partner_color}} Participant, $ 0 to the
+                    {{left_partner_color}}
+                    Participant).
                 </label>
             </div>
             <div class="form-check">
                 <input type="radio" name="decision_choice" value="Both" id="dc_both" class="form-check-input">
                 <label class="form-check-label" for="dc_both">
-                    I would like to divide the $12 equally among all the members of the group
+                    I would like to divide the $12 equally among all the Participants ( $ 4 to
+                    {{my_color}} Participant, $ 4 to the {{left_partner_color}} Participant, $ 4 to the
+                    {{right_partner_color}}
+                    Participant).
                 </label>
             </div>
         </div>

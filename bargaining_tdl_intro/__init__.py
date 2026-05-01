@@ -164,7 +164,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the BLUE player ?"
+        label="What would be the earnings for the Purple Participant ?"
     )
     example1_earnings_right = models.StringField(
         choices=[
@@ -173,7 +173,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the RED player?"
+        label="What would be the earnings for the Orange Participant?"
     )
     
     # Control Questions - Example 2
@@ -195,7 +195,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the BLUE player ?"
+        label="What would be the earnings for the Purple Participant ?"
     )
     example2_earnings_right = models.StringField(
         choices=[
@@ -204,7 +204,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the RED player ?"
+        label="What would be the earnings for the Orange Participant ?"
     )
     
     # Control Questions - Example 3
@@ -226,7 +226,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the BLUE player ?"
+        label="What would be the earnings for the Purple Participant ?"
     )
     example3_earnings_right = models.StringField(
         choices=[
@@ -235,7 +235,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the RED player ?"
+        label="What would be the earnings for the Orange Participant ?"
     )
     
 
@@ -328,9 +328,24 @@ def create_control_questions_class(attempt_number):
             attempts_remaining = max_attempts - current_attempts
             
             return {
-                'example1_scenario': "Imagine that you (GREEN player) chose to split equally the $ 12 with the RED player choosing the option: 'Split equally the $ 12 only with the RED player'; the BLUE player chooses the option: 'Split equally the $ 12 with both the two players'; the RED player chooses the option: 'Split equally the $ 12 only with the GREEN player'.",
-                'example2_scenario': "Imagine that you (GREEN player) chose to split equally the $ 12 with the two players choosing the option: 'Split equally the $ 12 with both the two players'; the BLUE player chooses the option: 'Split equally the $ 12 only with the RED player'; the RED player chooses the option: 'Split equally the $ 12 with both the two players'.",
-                'example3_scenario': "Imagine that you (GREEN player) chose to split equally the $ 12 with the two players choosing the option: 'Split equally the $ 12 with both the two players'; the BLUE player chooses the option: 'Split equally the $ 12 only with the GREEN player'; the RED player chooses the option: 'Split equally the $ 12 only with the BLUE player'.",
+                'example1_scenario': (
+                    "Imagine that you are the GREEN Participant, and chose to split equally the $ 12 with the Orange Participant choosing the option:<br>"
+                    "- 'Split equally the $ 12 only with the Orange Participant'($ 6 to you, $ 6 to the Orange Participant, $ 0 to the Purple Participant);<br>"
+                    "- The Purple Participant chooses the option: 'Split equally the $ 12 with both the two Participants'($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant); <br>"
+                    "- the Orange Participant chooses the option: 'Split equally the $ 12 only with the GREEN Participant'($ 6 to you, $ 6 to the Orange Participant, $ 0 to the Purple Participant)."
+                ),
+                'example2_scenario': (
+                    "Imagine that you are the GREEN Participant, and chose to split equally the $ 12 with the two Participants choosing the option:<br>"
+                    "- 'Split equally the $ 12 only with the two Participants'($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant);<br>"
+                    "- The Purple Participant chooses the option: 'Split equally the $ 12 with the Orange Participant'($ 0 to you, $ 6 to the Orange Participant, $ 6 to the Purple Participant);<br>"
+                    "- the Orange Participant chooses the option: 'Split equally the $ 12 only with the two Participants'($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant)."
+                ),
+                'example3_scenario': (
+                    "Imagine that you are the GREEN Participant, and chose to split equally the $ 12 with the two Participants choosing the option:<br>"
+                    "- 'Split equally the $ 12 only with the two Participants'($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant);<br>"
+                    "- The Purple Participant chooses the option: 'Split equally the $ 12 with the Green Participant'($ 6 to you, $ 0 to the Orange Participant, $ 6 to the Purple Participant);<br>"
+                    "- the Orange Participant chooses the option: 'Split equally the $ 12 with the Purple Participants'($ 0 to you, $ 6 to the Orange Participant, $ 6 to the Purple Participant)."
+                ),
                 'max_attempts': max_attempts,
                 'current_attempt': attempt_number,
                 'attempts_remaining': max_attempts - attempt_number,
