@@ -307,8 +307,7 @@ class DecisionPart3(Page):
     
     @staticmethod
     def is_displayed(player):
-        """Mostra questa pagina solo se le control questions sono corrette."""
-        return has_passed_control_questions(player, 'part3')
+        return True
 
     @staticmethod
     def vars_for_template(player):
@@ -342,8 +341,7 @@ class ResultsPart3(Page):
     
     @staticmethod
     def is_displayed(player):
-        """Mostra questa pagina solo se le control questions sono corrette e la decisione è stata presa."""
-        return player.all_control_questions_correct and player.decision is not None
+        return True
     
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -364,13 +362,6 @@ class ResultsPart3(Page):
 
 page_sequence = [
     InstructionsPart3,
-    SummaryPart3,
-    ControlQuestionsPart3Attempt1,
-    ControlQuestionsPart3Attempt2,
-    ControlQuestionsPart3Attempt3,
-    ControlQuestionsPart3Attempt4,
-    ControlQuestionsPart3Attempt5,
-    ThankYouPart3,  # Solo se control questions sbagliate
-    DecisionPart3,  # Solo se control questions corrette
-    ResultsPart3,  # Solo se control questions corrette - mostra payoff
+    DecisionPart3,
+    ResultsPart3,
 ]

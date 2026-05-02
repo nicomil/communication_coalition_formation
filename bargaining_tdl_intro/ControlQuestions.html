@@ -30,7 +30,7 @@
         <!-- Example 1 -->
         <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
             <h5>Example 1</h5>
-            <p class="mb-3"><em>{{ example1_scenario }}</em></p>
+            <p class="mb-3"><em>{{ example1_scenario|safe }}</em></p>
 
             <div class="mb-3">
                 {{ formfield player.example1_earnings_you }}
@@ -48,7 +48,7 @@
         <!-- Example 2 -->
         <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
             <h5>Example 2</h5>
-            <p class="mb-3"><em>{{ example2_scenario }}</em></p>
+            <p class="mb-3"><em>{{ example2_scenario|safe }}</em></p>
 
             <div class="mb-3">
                 {{ formfield player.example2_earnings_you }}
@@ -66,7 +66,7 @@
         <!-- Example 3 -->
         <div class="mb-4" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
             <h5>Example 3</h5>
-            <p class="mb-3"><em>{{ example3_scenario }}</em></p>
+            <p class="mb-3"><em>{{ example3_scenario|safe }}</em></p>
 
             <div class="mb-3">
                 {{ formfield player.example3_earnings_you }}

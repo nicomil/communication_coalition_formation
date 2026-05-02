@@ -1,4 +1,4 @@
-{{ block title }}Survey{{ endblock }}
+{{ block title }}Survey: Guessing game{{ endblock }}
 {{ block content }}
 
 {{ include_sibling '_button_style.html' }}
@@ -47,7 +47,8 @@
             </label>
             <div class="mt-2">
                 <input type="number" name="beauty_contest_guess" id="id_beauty_contest_guess" class="form-control"
-                    style="max-width: 200px;" min="0" max="100" step="any" placeholder="e.g. 42" required>
+                    style="max-width: 200px;" min="0" max="100" step="any" placeholder="Please enter your number"
+                    required>
             </div>
         </div>
 
