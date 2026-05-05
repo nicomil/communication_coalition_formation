@@ -54,41 +54,41 @@ SECRET_KEY = environ.get('SECRET_KEY', '{{ secret_key }}')
 
 INSTALLED_APPS = ['otree']
 
-# Patch oTree bot: response.url può essere un oggetto URL (Starlette/httpx), unquote() richiede str
-try:
-    from urllib.parse import unquote, urlsplit
-    import otree.bots.bot as _bot
-    _fget = _bot.ParticipantBot.response.fget
-
-    def _response_setter(self, response):
-        url = response.url
-        if not isinstance(url, str):
-            url = str(url)
-        self.url = unquote(url)
-        self.path = urlsplit(self.url).path
-        self._response = response
-        self.html = response.content.decode('utf-8')
-
-    _bot.ParticipantBot.response = property(_fget, _response_setter)
-except Exception:
-    pass
-
-# Patch oTree chat history: SQLAlchemy recente non accetta .values('nickname', ...)
-try:
-    from otree.channels import consumers as _consumers  # type: ignore
-    from otree.models_concrete import ChatMessage as _ChatMessage  # type: ignore
-
-    def _wschat_get_history(self, channel):
-        rows = list(_ChatMessage.objects_filter(channel=channel).order_by('timestamp'))
-        return [
-            {
-                'nickname': row.nickname,
-                'body': row.body,
-                'participant_id': row.participant_id,
-            }
-            for row in rows
-        ]
-
-    _consumers.WSChat._get_history = _wschat_get_history
-except Exception:
-    pass
+# # Patch oTree bot: response.url può essere un oggetto URL (Starlette/httpx), unquote() richiede str
+# try:
+#     from urllib.parse import unquote, urlsplit
+#     import otree.bots.bot as _bot
+#     _fget = _bot.ParticipantBot.response.fget
+# 
+#     def _response_setter(self, response):
+#         url = response.url
+#         if not isinstance(url, str):
+#             url = str(url)
+#         self.url = unquote(url)
+#         self.path = urlsplit(self.url).path
+#         self._response = response
+#         self.html = response.content.decode('utf-8')
+# 
+#     _bot.ParticipantBot.response = property(_fget, _response_setter)
+# except Exception:
+#     pass
+# 
+# # Patch oTree chat history: SQLAlchemy recente non accetta .values('nickname', ...)
+# try:
+#     from otree.channels import consumers as _consumers  # type: ignore
+#     from otree.models_concrete import ChatMessage as _ChatMessage  # type: ignore
+# 
+#     def _wschat_get_history(self, channel):
+#         rows = list(_ChatMessage.objects_filter(channel=channel).order_by('timestamp'))
+#         return [
+#             {
+#                 'nickname': row.nickname,
+#                 'body': row.body,
+#                 'participant_id': row.participant_id,
+#             }
+#             for row in rows
+#         ]
+# 
+#     _consumers.WSChat._get_history = _wschat_get_history
+# except Exception:
+#     pass

@@ -6,12 +6,61 @@
 <div class="card bg-light m-3">
     <div class="card-body">
         <p>
-            Please answer the following questions correctly to proceed with Part 1 of the experiment.
+            Please answer the following questions correctly to proceed with Part 1 of the experiment. You must answer
+            all questions correctly to continue.
         </p>
-        <p> You must answer all questions correctly to continue. </p>
+        <p> </p>
         <strong>Please note:</strong> After five wrong answers, you will not be able to continue with the experiment.<p>
         </p>
-
+        <p>
+            <strong>Please read carefully the following instructions:</strong>
+        </p>
+        <p>
+            Imagine you are the Green Participant, and in your group there are the Orange and Purple Participants. The
+            possible outcomes, are the folliwing:
+        </p>
+        <ul>
+            <li>
+                <strong>Dividing the $12 equally among all members:</strong>
+                <ul>
+                    <li>If <strong>at least two Participants</strong> also choose this option, <strong>each Participant
+                            of your group
+                            earns $4</strong>. <br>
+                        <em>(Example: You (Green) and the Orange participant both choose to split equally among all the
+                            participants of the group;
+                            The Purple participant chooses to split only with the Orange participant. In this case, all
+                            three participants earn $4.)</em>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <strong>Dividing the $12 equally with only one member:</strong>
+                <ul>
+                    <li>If <strong>you and another Participant</strong> both choose to split equally only with
+                        each other, <strong>you both
+                            earn $6, and the other Participant earns $0</strong>. <br>
+                        <em>(Example: You (Green) and the Orange participant choose to split equally only with each
+                            other; The
+                            Purple participant chooses to split equally among
+                            all the participants. You (Green) and the Orange participants earn $6, and the Purple
+                            participant earns
+                            $0.)</em>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <strong>No Agreement:</strong>
+                <ul>
+                    <li>If no Participants choose the same option, <strong>everyone earns $0</strong>. <br>
+                        <em>(Example: You (Green) choose to split equally among all the participants of the group; The
+                            Orange
+                            participant chooses to split equally only with you (Green);
+                            The Purple participant chooses to split equally only with the Orange participant. In this
+                            case, everyone earns $0.)</em>
+                    </li>
+                </ul>
+            </li>
+        </ul>
 
 
         {% if not is_first_attempt %}
@@ -89,6 +138,31 @@
 
 {{ include '_templates/global/_control_questions_persistence.html' }}
 
-{{ next_button }}
+<div class="d-flex justify-content-between align-items-center mt-4">
+    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#instructionsModal"
+        style="padding: 10px 20px; font-weight: bold; border-radius: 5px;">
+        Review Instructions
+    </button>
+    {{ next_button }}
+</div>
+
+<!-- Modal for Instructions -->
+<div class="modal fade" id="instructionsModal" tabindex="-1" aria-labelledby="instructionsModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instructionsModalLabel">Instructions for Part 1</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {{ include_sibling '_instructions_content.html' }}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {{ endblock }}
