@@ -14,9 +14,9 @@
         <h4 class="text-success mb-4">Thank you! Your participation is now complete.</h4>
 
         <p class="mb-4">
-            Your payment for this experiment will be the sum of: $ 2 as participation fee, plus your payoff for either
-            Part 1 or Part 2 (only one will be randomly selected for the payment), plus $ 3 to complete the final
-            survey,
+            Your payment for this experiment will be the sum of: $ 3 as participation fee, and completing the final survey;
+            plus your payoff for either Part 1 or Part 2 (<strong>only one will be randomly selected for the
+                payment</strong>);
             plus the amount requested in the additional question.
         </p>
 
@@ -49,8 +49,8 @@
         <table class="table table-bordered table-sm" style="max-width: 400px;">
             <tbody>
                 <tr>
-                    <td>Show-up fee:</td>
-                    <td class="text-end">{{ show_up_fee }}</td>
+                    <td>Show-up fee and survey completion:</td>
+                    <td class="text-end">{{ base_fee }}</td>
                 </tr>
                 <tr>
                     <td>Part 1 payoff:</td>
@@ -61,10 +61,6 @@
                         0
                         {% endif %}
                     </td>
-                </tr>
-                <tr>
-                    <td>Survey completion:</td>
-                    <td class="text-end">{{ survey_fee }}</td>
                 </tr>
                 <tr>
                     <td>Bonus question (requested amount):</td>

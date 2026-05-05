@@ -55,7 +55,8 @@ class Player(BasePlayer):
 
     # University years: free numeric input
     university_years = models.IntegerField(
-        min=0,
+        min=1,
+        max=10,
         label="Please indicate how many years you studied at university?",
     )
 
@@ -115,10 +116,10 @@ class Player(BasePlayer):
         label="I assume that people have only the best intentions.",
     )
 
-    # 11-20 game — guess a number 110-200 (steps of 10)
-    beauty_contest_guess = models.IntegerField(
-        min=110,
-        max=200,
+    # 11-20 game — guess an amount 1.10-2.00 (steps of 0.10)
+    beauty_contest_guess = models.FloatField(
+        min=1.1,
+        max=2.0,
         label="What amount of money would you request?",
     )
 
@@ -275,8 +276,10 @@ class SurveyPage10(Page):
 
     @staticmethod
     def beauty_contest_guess_error_message(player, value):
-        if value is not None and value % 10 != 0:
-            return 'Please enter a number in steps of 10 (e.g., 110, 120, 130... 200).'
+        if value is not None:
+            val_in_cents = round(value * 100)
+            if val_in_cents % 10 != 0:
+                return 'Please enter a number in steps of $ 0.10 (e.g., 1.10, 1.20, 1.30... 2.00).'
 
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -295,15 +298,14 @@ class FinalResults(Page):
         part1_group_id = player.participant.vars.get('part1_group_id')
         selected = player.participant.vars.get('selected_part_for_payment', 1)
             
-        show_up_fee = cu(2)
-        survey_fee = cu(3)
-        beauty_contest_bonus = cu((player.beauty_contest_guess or 0) / 100)
+        base_fee = cu(3)
+        beauty_contest_bonus = cu(player.beauty_contest_guess or 0)
         part1_payoff_val = player.participant.vars.get('part1_payoff', cu(0))
         
         if selected == 1:
-            subtotal = show_up_fee + part1_payoff_val + survey_fee + beauty_contest_bonus
+            subtotal = base_fee + part1_payoff_val + beauty_contest_bonus
         else:
-            subtotal = show_up_fee + survey_fee + beauty_contest_bonus
+            subtotal = base_fee + beauty_contest_bonus
             part1_payoff_val = "TBD"
 
         return {
@@ -311,8 +313,7 @@ class FinalResults(Page):
             'selected': selected,
             'part1_payoff': part1_payoff_val,
             'subtotal': subtotal,
-            'show_up_fee': show_up_fee,
-            'survey_fee': survey_fee,
+            'base_fee': base_fee,
             'beauty_contest_bonus': beauty_contest_bonus,
         }
 
