@@ -42,9 +42,14 @@ class PlayerBot(Bot):
         
         # GroupingAfterControlQuestions is a WaitPage - handled automatically by oTree
         # Chat - native chat is not simulated by bots
+        expect(Chat.get_timeout_seconds(self.player), 180)
         yield Chat, dict(
             time_on_page=1.0,
         )
+        chat_status = Chat.live_method(self.player, {}).get(self.player.id_in_group, {})
+        expect('left_partner_active' in chat_status, True)
+        expect('right_partner_active' in chat_status, True)
+        expect('should_auto_advance' in chat_status, True)
         # Signals - save intentions to participant.vars for DataMappingWaitPage mapping
         id_in_group = self.player.id_in_group
         if id_in_group == 1:
@@ -153,6 +158,9 @@ class PlayerBot(Bot):
         
         # Verifica che il payoff sia stato salvato in participant.vars
         expect(self.player.participant.vars.get('part1_payoff'), self.player.payoff)
+        expect(self.group.chat_left_p1, True)
+        expect(self.group.chat_left_p2, True)
+        expect(self.group.chat_left_p3, True)
 
 
 

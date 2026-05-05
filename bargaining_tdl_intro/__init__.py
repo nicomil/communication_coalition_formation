@@ -99,6 +99,10 @@ Instructions -> Chat and Intentions
 Data is saved to participant.vars for the next app.
 """
 
+
+def _skip_intro_control_questions(player):
+    return bool(player.session.config.get('skip_intro_control_questions', False))
+
 class C(BaseConstants):
     NAME_IN_URL = 'bargaining_tdl_intro'
     PLAYERS_PER_GROUP = None  # No groups in this app; grouping happens in bargaining_tdl_main
@@ -273,6 +277,10 @@ class InstructionsPart1(Page):
     def before_next_page(player, timeout_happened):
         player.time_instructions_part1 = save_time_value(player.time_on_page)
         logger.debug(f"InstructionsPart1 - time_instructions_part1 saved: {player.time_instructions_part1}")
+        if _skip_intro_control_questions(player):
+            # Temporary fast-path for manual testing of chat flow.
+            set_control_questions_passed(player, 'intro', passed=True)
+            set_control_questions_failed(player, 'intro', failed=False)
 
 def create_control_questions_class(attempt_number):
     """
@@ -311,6 +319,8 @@ def create_control_questions_class(attempt_number):
             - Non ha ancora fallito definitivamente E
             - È il tentativo corretto (current_attempts == attempt_number - 1)
             """
+            if _skip_intro_control_questions(player):
+                return False
             if has_passed_control_questions(player, 'intro'):
                 return False
             

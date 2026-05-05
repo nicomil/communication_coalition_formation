@@ -18,6 +18,7 @@ SESSION_CONFIGS = [
 SESSION_CONFIG_DEFAULTS = dict(
     real_world_currency_per_point=1.00, participation_fee=0.00, doc="",
     control_questions_max_attempts=5,  # Numero massimo di tentativi per le control questions
+    skip_intro_control_questions=False,
 )
 
 PARTICIPANT_FIELDS = []
@@ -53,6 +54,21 @@ Here are some oTree games.
 SECRET_KEY = environ.get('SECRET_KEY', '{{ secret_key }}')
 
 INSTALLED_APPS = ['otree']
+
+# Compat patch: oTree 5.x expects ExceptionMiddleware._lookup_exception_handler,
+# removed in newer Starlette. Reintroduce it using Starlette helper.
+try:
+    import otree.patch as _otree_patch
+    from starlette._exception_handler import _lookup_exception_handler as _st_lookup_exception_handler
+
+    if not hasattr(_otree_patch.ExceptionMiddleware, '_lookup_exception_handler'):
+        def _lookup_exception_handler_compat(self, exc):
+            handlers = getattr(self, '_exception_handlers', {})
+            return _st_lookup_exception_handler(handlers, exc)
+
+        _otree_patch.ExceptionMiddleware._lookup_exception_handler = _lookup_exception_handler_compat
+except Exception:
+    pass
 
 # # Patch oTree bot: response.url può essere un oggetto URL (Starlette/httpx), unquote() richiede str
 # try:

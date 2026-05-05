@@ -18,9 +18,9 @@
                     var msgNode = span.closest('.otree-chat__msg');
                     if (msgNode) msgNode.classList.add('my-own-message');
                 } else if (text.trim() === 'RightPartner') {
-                    span.textContent = _rightPartnerColor + ' player';
+                    span.textContent = _rightPartnerColor + ' Participant';
                 } else if (text.trim() === 'LeftPartner') {
-                    span.textContent = _leftPartnerColor + ' player';
+                    span.textContent = _leftPartnerColor + ' Participant';
                 }
             });
         }
@@ -42,8 +42,8 @@
                             msgs.forEach(customizeNicknames);
                         }
 
-                        // Sostituisci anche eventuali nuovi input di chat montati dinamicamente
-                        upgradeInputsIn(node);
+                        // Applica blocco clipboard anche a nodi chat montati dinamicamente
+                        blockClipboardIn(node);
                     }
                 });
             });
@@ -59,91 +59,24 @@
         // Seleziono per sicurezza anche l'intero corpo nel caso oTree creasse i container dopo
         observer.observe(document.body, { childList: true, subtree: true });
 
-        // ── AUTO-RESIZE TEXTAREA ─────────────────────────────────────────
+        // ── CLIPBOARD BLOCK (copy/cut/paste in all chat areas) ──────────
+        function blockClipboardIn(root) {
+            if (!root || !root.querySelectorAll) return;
+            var chats = root.querySelectorAll('.otree-chat');
+            chats.forEach(function(chatRoot) {
+                if (chatRoot.dataset.clipboardBlocked) return;
+                chatRoot.dataset.clipboardBlocked = 'true';
 
-        /**
-         * Sostituisce un <input type="text"> del widget chat oTree
-         * con una <textarea> auto-ridimensionabile.
-         */
-        function upgradeInput(input) {
-            // Evita di processare lo stesso elemento due volte
-            if (input.dataset.upgraded) return;
-            input.dataset.upgraded = 'true';
-
-            const textarea = document.createElement('textarea');
-
-            // Copia attributi rilevanti
-            textarea.placeholder = input.placeholder || '';
-            textarea.className   = input.className;
-
-            // Stile base per l'auto-resize
-            textarea.style.resize     = 'none';
-            textarea.style.overflowY  = 'hidden';
-            textarea.style.minHeight  = '2.4em';
-            textarea.style.lineHeight = '1.4';
-            textarea.style.boxSizing  = 'border-box';
-            textarea.style.width      = '100%';
-
-            // Funzione di auto-resize
-            function autoResize() {
-                textarea.style.height = 'auto';
-                textarea.style.height = (textarea.scrollHeight) + 'px';
-            }
-            textarea.addEventListener('input', autoResize);
-
-            // Enter invia, Shift+Enter va a capo
-            textarea.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    // Trova e clicca il bottone Send nel widget oTree
-                    const chatRoot = textarea.closest('otree-chat') || textarea.parentElement;
-                    const sendBtn  = chatRoot ? chatRoot.querySelector('button') : null;
-                    if (sendBtn) {
-                        sendBtn.click();
-                    }
-                    // Reset altezza dopo invio
-                    setTimeout(function () {
-                        textarea.style.height = 'auto';
-                    }, 50);
-                }
+                ['copy', 'cut', 'paste'].forEach(function(eventName) {
+                    chatRoot.addEventListener(eventName, function (e) {
+                        e.preventDefault();
+                    });
+                });
             });
-
-            // Sincronizza il valore della textarea → input originale (oTree legge da quello)
-            textarea.addEventListener('input', function () {
-                const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-                    window.HTMLInputElement.prototype, 'value'
-                ).set;
-                nativeInputValueSetter.call(input, textarea.value);
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            });
-
-            // Nasconde l'input originale e inserisce la textarea al suo posto
-            input.style.display = 'none';
-            input.parentNode.insertBefore(textarea, input.nextSibling);
-
-            // Polling leggero: rileva quando oTree resetta input.value = '' dopo l'invio
-            let lastVal = '';
-            setInterval(function () {
-                if (input.value !== lastVal) {
-                    if (input.value === '' && lastVal !== '') {
-                        textarea.value = '';
-                        textarea.style.height = 'auto';
-                    }
-                    lastVal = input.value;
-                }
-            }, 200);
-        }
-
-        /** Cerca e aggiorna tutti gli input chat dentro un nodo radice */
-        function upgradeInputsIn(root) {
-            const selector = 'otree-chat input[type="text"], .otree-chat input[type="text"]';
-            const inputs = (root.querySelectorAll ? root.querySelectorAll(selector) : []);
-            inputs.forEach(upgradeInput);
-            if (root.tagName === 'INPUT' && root.type === 'text') upgradeInput(root);
         }
 
         // Esegui subito su quanto già presente in pagina
-        upgradeInputsIn(document.body);
+        blockClipboardIn(document.body);
     });
 </script>
 
@@ -156,6 +89,13 @@
     /* Rende "You" in grassetto */
     .my-own-message .otree-chat__nickname {
         font-weight: bold;
+    }
+
+    /* Disable text selection across full chat to discourage copying */
+    .otree-chat,
+    .otree-chat * {
+        user-select: none;
+        -webkit-user-select: none;
     }
 
     /* Layout row: textarea + bottone Send allineati in basso */

@@ -65,6 +65,9 @@ class Group(BaseGroup):
     grp_coordinate = models.IntegerField(initial=0)  # 1 if group payoff is different from disagreement (at least one player has payoff > 0)
     grp_triadicsplit = models.IntegerField(initial=0)  # 1 if at least two players vote for "equally split among all the members of the group" (Both)
     selected_part_for_payment = models.IntegerField(initial=-1) # -1 = non ancora estratto, 0 = Part 3 paga, 1 = Part 1 paga
+    chat_left_p1 = models.BooleanField(initial=False)
+    chat_left_p2 = models.BooleanField(initial=False)
+    chat_left_p3 = models.BooleanField(initial=False)
 
 class Player(BasePlayer):
     # Color assigned to this player (Red/Green/Blue), stored for CSV export clarity
@@ -153,12 +156,68 @@ def _color_context(player):
 def _signal_display_text(code, target_color, other_color):
     """Human-readable text for a signal internal code."""
     if code == 'split_you':
-        return f"I wish to split the $12 equally with you only, the {target_color} player."
+        # "you" refers to the receiver, so do not append a color label.
+        return "I wish to split the $12 equally with you only."
     elif code == 'split_other':
-        return f"I wish to split the $12 equally with the other player only, the {other_color} player."
+        return f"I wish to split the $12 equally with the other Participant only, the {other_color} Participant."
     elif code == 'split_both':
-        return f"I wish to split the $12 equally with both you and the {other_color} player."
+        return f"I wish to split the $12 equally with both you and the {other_color} Participant."
     return code or ""
+
+
+def _chat_left_state(group: Group):
+    return {
+        1: group.chat_left_p1,
+        2: group.chat_left_p2,
+        3: group.chat_left_p3,
+    }
+
+
+def _set_player_left_chat(player: Player):
+    field_name = f'chat_left_p{player.id_in_group}'
+    if hasattr(player.group, field_name):
+        setattr(player.group, field_name, True)
+
+
+def _chat_status_payload(player: Player):
+    statuses = _chat_left_state(player.group)
+    my_id = player.id_in_group
+    left_id = get_left_partner_id(my_id)
+    right_id = get_right_partner_id(my_id)
+    left_count = sum(1 for has_left in statuses.values() if has_left)
+    return dict(
+        left_partner_id=left_id,
+        right_partner_id=right_id,
+        left_partner_active=not statuses[left_id],
+        right_partner_active=not statuses[right_id],
+        should_auto_advance=(left_count >= 2 and not statuses[my_id]),
+        left_count=left_count,
+    )
+
+
+def _chat_rows_for_decision(player: Player, channel: str, partner_label: str):
+    """Return chat history formatted for read-only rendering on Decision page."""
+    try:
+        from otree.models_concrete import ChatMessage  # type: ignore
+    except Exception:
+        return []
+
+    try:
+        rows = list(ChatMessage.objects_filter(channel=channel).order_by('timestamp'))
+    except Exception:
+        return []
+
+    my_participant_id = player.participant.id
+    formatted = []
+    for row in rows:
+        speaker = 'You' if row.participant_id == my_participant_id else partner_label
+        formatted.append(
+            dict(
+                speaker=speaker,
+                body=row.body or '',
+            )
+        )
+    return formatted
 
 
 def map_player_data_in_group(group: Group):
@@ -231,6 +290,9 @@ class GroupingAfterControlQuestions(WaitPage):
 
     @staticmethod
     def after_all_players_arrive(group: Group):
+        group.chat_left_p1 = False
+        group.chat_left_p2 = False
+        group.chat_left_p3 = False
         for p in group.get_players():
             p.time_welcome = p.participant.vars.get('time_welcome', 0)
             p.player_color = get_player_color(p.id_in_group)
@@ -244,6 +306,12 @@ class GroupingAfterControlQuestions(WaitPage):
 class Chat(Page):
     form_model = 'player'
     form_fields = ['time_on_page']
+    timeout_seconds = 180
+    timer_text = "Chat time remaining:"
+
+    @staticmethod
+    def get_timeout_seconds(player):
+        return Chat.timeout_seconds
 
     @staticmethod
     def vars_for_template(player: Player):
@@ -260,13 +328,20 @@ class Chat(Page):
         return dict(
             channel_left=channel_left,
             channel_right=channel_right,
+            chat_timeout_seconds=Chat.timeout_seconds,
+            **_chat_status_payload(player),
             **colors,
         )
 
     @staticmethod
     def before_next_page(player, timeout_happened):
+        _set_player_left_chat(player)
         player.time_chat = save_time_value(player.time_on_page)
         logger.debug(f"Chat - time_chat saved: {player.time_chat}")
+
+    @staticmethod
+    def live_method(player: Player, data):
+        return {player.id_in_group: _chat_status_payload(player)}
 
 
 class Signals(Page):
@@ -346,11 +421,23 @@ class Decision(Page):
             colors['right_partner_color'],
             colors['left_partner_color'],
         )
+        left_chat_rows = _chat_rows_for_decision(
+            player,
+            channel_left,
+            f"{colors['left_partner_color']} Participant",
+        )
+        right_chat_rows = _chat_rows_for_decision(
+            player,
+            channel_right,
+            f"{colors['right_partner_color']} Participant",
+        )
         return dict(
             channel_left=channel_left,
             channel_right=channel_right,
             received_signal_left_display=received_left_display,
             received_signal_right_display=received_right_display,
+            left_chat_rows=left_chat_rows,
+            right_chat_rows=right_chat_rows,
             **colors,
         )
 
@@ -456,9 +543,9 @@ class Results(Page):
         colors = _color_context(player)
         choice = player.decision_choice
         if choice == 'Left':
-            choice_display = f"I would like to divide the $12 equally with the {colors['left_partner_color']} player"
+            choice_display = f"I would like to divide the $12 equally with the {colors['left_partner_color']} Participant"
         elif choice == 'Right':
-            choice_display = f"I would like to divide the $12 equally with the {colors['right_partner_color']} player"
+            choice_display = f"I would like to divide the $12 equally with the {colors['right_partner_color']} Participant"
         else:
             choice_display = "I would like to divide the $12 equally among all the members of the group"
         return dict(choice_display=choice_display, **colors)
