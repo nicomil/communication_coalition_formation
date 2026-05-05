@@ -115,11 +115,11 @@ class Player(BasePlayer):
         label="I assume that people have only the best intentions.",
     )
 
-    # Beauty contest — guess a number 0–100 (decimals allowed)
-    beauty_contest_guess = models.FloatField(
-        min=0,
-        max=100,
-        label="Please select a number between 0 and 100:",
+    # 11-20 game — guess a number 110-200 (steps of 10)
+    beauty_contest_guess = models.IntegerField(
+        min=110,
+        max=200,
+        label="What amount of money would you request?",
     )
 
     # Time tracking
@@ -269,9 +269,14 @@ class SurveyPage9(Page):
 
 
 class SurveyPage10(Page):
-    """Beauty contest — guess a number between 0 and 100."""
+    """11-20 game — guess a number between 110 and 200."""
     form_model = 'player'
     form_fields = ['beauty_contest_guess', 'time_on_page']
+
+    @staticmethod
+    def beauty_contest_guess_error_message(player, value):
+        if value is not None and value % 10 != 0:
+            return 'Please enter a number in steps of 10 (e.g., 110, 120, 130... 200).'
 
     @staticmethod
     def before_next_page(player, timeout_happened):
