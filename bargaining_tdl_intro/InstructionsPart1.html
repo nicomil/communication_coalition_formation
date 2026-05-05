@@ -1,11 +1,17 @@
 {{ block title }}Instructions for Part 1{{ endblock }}
 {{ block content }}
 
+<style>
+    .otree-body {
+        max-width: 1000px;
+    }
+</style>
+
 {{ include_sibling '_button_style.html' }}
 {{ include '_templates/global/_time_tracking_field.html' }}
 
-<div class="card bg-light m-3">
-    <div class="card-body">
+<div class="card bg-white mt-4 mb-4 shadow-sm">
+    <div class="card-body px-5 py-4">
         <p>
             <li>In this part of the experiment, you will be <strong>randomly assigned to a group of exactly three
                     participants (you and two others)</strong>.</li>
@@ -18,7 +24,7 @@
 
         <p>
             <li>Each participant has the same <strong>three options to choose how divide the $ 12</strong>. Imagine you
-                are the Green Participant, and you are interacting with a Purple and an Orange Participant. You can
+                are the Green Participant, and you are interacting with a Purple and an Orange Participant. You have to
                 choose to:</li>
         </p>
         <ul>
@@ -47,7 +53,7 @@
         </p>
 
     </div>
-    <div class="card-body">
+    <div class="card-body px-5 py-4">
         <h4>Chat Instructions</h4>
 
         <p>

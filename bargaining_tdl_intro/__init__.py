@@ -360,6 +360,8 @@ def create_control_questions_class(attempt_number):
                 'current_attempt': attempt_number,
                 'attempts_remaining': max_attempts - attempt_number,
                 'is_first_attempt': attempt_number == 1,
+                'cq_errors': player.participant.vars.get('intro_cq_errors', []),
+                'cq_errors_str': ", ".join(player.participant.vars.get('intro_cq_errors', [])),
             }
 
         @staticmethod
@@ -370,6 +372,18 @@ def create_control_questions_class(attempt_number):
             
             # Verifica le risposte
             is_correct = check_control_questions_intro(player)
+            
+            # Identify which examples are wrong
+            errors = []
+            if not (player.example1_earnings_you == "6" and player.example1_earnings_left == "0" and player.example1_earnings_right == "6"):
+                errors.append("Example 1")
+            if not (player.example2_earnings_you == "4" and player.example2_earnings_left == "4" and player.example2_earnings_right == "4"):
+                errors.append("Example 2")
+            if not (player.example3_earnings_you == "0" and player.example3_earnings_left == "0" and player.example3_earnings_right == "0"):
+                errors.append("Example 3")
+                
+            player.participant.vars['intro_cq_errors'] = errors
+            
             max_attempts = get_max_attempts(player.session)
             current_attempts = increment_control_questions_attempts(player, 'intro')
             

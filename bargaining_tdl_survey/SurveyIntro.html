@@ -1,23 +1,25 @@
 {{ block title }}Survey{{ endblock }}
 {{ block content }}
 
+<style>
+    .otree-body {
+        max-width: 1000px;
+    }
+</style>
+
 {{ include_sibling '_button_style.html' }}
 
-<div class="card bg-light m-3">
-    <div class="card-body">
+<div class="card bg-white mt-4 mb-4 shadow-sm">
+    <div class="card-body px-5 py-4">
 
         <hh2 class="mb-4">Thank you for taking part in this experiment!</h2>
 
             <p class="mt-3">
                 In this part of the experiment, we will ask you to answer
-                <strong>some questions related to yourself</strong> and
-                <strong>one question related</strong> to the
-                <strong>other participant choice</strong> in the experiment.
+                <strong>some questions related to yourself</strong>.
                 All the information will be recorded in a complete anonymous way,
                 and are not conductible to yourself.
-                Answering all questions related to yourself awards you $&nbsp;5,
-                while answering the question related to the other participant choice
-                gives you the chance to win an additional $&nbsp;2.
+                Answering all questions related to yourself awards you $&nbsp;3.
             </p>
 
     </div>

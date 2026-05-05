@@ -1,6 +1,12 @@
 {{ block title }}Your Decision{{ endblock }}
 {{ block content }}
 
+<style>
+    .otree-body {
+        max-width: 1000px;
+    }
+</style>
+
 {{ include_sibling '_button_style.html' }}
 
 <style>
@@ -53,7 +59,7 @@
             <div class="card-header">
                 From <strong>{{ left_partner_color }}</strong> Participant
             </div>
-            <div class="card-body">
+            <div class="card-body px-5 py-4">
                 <div class="signal-box">
                     Intentions: {{ received_signal_left_display }}
                 </div>
@@ -69,7 +75,7 @@
             <div class="card-header">
                 From <strong>{{ right_partner_color }}</strong> Participant
             </div>
-            <div class="card-body">
+            <div class="card-body px-5 py-4">
                 <div class="signal-box">
                     Intentions: {{ received_signal_right_display }}
                 </div>
@@ -88,7 +94,7 @@
     <div class="card-header bg-secondary text-white">
         <h4>Your Choice</h4>
     </div>
-    <div class="card-body">
+    <div class="card-body px-5 py-4">
         <p>
             Please choose how you would like to divide the $12.
         </p>

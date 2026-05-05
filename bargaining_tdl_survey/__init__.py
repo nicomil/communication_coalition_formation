@@ -296,13 +296,14 @@ class FinalResults(Page):
         selected = player.participant.vars.get('selected_part_for_payment', 1)
             
         show_up_fee = cu(2)
-        survey_fee = cu(5)
+        survey_fee = cu(3)
+        beauty_contest_bonus = cu((player.beauty_contest_guess or 0) / 100)
         part1_payoff_val = player.participant.vars.get('part1_payoff', cu(0))
         
         if selected == 1:
-            subtotal = show_up_fee + part1_payoff_val + survey_fee
+            subtotal = show_up_fee + part1_payoff_val + survey_fee + beauty_contest_bonus
         else:
-            subtotal = show_up_fee + survey_fee
+            subtotal = show_up_fee + survey_fee + beauty_contest_bonus
             part1_payoff_val = "TBD"
 
         return {
@@ -312,6 +313,7 @@ class FinalResults(Page):
             'subtotal': subtotal,
             'show_up_fee': show_up_fee,
             'survey_fee': survey_fee,
+            'beauty_contest_bonus': beauty_contest_bonus,
         }
 
     @staticmethod

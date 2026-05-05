@@ -1,10 +1,16 @@
 {{ block title }}Results{{ endblock }}
 {{ block content }}
 
+<style>
+    .otree-body {
+        max-width: 1000px;
+    }
+</style>
+
 {{ include_sibling '_button_style.html' }}
 
-<div class="card">
-    <div class="card-body">
+<div class="card bg-white mt-4 mb-4 shadow-sm">
+    <div class="card-body px-5 py-4">
         <p>
         <h4> You are the {{ my_color }}</h4>
         </p>

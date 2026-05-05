@@ -1,16 +1,23 @@
 {{ block title }}Final Results{{ endblock }}
 {{ block content }}
 
+<style>
+    .otree-body {
+        max-width: 1000px;
+    }
+</style>
+
 {{ include_sibling '_button_style.html' }}
 
-<div class="card">
-    <div class="card-body">
+<div class="card bg-white mt-4 mb-4 shadow-sm">
+    <div class="card-body px-5 py-4">
         <h4 class="text-success mb-4">Thank you! Your participation is now complete.</h4>
 
         <p class="mb-4">
-            Your payment for this experiment will be the sum of: $2 as participation fee, plus your payoff for either
-            Part 1 or Part 2 (only one will be randomly selected for the payment), plus $5 to complete the final survey,
-            plus $2 for answering an additional question.
+            Your payment for this experiment will be the sum of: $ 2 as participation fee, plus your payoff for either
+            Part 1 or Part 2 (only one will be randomly selected for the payment), plus $ 3 to complete the final
+            survey,
+            plus the amount requested in the additional question.
         </p>
 
         <hr>
@@ -59,6 +66,10 @@
                     <td>Survey completion:</td>
                     <td class="text-end">{{ survey_fee }}</td>
                 </tr>
+                <tr>
+                    <td>Bonus question (requested amount):</td>
+                    <td class="text-end">{{ beauty_contest_bonus }}</td>
+                </tr>
                 <tr class="table-active font-weight-bold">
                     <td><strong>Subtotal (confirmed):</strong></td>
                     <td class="text-end"><strong>{{ subtotal }}</strong></td>
@@ -71,7 +82,8 @@
         <h5>Amounts to be determined</h5>
         <p>The following amounts will be communicated to you after the experiment concludes:</p>
         <ul>
-            <li><strong>$2</strong> for the additional question (guessing game): the winner will be determined after
+            <li><strong>$ 2</strong> for the additional bonus question: the winner will be determined
+                after
                 all participants have completed the experiment.</li>
             {% if selected == 0 %}
             <li><strong>Part 2 payoff</strong>: after data collection, the researcher will randomly form groups and

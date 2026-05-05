@@ -1,12 +1,18 @@
 {{ block title }}Decision{{ endblock }}
 {{ block content }}
 
+<style>
+    .otree-body {
+        max-width: 1000px;
+    }
+</style>
+
 {{ include_sibling '_button_style.html' }}
 
-<div class="card bg-light m-3">
-    <div class="card-body">
+<div class="card bg-white mt-4 mb-4 shadow-sm">
+    <div class="card-body px-5 py-4">
         <p>
-            How would you like to divide $12 between the three of you?
+            How would you like to divide $ 12 between the three of you?
         </p>
 
         <p class="mb-3">
@@ -17,8 +23,8 @@
             <div class="form-group">
                 {{ for opt in decision_options }}
                 <div class="form-check">
-                    <input type="radio" name="decision" value="{{ opt.value }}"
-                        id="decision_{{ opt.value }}" class="form-check-input" required>
+                    <input type="radio" name="decision" value="{{ opt.value }}" id="decision_{{ opt.value }}"
+                        class="form-check-input" required>
                     <label class="form-check-label" for="decision_{{ opt.value }}">
                         {{ opt.label }}
                     </label>
@@ -37,4 +43,4 @@
 </div>
 
 {{ next_button }}
-{{ endblock }}
+{{ endblock }}
