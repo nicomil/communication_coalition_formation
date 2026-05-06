@@ -59,18 +59,18 @@ class Player(BasePlayer):
     # Control Questions - Example 1 (scenario uses fixed color names from vars_for_template)
     example1_earnings_you = models.StringField(
         choices=[
-            ['0', '$0'],
-            ['4', '$4'],
-            ['6', '$6'],
+            ['0', '$ 0'],
+            ['4', '$ 4'],
+            ['6', '$ 6'],
         ],
         widget=widgets.RadioSelect,
         label="What would be the earnings for the SENDER ?"
     )
     example1_earnings_left = models.StringField(
         choices=[
-            ['0', '$0'],
-            ['4', '$4'],
-            ['6', '$6'],
+            ['0', '$ 0'],
+            ['4', '$ 4'],
+            ['6', '$ 6'],
         ],
         widget=widgets.RadioSelect,
         label="What would be the earnings for the first of the two RECEIVERS ?"
@@ -153,9 +153,9 @@ def _decision_display_text(decision_code, colors):
     Convert internal decision code (share_one/share_both) to participant-facing text.
     """
     if decision_code == 'share_one':
-        return "Equally split the $12 with only one of the two RECEIVERS"
+        return "Equally split the $ 12 with only one of the two RECEIVERS"
     if decision_code == 'share_both':
-        return "Equally split the $12 between myself and the other two RECEIVERS"
+        return "Equally split the $ 12 between myself and the other two RECEIVERS"
     return ""
 
 
@@ -318,8 +318,8 @@ class DecisionPart3(Page):
         order_key = 'decision_part3_option_order'
         if order_key not in player.participant.vars:
             options = [
-                {'value': 'share_one',  'label': 'Equally split the $12 with only one of the two RECEIVERS'},
-                {'value': 'share_both', 'label': 'Equally split the $12 between myself and the other two RECEIVERS'},
+                {'value': 'share_one',  'label': 'Equally split the $ 12 with only one of the two RECEIVERS'},
+                {'value': 'share_both', 'label': 'Equally split the $ 12 between myself and the other two RECEIVERS'},
             ]
             random.shuffle(options)
             player.participant.vars[order_key] = options

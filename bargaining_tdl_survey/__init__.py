@@ -56,7 +56,7 @@ class Player(BasePlayer):
     # University years: free numeric input
     university_years = models.IntegerField(
         min=1,
-        max=10,
+        max=20,
         label="Please indicate how many years you studied at university?",
     )
 
@@ -65,7 +65,9 @@ class Player(BasePlayer):
         choices=[
             ['employee', 'Employee'],
             ['employer', 'Employer'],
+            ['self_employed', 'Self-employed'],
             ['not_in_labour_force', 'Not in the labour force'],
+            
         ],
         widget=widgets.RadioSelect,
         label="Please indicate your job status:",

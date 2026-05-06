@@ -22,11 +22,11 @@
         <div class="mb-4">
             <div class="form-group">
                 {{ for opt in decision_options }}
-                <div class="form-check">
+                <div class="form-check mb-3">
                     <input type="radio" name="decision" value="{{ opt.value }}" id="decision_{{ opt.value }}"
                         class="form-check-input" required>
                     <label class="form-check-label" for="decision_{{ opt.value }}">
-                        {{ opt.label }}
+                        <strong>{{ opt.label }}</strong>
                     </label>
                 </div>
                 {{ endfor }}

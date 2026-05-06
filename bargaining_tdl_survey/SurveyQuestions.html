@@ -16,7 +16,6 @@
 
         <!-- Gender -->
         <div class="mb-4">
-            <p class="fw-bold mb-2">{{ form.gender.label }}</p>
             {{ formfield 'gender' }}
         </div>
 
@@ -24,20 +23,14 @@
 
         <!-- Age -->
         <div class="mb-4">
-            <label for="id_age" class="fw-bold">{{ form.age.label }}</label>
-            <div class="mt-2">
-                {{ formfield 'age' }}
-            </div>
+            {{ formfield 'age' }}
         </div>
 
         <hr>
 
         <!-- Field of study -->
         <div class="mb-4">
-            <label for="id_field_of_study" class="fw-bold">{{ form.field_of_study.label }}</label>
-            <div class="mt-2">
-                {{ formfield 'field_of_study' }}
-            </div>
+            {{ formfield 'field_of_study' }}
             <div id="field_of_study_hint" class="form-text text-danger" style="display:none;">
                 Please enter a valid field of study (text only, no numbers).
             </div>
@@ -73,17 +66,13 @@
 
         <!-- University years -->
         <div class="mb-4">
-            <label for="id_university_years" class="fw-bold">{{ form.university_years.label }}</label>
-            <div class="mt-2">
-                {{ formfield 'university_years' }}
-            </div>
+            {{ formfield 'university_years' }}
         </div>
 
         <hr>
 
         <!-- Job status -->
         <div class="mb-4">
-            <p class="fw-bold mb-2">{{ form.job_status.label }}</p>
             {{ formfield 'job_status' }}
         </div>
 

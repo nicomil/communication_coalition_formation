@@ -17,12 +17,14 @@
         border-radius: 4px;
         overflow: visible;
     }
+
     .read-only-chat .otree-chat {
         border: none;
         padding: 0;
         margin: 0;
         background: transparent;
     }
+
     .read-only-chat .otree-chat__messages {
         max-height: 260px;
         overflow-y: auto;
@@ -31,6 +33,7 @@
         background: #f1f3f5;
         padding: 6px 8px;
     }
+
     .signal-box {
         font-weight: bold;
         color: #495057;
@@ -39,9 +42,10 @@
         background-color: #e9ecef;
         border-radius: 4px;
     }
+
     .read-only-chat .otree-chat__input,
     .read-only-chat .otree-chat__btn-send,
-    .read-only-chat .otree-chat > div:last-child {
+    .read-only-chat .otree-chat>div:last-child {
         display: none !important;
     }
 </style>
@@ -92,39 +96,45 @@
 
 <div class="card border-secondary">
     <div class="card-header bg-secondary text-white">
-        <h4>Your Choice</h4>
+        <h4>Select your choice:</h4>
     </div>
     <div class="card-body px-5 py-4">
         <p>
-            Please choose how you would like to divide the $12.
+            Please choose how you would like to divide the $12, by choosing one of the following options:
         </p>
+        <p></p>
         <div class="form-group">
-            <label><strong>Select your choice:</strong></label>
-            <div class="form-check">
+
+            <div class="form-check mb-3">
                 <input type="radio" name="decision_choice" value="Left" id="dc_left" class="form-check-input" required>
                 <label class="form-check-label" for="dc_left">
-                    I would like to divide the $12 equally with the {{ left_partner_color }} Participant ( $ 6 to
-                    {{my_color}} Participant, $ 6 to the {{left_partner_color}} Participant, $ 0 to the
-                    {{right_partner_color}}
-                    Participant).
+                    <strong>I would like to divide the $12 equally with the {{ left_partner_color }}
+                        Participant</strong> <em>( $ 6 to
+
+                        {{my_color}} Participant, $ 6 to the {{left_partner_color}} Participant, $ 0 to the
+                        {{right_partner_color}}
+                        Participant)</em>.
                 </label>
             </div>
-            <div class="form-check">
+            <div class="form-check mb-3">
                 <input type="radio" name="decision_choice" value="Right" id="dc_right" class="form-check-input">
                 <label class="form-check-label" for="dc_right">
-                    I would like to divide the $12 equally with the {{ right_partner_color }} Participant ( $ 6 to
-                    {{my_color}} Participant, $ 6 to the {{right_partner_color}} Participant, $ 0 to the
-                    {{left_partner_color}}
-                    Participant).
+                    <strong>I would like to divide the $12 equally with the {{ right_partner_color }}
+                        Participant</strong> <em>( $ 6 to
+                        {{my_color}} Participant, $ 6 to the {{right_partner_color}} Participant, $ 0 to the
+                        {{left_partner_color}}
+                        Participant)</em>.
+
                 </label>
             </div>
-            <div class="form-check">
+            <div class="form-check mb-3">
                 <input type="radio" name="decision_choice" value="Both" id="dc_both" class="form-check-input">
                 <label class="form-check-label" for="dc_both">
-                    I would like to divide the $12 equally among all the Participants ( $ 4 to
-                    {{my_color}} Participant, $ 4 to the {{left_partner_color}} Participant, $ 4 to the
-                    {{right_partner_color}}
-                    Participant).
+                    <strong>I would like to divide the $12 equally with the two other Participants</strong> <em>( $ 4 to
+                        {{my_color}} Participant, $ 4 to the {{left_partner_color}} Participant, $ 4 to the
+                        {{right_partner_color}}
+                        Participant)</em>.
+
                 </label>
             </div>
         </div>

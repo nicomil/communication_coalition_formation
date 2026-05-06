@@ -339,22 +339,19 @@ def create_control_questions_class(attempt_number):
             
             return {
                 'example1_scenario': (
-                    "Imagine that you are the Green Participant, and chose to split equally the $ 12 with the Orange Participant choosing the option:<br>"
-                    "- 'Split equally the $ 12 only with the Orange Participant'($ 6 to you, $ 6 to the Orange Participant, $ 0 to the Purple Participant);<br>"
-                    "- The Purple Participant chooses the option: 'Split equally the $ 12 with both the two Participants'($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant); <br>"
-                    "- The Orange Participant chooses the option: 'Split equally the $ 12 only with the Green Participant'($ 6 to you, $ 6 to the Orange Participant, $ 0 to the Purple Participant)."
+                    "Imagine that you are the Green Participant, and chose to 'Split equally the $ 12 only with the Orange Participant' ($ 6 to you, $ 6 to the Orange Participant, $ 0 to the Purple Participant);<br>"
+                    "- The Purple Participant chooses to 'Split equally the $ 12 with both the two Participants'($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant); <br>"
+                    "- The Orange Participant chooses to 'Split equally the $ 12 only with the Green Participant'($ 6 to you, $ 6 to the Orange Participant, $ 0 to the Purple Participant)."
                 ),
                 'example2_scenario': (
-                    "Imagine that you are the Green Participant, and chose to split equally the $ 12 with the two Participants choosing the option:<br>"
-                    "- 'Split equally the $ 12 only with the two Participants'($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant);<br>"
-                    "- The Purple Participant chooses the option: 'Split equally the $ 12 with the Orange Participant'($ 0 to you, $ 6 to the Orange Participant, $ 6 to the Purple Participant);<br>"
-                    "- The Orange Participant chooses the option: 'Split equally the $ 12 only with the two Participants'($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant)."
+                    "Imagine that you are the Green Participant, and chose to 'Split equally the $ 12 only with the two Participants' ($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant);<br>"
+                    "- The Purple Participant chooses to 'Split equally the $ 12 with the Orange Participant' ($ 0 to you, $ 6 to the Orange Participant, $ 6 to the Purple Participant);<br>"
+                    "- The Orange Participant chooses to 'Split equally the $ 12 only with the two Participants' ($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant)."
                 ),
                 'example3_scenario': (
-                    "Imagine that you are the Green Participant, and chose to split equally the $ 12 with the two Participants choosing the option:<br>"
-                    "- 'Split equally the $ 12 only with the two Participants'($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant);<br>"
-                    "- The Purple Participant chooses the option: 'Split equally the $ 12 with the Green Participant'($ 6 to you, $ 0 to the Orange Participant, $ 6 to the Purple Participant);<br>"
-                    "- The Orange Participant chooses the option: 'Split equally the $ 12 with the Purple Participant'($ 0 to you, $ 6 to the Orange Participant, $ 6 to the Purple Participant)."
+                    "Imagine that you are the Green Participant, and chose to 'Split equally the $ 12 with the two Participants' ($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant);<br>"
+                    "- The Purple Participant chooses to 'Split equally the $ 12 with the Green Participant' ($ 6 to you, $ 0 to the Orange Participant, $ 6 to the Purple Participant);<br>"
+                    "- The Orange Participant chooses to 'Split equally the $ 12 with the Purple Participant' ($ 0 to you, $ 6 to the Orange Participant, $ 6 to the Purple Participant)."
                 ),
                 'max_attempts': max_attempts,
                 'current_attempt': attempt_number,
