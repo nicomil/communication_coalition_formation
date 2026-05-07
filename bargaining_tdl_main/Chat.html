@@ -1,3 +1,4 @@
+{{ extends "_templates/global/Page.html" }}
 {{ block title }}Chat{{ endblock }}
 {{ block content }}
 
@@ -8,6 +9,13 @@
 </style>
 
 <style>
+    /* Re-enable timeout widget only on chat page */
+    .otree-timer,
+    .otree-timer__time-left,
+    #otree-timer {
+        display: block !important;
+    }
+
     .container-columns {
         display: flex;
         justify-content: space-between;
@@ -54,6 +62,19 @@
         font-size: 0.9rem;
         font-weight: 600;
     }
+    .reconnect-wait {
+        margin-bottom: 12px;
+        padding: 10px 12px;
+        border: 1px solid #ffe58f;
+        background: #fffbe6;
+        border-radius: 4px;
+        color: #8a6d3b;
+        font-weight: 600;
+    }
+    .otree-timer {
+        opacity: 0.35;
+        margin-bottom: 8px;
+    }
 </style>
 
 {{ include_sibling '_button_style.html' }}
@@ -67,6 +88,7 @@
 <p>
 <h4> You are the {{ my_color }} Participant.</h4>
 </p>
+<div class="reconnect-wait" id="reconnect-wait" style="display:none;"></div>
 <div class="container-columns">
     <div class="column {% if not left_partner_active %}chat-disabled{% endif %}" data-chat-column="left">
         <h4>{{ left_partner_color }} Participant</h4>
@@ -90,8 +112,6 @@
     </div>
 </div>
 
-<br>
-
 {{ include '_templates/global/_time_tracking_field.html' }}
 
 {{ next_button }}
@@ -102,8 +122,49 @@
         if (!form) return;
         const leftColumn = document.querySelector('[data-chat-column="left"]');
         const rightColumn = document.querySelector('[data-chat-column="right"]');
+        const reconnectWait = document.getElementById('reconnect-wait');
+        const nextButton = document.querySelector('.otree-btn-next');
         let hasSubmitted = false;
         let liveSyncTimer = null;
+        let reconnectUiTimer = null;
+        let localReconnectSeconds = 0;
+        const placeholderByColumn = new WeakMap();
+
+        function getDefaultPlaceholder(input) {
+            if (!input) return '';
+            if (!placeholderByColumn.has(input)) {
+                placeholderByColumn.set(input, input.placeholder || '');
+            }
+            return placeholderByColumn.get(input) || '';
+        }
+
+        function setNextButtonBlocked(blocked) {
+            if (!nextButton) return;
+            nextButton.disabled = blocked;
+            nextButton.style.opacity = blocked ? '0.5' : '1';
+            nextButton.style.cursor = blocked ? 'not-allowed' : 'pointer';
+        }
+
+        function stopLocalReconnectCountdown() {
+            if (reconnectUiTimer) {
+                clearInterval(reconnectUiTimer);
+                reconnectUiTimer = null;
+            }
+        }
+
+        function startLocalReconnectCountdown(seconds) {
+            stopLocalReconnectCountdown();
+            localReconnectSeconds = Math.max(0, Number(seconds) || 0);
+            reconnectUiTimer = setInterval(function () {
+                localReconnectSeconds = Math.max(0, localReconnectSeconds - 1);
+                if (reconnectWait && reconnectWait.style.display !== 'none') {
+                    reconnectWait.textContent = 'One participant disconnected. Waiting up to ' + localReconnectSeconds + ' seconds for reconnection.';
+                }
+                if (localReconnectSeconds <= 0) {
+                    stopLocalReconnectCountdown();
+                }
+            }, 1000);
+        }
 
         function setColumnStatus(column, isActive) {
             if (!column) return;
@@ -115,10 +176,13 @@
             const input = column.querySelector('.otree-chat__input');
             const sendBtn = column.querySelector('.otree-chat__btn-send');
             if (input) {
+                const defaultPlaceholder = getDefaultPlaceholder(input);
                 input.disabled = !isActive;
                 if (!isActive) {
                     input.value = '';
                     input.placeholder = 'Chat disabled: participant left.';
+                } else {
+                    input.placeholder = defaultPlaceholder;
                 }
             }
             if (sendBtn) {
@@ -135,8 +199,26 @@
 
         function applyStatus(payload) {
             if (!payload) return;
-            setColumnStatus(leftColumn, Boolean(payload.left_partner_active));
-            setColumnStatus(rightColumn, Boolean(payload.right_partner_active));
+            if (reconnectWait) {
+                if (payload.waiting_on_reconnect) {
+                    setColumnStatus(leftColumn, false);
+                    setColumnStatus(rightColumn, false);
+                    setNextButtonBlocked(true);
+                    reconnectWait.style.display = 'block';
+                    const seconds = Math.max(0, Number(payload.reconnect_seconds_left) || 0);
+                    reconnectWait.textContent = 'One participant disconnected. Waiting up to ' + seconds + ' seconds for reconnection.';
+                    startLocalReconnectCountdown(seconds);
+                } else {
+                    stopLocalReconnectCountdown();
+                    setColumnStatus(leftColumn, Boolean(payload.left_partner_active));
+                    setColumnStatus(rightColumn, Boolean(payload.right_partner_active));
+                    setNextButtonBlocked(false);
+                    reconnectWait.style.display = 'none';
+                }
+            } else {
+                setColumnStatus(leftColumn, Boolean(payload.left_partner_active));
+                setColumnStatus(rightColumn, Boolean(payload.right_partner_active));
+            }
             if (payload.should_auto_advance) {
                 requestAutoSubmit('two-left');
             }
@@ -162,7 +244,9 @@
         applyStatus({
             left_partner_active: {{ left_partner_active|json }},
             right_partner_active: {{ right_partner_active|json }},
-            should_auto_advance: {{ should_auto_advance|json }}
+            should_auto_advance: {{ should_auto_advance|json }},
+            waiting_on_reconnect: {{ waiting_on_reconnect|json }},
+            reconnect_seconds_left: {{ reconnect_seconds_left|json }}
         });
 
         window.liveRecv = function (data) {
@@ -182,10 +266,30 @@
                 if (form.dataset.autoSubmit) {
                     return;
                 }
+                if (reconnectWait && reconnectWait.style.display !== 'none') {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    e.stopPropagation();
+                    return false;
+                }
+                if (typeof window.liveSend === 'function') {
+                    try {
+                        window.liveSend({ type: 'next_button_intent' });
+                    } catch (err) {
+                        // best effort only
+                    }
+                }
                 const ok = window.confirm(
                     'Are you sure you want to move to the next screen? You will not be able to go back to this chat.'
                 );
                 if (!ok) {
+                    if (typeof window.liveSend === 'function') {
+                        try {
+                            window.liveSend({ type: 'next_button_cancelled' });
+                        } catch (err) {
+                            // best effort only
+                        }
+                    }
                     e.preventDefault();
                     e.stopImmediatePropagation();
                     e.stopPropagation();
@@ -193,6 +297,15 @@
                 }
                 // se confermato, lasciamo procedere normale handler oTree
             }, true);
+
+        window.addEventListener('beforeunload', function () {
+            if (hasSubmitted || typeof window.liveSend !== 'function') return;
+            try {
+                window.liveSend({ type: 'client_leaving' });
+            } catch (e) {
+                // best effort only
+            }
+        });
     })();
 </script>
 

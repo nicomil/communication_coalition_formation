@@ -9,6 +9,7 @@ from otree.api import (  # type: ignore
     Page,
     WaitPage,
 )
+import time
 from bargaining_tdl_common import (  # type: ignore
     save_time_value,
     has_failed_control_questions,
@@ -56,6 +57,8 @@ class C(BaseConstants):
     PAYOFF_MAX = cu(6)
     PAYOFF_SPLIT = cu(4)
     PAYOFF_DISAGREEMENT = cu(0)
+    CHAT_RECONNECT_WINDOW_SECONDS = 90
+    CHAT_DISCONNECT_DETECTION_SECONDS = 3
 
 class Subsession(BaseSubsession):
     pass
@@ -68,6 +71,16 @@ class Group(BaseGroup):
     chat_left_p1 = models.BooleanField(initial=False)
     chat_left_p2 = models.BooleanField(initial=False)
     chat_left_p3 = models.BooleanField(initial=False)
+    group_dropped = models.BooleanField(initial=False)
+    reconnect_deadline_ts = models.FloatField(initial=0)
+    interrupted_player_id = models.IntegerField(initial=0)
+    last_ping_p1 = models.FloatField(initial=0)
+    last_ping_p2 = models.FloatField(initial=0)
+    last_ping_p3 = models.FloatField(initial=0)
+    submit_grace_until_p1 = models.FloatField(initial=0)
+    submit_grace_until_p2 = models.FloatField(initial=0)
+    submit_grace_until_p3 = models.FloatField(initial=0)
+    part1_payoff_eligible = models.BooleanField(initial=True)
 
 class Player(BasePlayer):
     # Color assigned to this player (Red/Green/Blue), stored for CSV export clarity
@@ -136,6 +149,9 @@ class Player(BasePlayer):
     
     # Hidden field for JavaScript to populate
     time_on_page = models.FloatField(initial=0, blank=True)
+    chat_interrupted = models.BooleanField(initial=False)
+    participant_left_ts = models.FloatField(initial=0)
+    part1_payoff_eligible = models.BooleanField(initial=True)
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -173,10 +189,82 @@ def _chat_left_state(group: Group):
     }
 
 
+def _mark_inactive_exclusion(player: Player, reason: str):
+    player.participant.inactive_excluded = True
+    player.participant.inactive_excluded_reason = reason
+    player.participant.vars['inactive_excluded'] = True
+    player.participant.vars['inactive_excluded_reason'] = reason
+
+
+def _is_inactive_excluded(player: Player):
+    return bool(player.participant.vars.get('inactive_excluded', False))
+
+
 def _set_player_left_chat(player: Player):
     field_name = f'chat_left_p{player.id_in_group}'
     if hasattr(player.group, field_name):
         setattr(player.group, field_name, True)
+
+
+def _set_last_ping(group: Group, player_id: int, ts: float):
+    setattr(group, f'last_ping_p{player_id}', ts)
+
+
+def _get_last_ping(group: Group, player_id: int):
+    return getattr(group, f'last_ping_p{player_id}', 0)
+
+
+def _set_submit_grace_until(group: Group, player_id: int, ts: float):
+    setattr(group, f'submit_grace_until_p{player_id}', ts)
+
+
+def _get_submit_grace_until(group: Group, player_id: int):
+    return getattr(group, f'submit_grace_until_p{player_id}', 0)
+
+
+def _mark_group_dropped(group: Group):
+    group.group_dropped = True
+    group.part1_payoff_eligible = False
+    for p in group.get_players():
+        p.part1_payoff_eligible = False
+        p.participant.group_dropped = True
+        p.participant.part1_payoff_eligible = False
+        p.participant.vars['group_dropped'] = True
+        p.participant.vars['part1_payoff_eligible'] = False
+        p.participant.vars['part1_payoff'] = cu(0)
+
+
+def _evaluate_chat_dropout(group: Group):
+    if group.group_dropped:
+        return
+
+    now = time.time()
+    interrupted_id = group.interrupted_player_id
+
+    if interrupted_id:
+        last_ping = _get_last_ping(group, interrupted_id)
+        if last_ping and (now - last_ping) <= 5:
+            group.interrupted_player_id = 0
+            group.reconnect_deadline_ts = 0
+            return
+        if group.reconnect_deadline_ts and now >= group.reconnect_deadline_ts:
+            _mark_group_dropped(group)
+        return
+
+    for player_id in [1, 2, 3]:
+        if getattr(group, f'chat_left_p{player_id}'):
+            continue
+        grace_until = _get_submit_grace_until(group, player_id)
+        if grace_until and now < grace_until:
+            continue
+        last_ping = _get_last_ping(group, player_id)
+        if last_ping and (now - last_ping) > C.CHAT_DISCONNECT_DETECTION_SECONDS:
+            group.interrupted_player_id = player_id
+            group.reconnect_deadline_ts = now + C.CHAT_RECONNECT_WINDOW_SECONDS
+            participant = group.get_player_by_id(player_id)
+            participant.chat_interrupted = True
+            participant.participant_left_ts = now
+            break
 
 
 def _chat_status_payload(player: Player):
@@ -185,13 +273,29 @@ def _chat_status_payload(player: Player):
     left_id = get_left_partner_id(my_id)
     right_id = get_right_partner_id(my_id)
     left_count = sum(1 for has_left in statuses.values() if has_left)
+    now = time.time()
+    interrupted_id = player.group.interrupted_player_id
+    reconnect_seconds_left = 0
+    if interrupted_id and player.group.reconnect_deadline_ts:
+        reconnect_seconds_left = max(0, int(round(player.group.reconnect_deadline_ts - now)))
+    left_partner_temporarily_offline = bool(
+        interrupted_id == left_id and reconnect_seconds_left > 0 and not player.group.group_dropped
+    )
+    right_partner_temporarily_offline = bool(
+        interrupted_id == right_id and reconnect_seconds_left > 0 and not player.group.group_dropped
+    )
+    both_partners_left_chat = bool(statuses[left_id] and statuses[right_id])
     return dict(
         left_partner_id=left_id,
         right_partner_id=right_id,
-        left_partner_active=not statuses[left_id],
-        right_partner_active=not statuses[right_id],
-        should_auto_advance=(left_count >= 2 and not statuses[my_id]),
+        left_partner_active=not statuses[left_id] and not left_partner_temporarily_offline,
+        right_partner_active=not statuses[right_id] and not right_partner_temporarily_offline,
+        should_auto_advance=((player.group.group_dropped or both_partners_left_chat) and not statuses[my_id]),
         left_count=left_count,
+        group_dropped=player.group.group_dropped,
+        interrupted_player_id=interrupted_id,
+        waiting_on_reconnect=bool(interrupted_id and interrupted_id != my_id and reconnect_seconds_left > 0),
+        reconnect_seconds_left=reconnect_seconds_left,
     )
 
 
@@ -290,12 +394,30 @@ class GroupingAfterControlQuestions(WaitPage):
 
     @staticmethod
     def after_all_players_arrive(group: Group):
+        now = time.time()
         group.chat_left_p1 = False
         group.chat_left_p2 = False
         group.chat_left_p3 = False
+        group.group_dropped = False
+        group.part1_payoff_eligible = True
+        group.interrupted_player_id = 0
+        group.reconnect_deadline_ts = 0
+        group.last_ping_p1 = now
+        group.last_ping_p2 = now
+        group.last_ping_p3 = now
+        group.submit_grace_until_p1 = 0
+        group.submit_grace_until_p2 = 0
+        group.submit_grace_until_p3 = 0
         for p in group.get_players():
             p.time_welcome = p.participant.vars.get('time_welcome', 0)
             p.player_color = get_player_color(p.id_in_group)
+            p.chat_interrupted = False
+            p.participant_left_ts = 0
+            p.part1_payoff_eligible = True
+            p.participant.group_dropped = False
+            p.participant.part1_payoff_eligible = True
+            p.participant.vars['group_dropped'] = False
+            p.participant.vars['part1_payoff_eligible'] = True
         triad_pids = [p.participant.id for p in group.get_players()]
         intro_groups = group.session.vars.setdefault('intro_groups', [])
         if triad_pids not in intro_groups:
@@ -329,6 +451,7 @@ class Chat(Page):
             channel_left=channel_left,
             channel_right=channel_right,
             chat_timeout_seconds=Chat.timeout_seconds,
+            reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
             **_chat_status_payload(player),
             **colors,
         )
@@ -341,12 +464,38 @@ class Chat(Page):
 
     @staticmethod
     def live_method(player: Player, data):
-        return {player.id_in_group: _chat_status_payload(player)}
+        now = time.time()
+        payload_type = (data or {}).get('type')
+        _set_last_ping(player.group, player.id_in_group, now)
+        if payload_type == 'next_button_intent':
+            # User opened confirm to proceed: avoid false disconnect while native dialog blocks JS.
+            _set_submit_grace_until(player.group, player.id_in_group, now + 30)
+        elif payload_type == 'next_button_cancelled':
+            _set_submit_grace_until(player.group, player.id_in_group, now)
+
+        if payload_type == 'client_leaving' and not player.group.group_dropped:
+            player.group.interrupted_player_id = player.id_in_group
+            player.group.reconnect_deadline_ts = now + C.CHAT_RECONNECT_WINDOW_SECONDS
+            player.chat_interrupted = True
+            player.participant_left_ts = now
+
+        _evaluate_chat_dropout(player.group)
+        return {
+            p.id_in_group: _chat_status_payload(p)
+            for p in player.group.get_players()
+        }
 
 
 class Signals(Page):
     form_model = 'player'
     form_fields = ['signal_left', 'signal_right', 'first_intention_selected', 'time_on_page']
+    timeout_seconds = 180
+    timeout_submission = dict(
+        signal_left='split_you',
+        signal_right='split_you',
+        first_intention_selected='left',
+        time_on_page=180,
+    )
 
     @staticmethod
     def vars_for_template(player: Player):
@@ -357,10 +506,14 @@ class Signals(Page):
     def before_next_page(player, timeout_happened):
         player.time_signals = save_time_value(player.time_on_page)
         player.time_chat_and_signals = player.time_chat + player.time_signals
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'main_signals_timeout')
+            set_control_questions_failed(player, 'intro', failed=True)
+        else:
+            set_control_questions_failed(player, 'intro', failed=False)
         logger.debug(f"Signals - time_signals saved: {player.time_signals}, time_chat_and_signals: {player.time_chat_and_signals}")
         player.participant.vars['signal_left'] = player.signal_left
         player.participant.vars['signal_right'] = player.signal_right
-        set_control_questions_failed(player, 'intro', failed=False)
 
 
 class ExperimentTerminated(Page):
@@ -371,7 +524,13 @@ class ExperimentTerminated(Page):
     @staticmethod
     def is_displayed(player):
         """Mostra questa pagina solo se il partecipante ha fallito le control questions."""
-        return has_failed_control_questions(player, 'intro')
+        return has_failed_control_questions(player, 'intro') or _is_inactive_excluded(player)
+
+    @staticmethod
+    def js_vars(player):
+        return dict(
+            completionlink=player.session.config.get('completionlink', '').strip(),
+        )
     
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -398,6 +557,11 @@ class DataMappingWaitPage(WaitPage):
 class Decision(Page):
     form_model = 'player'
     form_fields = ['decision_choice', 'time_on_page']
+    timeout_seconds = 180
+    timeout_submission = dict(
+        decision_choice='Left',
+        time_on_page=180,
+    )
 
     @staticmethod
     def vars_for_template(player: Player):
@@ -449,12 +613,37 @@ class Decision(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_decision = save_time_value(player.time_on_page)
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'main_decision_timeout')
+            player.participant.vars['part1_payoff'] = cu(0)
+            player.participant.vars['part1_payoff_eligible'] = False
+            player.participant.part1_payoff_eligible = False
+
+
+class InactivityGoodbyeMain(Page):
+    template_name = 'bargaining_tdl_main/ExperimentTerminated.html'
+    form_model = 'player'
+    form_fields = ['time_on_page']
+
+    @staticmethod
+    def is_displayed(player):
+        return _is_inactive_excluded(player)
+
+    @staticmethod
+    def js_vars(player):
+        return dict(
+            completionlink=player.session.config.get('completionlink', '').strip(),
+        )
+
+    @staticmethod
+    def app_after_this_page(player, upcoming_apps):
+        return []
 
 class ResultsWaitPage(WaitPage):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        return not has_failed_control_questions(player, 'intro')
+        return not has_failed_control_questions(player, 'intro') and not _is_inactive_excluded(player)
     
     @staticmethod
     def after_all_players_arrive(group: Group):
@@ -471,6 +660,23 @@ class ResultsWaitPage(WaitPage):
         # Initialize payoffs to Disagreement (0)
         for p in players:
             p.payoff = C.PAYOFF_DISAGREEMENT
+
+        if group.group_dropped:
+            for p in players:
+                p.payoff = cu(0)
+                p.part1_calculated_payoff = cu(0)
+                p.participant.vars['part1_payoff'] = cu(0)
+                p.participant.vars['part1_group_id'] = group.id
+                p.participant.vars['selected_part_for_payment'] = 1
+                p.participant.vars['group_dropped'] = True
+                p.participant.vars['part1_payoff_eligible'] = False
+                p.participant.group_dropped = True
+                p.participant.part1_payoff_eligible = False
+                p.part1_payoff_eligible = False
+            group.selected_part_for_payment = 1
+            group.grp_coordinate = 0
+            group.grp_triadicsplit = 0
+            return
 
         # Logic:
         # 1. At least 2 choose Both -> All get 4
@@ -536,7 +742,7 @@ class Results(Page):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        return not has_failed_control_questions(player, 'intro')
+        return not has_failed_control_questions(player, 'intro') and not _is_inactive_excluded(player)
 
     @staticmethod
     def vars_for_template(player: Player):
@@ -561,6 +767,7 @@ page_sequence = [
     ExperimentTerminated,
     DataMappingWaitPage,
     Decision,
+    InactivityGoodbyeMain,
     ResultsWaitPage,
     Results
 ]

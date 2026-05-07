@@ -132,32 +132,32 @@ class PlayerBot(Bot):
         expect(self.player.received_signal_left, exp_left)
         expect(self.player.received_signal_right, exp_right)
         
-        # Verifica che il payoff sia stato calcolato correttamente
-        expect(self.player.payoff, '!=', None)
+        # Verifica che il payoff di Part 1 sia stato calcolato correttamente
+        expect(self.player.part1_calculated_payoff, '!=', None)
         
         # Verifica payoff specifici in base al case
         if case == 'all_both':
-            expect(self.player.payoff, C.PAYOFF_SPLIT)  # 4
+            expect(self.player.part1_calculated_payoff, C.PAYOFF_SPLIT)  # 4
         elif case == 'match_12':
             if id_in_group in [1, 2]:
-                expect(self.player.payoff, C.PAYOFF_MAX)  # 6
+                expect(self.player.part1_calculated_payoff, C.PAYOFF_MAX)  # 6
             else:
-                expect(self.player.payoff, C.PAYOFF_DISAGREEMENT)  # 0
+                expect(self.player.part1_calculated_payoff, C.PAYOFF_DISAGREEMENT)  # 0
         elif case == 'match_23':
             if id_in_group in [2, 3]:
-                expect(self.player.payoff, C.PAYOFF_MAX)  # 6
+                expect(self.player.part1_calculated_payoff, C.PAYOFF_MAX)  # 6
             else:
-                expect(self.player.payoff, C.PAYOFF_DISAGREEMENT)  # 0
+                expect(self.player.part1_calculated_payoff, C.PAYOFF_DISAGREEMENT)  # 0
         elif case == 'match_31':
             if id_in_group in [3, 1]:
-                expect(self.player.payoff, C.PAYOFF_MAX)  # 6
+                expect(self.player.part1_calculated_payoff, C.PAYOFF_MAX)  # 6
             else:
-                expect(self.player.payoff, C.PAYOFF_DISAGREEMENT)  # 0
+                expect(self.player.part1_calculated_payoff, C.PAYOFF_DISAGREEMENT)  # 0
         elif case == 'disagreement':
-            expect(self.player.payoff, C.PAYOFF_DISAGREEMENT)  # 0
+            expect(self.player.part1_calculated_payoff, C.PAYOFF_DISAGREEMENT)  # 0
         
         # Verifica che il payoff sia stato salvato in participant.vars
-        expect(self.player.participant.vars.get('part1_payoff'), self.player.payoff)
+        expect(self.player.participant.vars.get('part1_payoff'), self.player.part1_calculated_payoff)
         expect(self.group.chat_left_p1, True)
         expect(self.group.chat_left_p2, True)
         expect(self.group.chat_left_p3, True)

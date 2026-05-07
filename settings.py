@@ -7,6 +7,10 @@ SESSION_CONFIGS = [
         display_name="Bargaining Game (TDL + Async)",
         app_sequence=['bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_part3', 'bargaining_tdl_survey'],
         num_demo_participants=9,
+        completionlink=environ.get(
+            'PROLIFIC_COMPLETION_URL',
+            'https://app.prolific.com/submissions/complete?cc=C1HQEIID',
+        ),
     ),
 ]
 
@@ -21,7 +25,15 @@ SESSION_CONFIG_DEFAULTS = dict(
     skip_intro_control_questions=False,
 )
 
-PARTICIPANT_FIELDS = []
+PARTICIPANT_FIELDS = [
+    'prolific_id',
+    'prolific_study_id',
+    'prolific_session_id',
+    'inactive_excluded',
+    'inactive_excluded_reason',
+    'group_dropped',
+    'part1_payoff_eligible',
+]
 SESSION_FIELDS = []
 
 # ISO-639 code

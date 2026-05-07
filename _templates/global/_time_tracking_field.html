@@ -37,7 +37,6 @@
                 timeField.value = '0';
                 // Update every 0.5 seconds
                 window._timeTrackingInterval = setInterval(updateTimeField, 500);
-                console.log('⏱️ Time tracking started on:', window.location.pathname);
                 
                 // Update on form submit - use capture phase to run early
                 var forms = document.querySelectorAll('form');
@@ -55,7 +54,6 @@
                             // Trigger change event to ensure oTree recognizes it
                             field.dispatchEvent(new Event('change', { bubbles: true }));
                             field.dispatchEvent(new Event('input', { bubbles: true }));
-                            console.log('✅ Time saved before submit:', field.value, 'seconds');
                         }
                     }, true); // Capture phase
                 });
@@ -74,7 +72,6 @@
                             // Trigger change event
                             field.dispatchEvent(new Event('change', { bubbles: true }));
                             field.dispatchEvent(new Event('input', { bubbles: true }));
-                            console.log('✅ Time saved on button click:', field.value, 'seconds');
                         }
                     }
                 }, true); // Capture phase

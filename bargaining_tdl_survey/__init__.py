@@ -28,6 +28,17 @@ class Group(BaseGroup):
     pass
 
 
+def _mark_inactive_exclusion(player, reason):
+    player.participant.inactive_excluded = True
+    player.participant.inactive_excluded_reason = reason
+    player.participant.vars['inactive_excluded'] = True
+    player.participant.vars['inactive_excluded_reason'] = reason
+
+
+def _is_inactive_excluded(player):
+    return bool(player.participant.vars.get('inactive_excluded', False))
+
+
 class Player(BasePlayer):
     # Gender: 0=Male, 1=Female, 2=Other
     gender = models.IntegerField(
@@ -157,6 +168,7 @@ class SurveyIntro(Page):
 class SurveyQuestions(Page):
     """Demographic questions page."""
     form_model = 'player'
+    timeout_seconds = 180
     form_fields = [
         'gender',
         'age',
@@ -165,6 +177,15 @@ class SurveyQuestions(Page):
         'job_status',
         'time_on_page',
     ]
+
+    timeout_submission = dict(
+        gender=0,
+        age=18,
+        field_of_study='N/A',
+        university_years=1,
+        job_status='employee',
+        time_on_page=180,
+    )
 
     @staticmethod
     def field_of_study_error_message(player, value):
@@ -175,6 +196,8 @@ class SurveyQuestions(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_questions = player.time_on_page or 0
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'survey_questions_timeout')
 
 
 class SurveyScaleIntro(Page):
@@ -186,11 +209,17 @@ class SurveyScaleIntro(Page):
     def before_next_page(player, timeout_happened):
         player.time_survey_scale_intro = player.time_on_page or 0
 
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
+
 
 class SurveyPage4(Page):
     """Willingness to delay gratification — 0–10 scale."""
     form_model = 'player'
+    timeout_seconds = 180
     form_fields = ['willingness_future', 'time_on_page']
+    timeout_submission = dict(willingness_future=0, time_on_page=180)
 
     @staticmethod
     def vars_for_template(player):
@@ -199,12 +228,20 @@ class SurveyPage4(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page4 = player.time_on_page or 0
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'survey_page4_timeout')
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
 
 
 class SurveyPage5(Page):
     """General willingness to take risks — 0–10 scale."""
     form_model = 'player'
+    timeout_seconds = 180
     form_fields = ['willingness_risk', 'time_on_page']
+    timeout_submission = dict(willingness_risk=0, time_on_page=180)
 
     @staticmethod
     def vars_for_template(player):
@@ -213,12 +250,20 @@ class SurveyPage5(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page5 = player.time_on_page or 0
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'survey_page5_timeout')
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
 
 
 class SurveyPage6(Page):
     """Positive reciprocity self-assessment — 0–10 scale."""
     form_model = 'player'
+    timeout_seconds = 180
     form_fields = ['reciprocity_positive', 'time_on_page']
+    timeout_submission = dict(reciprocity_positive=0, time_on_page=180)
 
     @staticmethod
     def vars_for_template(player):
@@ -227,12 +272,20 @@ class SurveyPage6(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page6 = player.time_on_page or 0
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'survey_page6_timeout')
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
 
 
 class SurveyPage7(Page):
     """Negative reciprocity self-assessment — 0–10 scale."""
     form_model = 'player'
+    timeout_seconds = 180
     form_fields = ['reciprocity_negative', 'time_on_page']
+    timeout_submission = dict(reciprocity_negative=0, time_on_page=180)
 
     @staticmethod
     def vars_for_template(player):
@@ -241,12 +294,20 @@ class SurveyPage7(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page7 = player.time_on_page or 0
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'survey_page7_timeout')
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
 
 
 class SurveyPage8(Page):
     """Altruism — willingness to donate to good causes — 0–10 scale."""
     form_model = 'player'
+    timeout_seconds = 180
     form_fields = ['willingness_donate', 'time_on_page']
+    timeout_submission = dict(willingness_donate=0, time_on_page=180)
 
     @staticmethod
     def vars_for_template(player):
@@ -255,12 +316,20 @@ class SurveyPage8(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page8 = player.time_on_page or 0
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'survey_page8_timeout')
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
 
 
 class SurveyPage9(Page):
     """General trust self-assessment — 0–10 scale."""
     form_model = 'player'
+    timeout_seconds = 180
     form_fields = ['trust_general', 'time_on_page']
+    timeout_submission = dict(trust_general=0, time_on_page=180)
 
     @staticmethod
     def vars_for_template(player):
@@ -269,12 +338,20 @@ class SurveyPage9(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page9 = player.time_on_page or 0
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'survey_page9_timeout')
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
 
 
 class SurveyPage10(Page):
     """11-20 game — guess a number between 110 and 200."""
     form_model = 'player'
+    timeout_seconds = 180
     form_fields = ['beauty_contest_guess', 'time_on_page']
+    timeout_submission = dict(beauty_contest_guess=1.1, time_on_page=180)
 
     @staticmethod
     def beauty_contest_guess_error_message(player, value):
@@ -286,6 +363,32 @@ class SurveyPage10(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page10 = player.time_on_page or 0
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'survey_page10_timeout')
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
+
+
+class SurveyTerminated(Page):
+    template_name = 'bargaining_tdl_survey/SurveyTerminated.html'
+    form_model = 'player'
+    form_fields = ['time_on_page']
+
+    @staticmethod
+    def is_displayed(player):
+        return _is_inactive_excluded(player)
+
+    @staticmethod
+    def js_vars(player):
+        return dict(
+            completionlink=player.session.config.get('completionlink', '').strip(),
+        )
+
+    @staticmethod
+    def app_after_this_page(player, upcoming_apps):
+        return []
 
 
 class FinalResults(Page):
@@ -294,30 +397,45 @@ class FinalResults(Page):
     form_fields = ['time_on_page']
 
     @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
+
+    @staticmethod
     def vars_for_template(player):
         from otree.api import Currency as cu
         
         part1_group_id = player.participant.vars.get('part1_group_id')
         selected = player.participant.vars.get('selected_part_for_payment', 1)
+        part1_payoff_eligible = bool(player.participant.vars.get('part1_payoff_eligible', True))
             
         base_fee = cu(3)
         beauty_contest_bonus = cu(player.beauty_contest_guess or 0)
         part1_payoff_val = player.participant.vars.get('part1_payoff', cu(0))
+        if not part1_payoff_eligible:
+            part1_payoff_val = cu(0)
         
-        if selected == 1:
+        if selected == 1 and part1_payoff_eligible:
             subtotal = base_fee + part1_payoff_val + beauty_contest_bonus
         else:
             subtotal = base_fee + beauty_contest_bonus
-            part1_payoff_val = "TBD"
+            if selected != 1:
+                part1_payoff_val = "TBD"
 
         return {
             'part1_group_id': part1_group_id,
             'selected': selected,
+            'part1_payoff_eligible': part1_payoff_eligible,
             'part1_payoff': part1_payoff_val,
             'subtotal': subtotal,
             'base_fee': base_fee,
             'beauty_contest_bonus': beauty_contest_bonus,
         }
+
+    @staticmethod
+    def js_vars(player):
+        return dict(
+            completionlink=player.session.config.get('completionlink', '').strip(),
+        )
 
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -335,5 +453,6 @@ page_sequence = [
     SurveyPage8,
     SurveyPage9,
     SurveyPage10,
+    SurveyTerminated,
     FinalResults,
 ]

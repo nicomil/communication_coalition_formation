@@ -32,6 +32,17 @@ The experimenter will create groups with new triads a posteriori.
 """
 
 
+def _mark_inactive_exclusion(player, reason):
+    player.participant.inactive_excluded = True
+    player.participant.inactive_excluded_reason = reason
+    player.participant.vars['inactive_excluded'] = True
+    player.participant.vars['inactive_excluded_reason'] = reason
+
+
+def _is_inactive_excluded(player):
+    return bool(player.participant.vars.get('inactive_excluded', False))
+
+
 
 
 class C(BaseConstants):
@@ -199,6 +210,16 @@ def create_control_questions_part3_class(attempt_number):
         template_name = 'bargaining_tdl_part3/ControlQuestionsPart3.html'
         form_model = 'player'
         preserve_unsubmitted_inputs = True
+        timeout_seconds = 180
+        timeout_submission = dict(
+            example1_earnings_you='4',
+            example1_earnings_left='4',
+            example1_earnings_right='4',
+            example2_earnings_you='4',
+            example2_earnings_left='4',
+            example2_earnings_right='4',
+            time_on_page=180,
+        )
         form_fields = [
             'example1_earnings_you',
             'example1_earnings_left',
@@ -208,7 +229,7 @@ def create_control_questions_part3_class(attempt_number):
             'example2_earnings_right',
             'time_on_page'
         ]
-        
+
         @staticmethod
         def is_displayed(player):
             """
@@ -245,6 +266,12 @@ def create_control_questions_part3_class(attempt_number):
             """Gestisce la logica di retry per le control questions."""
             player.time_control_questions_part3 = save_time_value(player.time_on_page)
             logger.debug(f"ControlQuestionsPart3 Attempt {attempt_number} - time_control_questions_part3 saved: {player.time_control_questions_part3}")
+
+            if timeout_happened:
+                _mark_inactive_exclusion(player, f'part3_control_questions_attempt_{attempt_number}_timeout')
+                set_control_questions_failed(player, 'part3', failed=True)
+                logger.debug(f"ControlQuestionsPart3 Attempt {attempt_number} - timeout, marking participant as inactive")
+                return
             
             # Verifica le risposte
             is_correct = check_control_questions_part3(player)
@@ -290,7 +317,13 @@ class ThankYouPart3(Page):
     @staticmethod
     def is_displayed(player):
         """Mostra questa pagina solo se il partecipante ha fallito le control questions."""
-        return has_failed_control_questions(player, 'part3')
+        return has_failed_control_questions(player, 'part3') or _is_inactive_excluded(player)
+
+    @staticmethod
+    def js_vars(player):
+        return dict(
+            completionlink=player.session.config.get('completionlink', '').strip(),
+        )
     
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -304,10 +337,15 @@ class ThankYouPart3(Page):
 class DecisionPart3(Page):
     form_model = 'player'
     form_fields = ['decision', 'time_on_page']
+    timeout_seconds = 180
+    timeout_submission = dict(
+        decision='share_one',
+        time_on_page=180,
+    )
     
     @staticmethod
     def is_displayed(player):
-        return True
+        return not _is_inactive_excluded(player)
 
     @staticmethod
     def vars_for_template(player):
@@ -333,6 +371,9 @@ class DecisionPart3(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_decision_part3 = save_time_value(player.time_on_page)
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'part3_decision_timeout')
+            set_control_questions_failed(player, 'part3', failed=True)
 
 class ResultsPart3(Page):
     """Payoff Page - mostra i payoff dell'esperimento."""
@@ -341,7 +382,7 @@ class ResultsPart3(Page):
     
     @staticmethod
     def is_displayed(player):
-        return True
+        return not has_failed_control_questions(player, 'part3') and not _is_inactive_excluded(player)
     
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -363,5 +404,6 @@ class ResultsPart3(Page):
 page_sequence = [
     InstructionsPart3,
     DecisionPart3,
+    ThankYouPart3,
     ResultsPart3,
 ]

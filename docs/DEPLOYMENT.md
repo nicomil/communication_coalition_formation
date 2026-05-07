@@ -1,260 +1,185 @@
-# Guida al Deployment Online
+# Deployment Essenziale (Heroku)
 
-Questa guida spiega come deployare l'esperimento oTree online per fornire il link alla piattaforma di testing.
+Guida minima per deploy sicuro oTree senza perdere dati.
 
-## Opzioni di Deployment
+## Primo setup (una sola volta)
 
-### 1. Heroku (Raccomandato - già configurato)
+1. Crea app e DB Postgres:
 
-Heroku è la piattaforma più semplice per oTree, e il progetto è già configurato con il `Procfile`.
-
-#### Prerequisiti
-- Account Heroku (gratuito per test)
-- Heroku CLI installato: https://devcenter.heroku.com/articles/heroku-cli
-
-#### Passaggi
-
-1. **Installa Heroku CLI** (se non l'hai già fatto):
-   ```bash
-   # Mac
-   brew tap heroku/brew && brew install heroku
-   
-   # Linux/Windows: scarica da https://devcenter.heroku.com/articles/heroku-cli
-   ```
-
-2. **Login su Heroku**:
-   ```bash
-   heroku login
-   ```
-
-   **Versione Python consigliata**:
-   - Crea file `.python-version` nella root progetto con contenuto `3.11`
-   - Non usare `runtime.txt` (deprecato da Heroku)
-
-3. **Crea una nuova app Heroku**:
-   ```bash
-   heroku create nome-tua-app
-   # Esempio: heroku create bargaining-experiment
-   ```
-
-4. **Aggiungi PostgreSQL**:
-   ```bash
-   # Piano entry-level (ex-mini, ~$5/mese): Essential-0
-   heroku addons:create heroku-postgresql:essential-0
-   ```
-   Nota: i piani gratuiti Mini/Basic non sono più disponibili; Essential-0 è il piano più economico attuale.
-
-5. **Configura le variabili d'ambiente**:
-   ```bash
-   # Password admin (IMPORTANTE: scegli una password sicura!)
-   heroku config:set OTREE_ADMIN_PASSWORD=la_tua_password_sicura
-   
-   # Modalità produzione
-   heroku config:set OTREE_PRODUCTION=1
-   
-   # Secret key (genera una chiave casuale)
-   heroku config:set SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(50))')
-   ```
-
-6. **Deploy del codice**:
-   ```bash
-   git push heroku main
-   # oppure se usi master: git push heroku master
-   ```
-
-7. **Inizializza il database**:
-   ```bash
-   heroku run otree resetdb
-   ```
-
-8. **Apri l'applicazione**:
-   ```bash
-   heroku open
-   ```
-
-9. **Ottieni il link**:
-   ```bash
-   heroku info
-   # Il link sarà: https://nome-tua-app.herokuapp.com
-   ```
-
-#### Aggiornamenti Futuri
-Per aggiornare l'app dopo modifiche:
 ```bash
-git add .
-git commit -m "Aggiornamento esperimento"
-git push heroku main
-heroku run otree resetdb  # Solo se hai cambiato modelli o struttura
+heroku create <nome-app>
+heroku addons:create heroku-postgresql:essential-0 --app <nome-app>
 ```
 
-#### Monitoraggio
-- **Logs**: `heroku logs --tail`
-- **Console**: `heroku run bash`
-- **Database**: `heroku pg:psql`
+1. Configura variabili:
 
----
+```bash
+heroku config:set OTREE_PRODUCTION=1 --app <nome-app>
+heroku config:set OTREE_AUTH_LEVEL=STUDY --app <nome-app>
+heroku config:set OTREE_ADMIN_PASSWORD=<password-forte> --app <nome-app>
+heroku config:set SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(50))') --app <nome-app>
+heroku config:set PROLIFIC_COMPLETION_URL="https://app.prolific.com/submissions/complete?cc=C1HQEIID" --app <nome-app>
+```
 
-### 2. Railway
+1. Verifica DB persistente collegato:
 
-Railway è un'alternativa moderna a Heroku con piano gratuito generoso.
+```bash
+heroku config:get DATABASE_URL --app <nome-app>
+```
 
-#### Passaggi
+Se vuoto ma esiste `HEROKU_POSTGRESQL_<COLOR>_URL`:
 
-1. **Crea account su Railway**: https://railway.app
+```bash
+heroku addons:attach <nome-addon-postgres> --app <nome-app> --as DATABASE
+```
 
-2. **Connetti il repository GitHub**:
-   - Vai su Railway Dashboard
-   - Clicca "New Project" → "Deploy from GitHub repo"
-   - Seleziona il tuo repository
+1. Primo deploy:
 
-3. **Configura il servizio**:
-   - Railway rileva automaticamente il `Procfile`
-   - Aggiungi un servizio PostgreSQL dal marketplace
+```bash
+git push heroku main
+```
 
-4. **Configura le variabili d'ambiente**:
-   Nella sezione "Variables" del progetto, aggiungi:
-   ```
-   OTREE_ADMIN_PASSWORD=la_tua_password_sicura
-   OTREE_PRODUCTION=1
-   SECRET_KEY=genera_una_chiave_casuale_lunga
-   DATABASE_URL=railway_lo_configura_automaticamente
-   ```
+## Deploy successivi (produzione)
 
-5. **Deploy automatico**:
-   - Railway deploya automaticamente ad ogni push su GitHub
-   - Il link sarà: `https://tuo-progetto.up.railway.app`
+1. Backup prima del push:
 
-6. **Inizializza il database**:
-   - Vai su "Deployments" → "View Logs"
-   - Apri la console e esegui: `otree resetdb`
+```bash
+heroku pg:backups:capture --app <nome-app>
+```
 
----
+1. Deploy:
 
-### 3. Render
+```bash
+git push heroku main
+```
 
-Render offre hosting gratuito con PostgreSQL incluso.
+1. Verifica rapida:
 
-#### Passaggi
+```bash
+heroku logs --tail --app <nome-app>
+```
 
-1. **Crea account su Render**: https://render.com
+## Backup DB (dove sta e come usarlo)
 
-2. **Crea un nuovo Web Service**:
-   - Connetti il repository GitHub
-   - Render rileva automaticamente il `Procfile`
+- Il backup viene salvato su Heroku Postgres (non nel repository locale).
+- Elenco backup:
 
-3. **Configura**:
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `otree prodserver1of2` (per il web)
-   - **Environment**: `Python 3`
+```bash
+heroku pg:backups --app <nome-app>
+```
 
-4. **Aggiungi PostgreSQL**:
-   - Crea un nuovo "PostgreSQL" database
-   - Render configura automaticamente `DATABASE_URL`
+- Download locale ultimo backup:
 
-5. **Configura le variabili d'ambiente**:
-   ```
-   OTREE_ADMIN_PASSWORD=la_tua_password_sicura
-   OTREE_PRODUCTION=1
-   SECRET_KEY=genera_una_chiave_casuale_lunga
-   ```
+```bash
+heroku pg:backups:download --app <nome-app>
+```
 
-6. **Crea un Background Worker** (per il worker):
-   - Nuovo "Background Worker"
-   - Start Command: `otree prodserver2of2`
-   - Stesse variabili d'ambiente del web service
+- Ripristino da backup specifico (operazione distruttiva sul DB target):
 
-7. **Deploy**:
-   - Render deploya automaticamente
-   - Il link sarà: `https://tuo-servizio.onrender.com`
+```bash
+heroku pg:backups:restore b001 DATABASE_URL --app <nome-app> --confirm <nome-app>
+```
 
----
+## Regole critiche
 
-## Configurazione Post-Deployment
+- Non usare `heroku run otree resetdb` in produzione: cancella tutti i dati.
+- Usa `otree resetdb` solo su ambiente nuovo/staging, mai su app con dati reali.
+- Ruota periodicamente `OTREE_ADMIN_PASSWORD` e `SECRET_KEY`.
+- `OTREE_AUTH_LEVEL=STUDY` per raccolta dati reale su Prolific (`DEMO` solo per test pubblici).
 
-### 1. Accesso Admin
+## Prolific (flusso con session link)
 
-Dopo il deployment, accedi all'interfaccia admin:
-- URL: `https://tuo-link.com/admin/`
-- Username: `admin`
-- Password: quella che hai impostato in `OTREE_ADMIN_PASSWORD`
+1. Crea sessione da admin oTree e copia start link usato nel vostro flusso.
+2. Aggiungi parametro Prolific al link:
 
-### 2. Creare una Sessione
+```text
+https://<app>.herokuapp.com/InitializeParticipant/<participant_code>?participant_label={{%PROLIFIC_PID%}}&STUDY_ID={{%STUDY_ID%}}&SESSION_ID={{%SESSION_ID%}}
+```
 
-1. Vai su `/admin/`
-2. Clicca su "Sessions"
-3. Crea una nuova sessione con:
-   - **Session config name**: `bargaining_tdl`
-   - **Number of participants**: il numero desiderato
-   - **Room**: seleziona una room o lascia vuoto
+3. In Prolific usa "I'll use URL parameters" e passa:
+   - `PROLIFIC_PID` (mappato su `participant_label`)
+   - `STUDY_ID`
+   - `SESSION_ID`
+4. Imposta `PROLIFIC_COMPLETION_URL` su Heroku con completion code dello studio Prolific.
+5. Verifica che pagina finale oTree faccia redirect automatico a Prolific completion URL.
 
-### 3. Link per i Partecipanti
+## Setup Prolific consigliato (pilota)
 
-Dopo aver creato la sessione, otterrai un link unico per i partecipanti:
-- URL tipo: `https://tuo-link.com/join/xxxxx/`
-- Condividi questo link con i partecipanti
+- Tipo studio: `External study`
+- Routing trattamenti: `Task flow / multiple URLs`
+- Link: una URL sessione per trattamento (una riga per URL nel file Prolific)
+- Quote pilota: `15 + 15` (totale 30)
+- Review: `Manual review`
+- Device: `Desktop only` (mobile off, tablet off)
+- Lingua filtro: `Primary language = English`
+- Durata stimata iniziale: `40 min` (aggiustare dopo pilot)
 
-### 4. Monitoraggio Sessione
+## Session sizing oTree (anti saturazione quote)
 
-- Vai su `/admin/` → "Sessions" → seleziona la tua sessione
-- Puoi vedere lo stato di tutti i partecipanti
-- Puoi avanzare manualmente i partecipanti se necessario
+- Non creare sessioni da N esatto quando quota Prolific è N.
+- Regola pratica pilota: quota 15 per trattamento -> session size almeno 30 per trattamento.
+- In produzione piena, mantenere margine extra per rimpiazzi Prolific/dropout.
 
----
+## Capacity e addon check pre-go-live
 
-## Variabili d'Ambiente Richieste
+- Verifica processi attivi:
 
-| Variabile | Descrizione | Esempio |
-|-----------|-------------|---------|
-| `OTREE_ADMIN_PASSWORD` | Password per l'accesso admin | `mia_password_sicura_123` |
-| `OTREE_PRODUCTION` | Modalità produzione (sempre `1` in produzione) | `1` |
-| `SECRET_KEY` | Chiave segreta per Django/oTree | Genera con: `python -c 'import secrets; print(secrets.token_urlsafe(50))'` |
-| `DATABASE_URL` | URL del database PostgreSQL | Configurato automaticamente da Heroku/Railway/Render |
+```bash
+heroku ps --app <nome-app>
+```
 
----
+- Mantieni `web=1` (oTree non beneficia da scaling orizzontale standard per singola sessione).
+- Verifica Redis se usi chat/live pages/waiting ad alta concorrenza:
 
-## Troubleshooting
+```bash
+heroku config:get REDIS_URL --app <nome-app>
+```
 
-### Errore: "Database connection failed"
-- Verifica che PostgreSQL sia attivo e configurato
-- Controlla che `DATABASE_URL` sia impostata correttamente
+- Monitora metriche dyno durante pilot (CPU/load/response time) e scala piano dyno se load rimane alto.
+- Mantieni backup DB recente prima di ogni deploy in produzione.
+- Postgres:
+  - pilota: minimo `Essential 1` consigliato se chat + concorrenza
+  - studio completo: target `Standard 0`
+- Dyno Eco: valido per test, ma con picchi/chat va verificato sotto carico reale.
 
-### Errore: "SECRET_KEY not set"
-- Assicurati di aver impostato `SECRET_KEY` nelle variabili d'ambiente
-- In produzione, non usare il placeholder `{{ secret_key }}` da `settings.py`
+## Checklist go-live Prolific
 
-### App non si avvia
-- Controlla i logs: `heroku logs --tail` (Heroku) o nella dashboard (Railway/Render)
-- Verifica che tutte le dipendenze siano in `requirements.txt`
+- [ ] `OTREE_PRODUCTION=1`
+- [ ] `OTREE_AUTH_LEVEL=STUDY`
+- [ ] `OTREE_ADMIN_PASSWORD` impostata e testata
+- [ ] `SECRET_KEY` impostata
+- [ ] `DATABASE_URL` presente
+- [ ] `PROLIFIC_COMPLETION_URL` valorizzata con completion code reale
+- [ ] URL sessione Prolific include `participant_label`, `STUDY_ID`, `SESSION_ID`
+- [ ] Prolific configurato come `External study` + `Task flow / multiple URLs`
+- [ ] Prolific `Desktop only`, mobile/tablet disabilitati
+- [ ] Prolific in `Manual review`
+- [ ] Session size oTree sovradimensionata rispetto alla quota Prolific
+- [ ] Smoke test completo: ingresso Prolific -> sessione oTree -> redirect completion
+- [ ] Backup DB eseguito (`heroku pg:backups:capture`)
 
-### Partecipanti non si connettono
-- Verifica che la sessione sia stata creata correttamente
-- Controlla che il link condiviso sia corretto
-- Assicurati che il numero di partecipanti corrisponda alla configurazione
+## Stato attuale Heroku (`ccf`)
 
----
+Ultimo check: 2026-05-05 14:13 (UTC+2)
 
-## Sicurezza
+- App: `ccf`
+- URL: `https://ccf-70e9cba78a52.herokuapp.com/`
+- Owner: `nicombk@gmail.com`
+- Stack: `heroku-24`
+- Dynos: `web: 1`
+- Addon DB: `heroku-postgresql:essential-0` (`postgresql-rugged-25313`)
+- DB alias attivi: `DATABASE_URL`, `HEROKU_POSTGRESQL_AQUA_URL`
+- Postgres: `17.9`
+- DB size: `7.69 MB`
+- Tabelle: `0`
+- Backup disponibile: `b001` (Completed, 2026-05-05 12:11:17 +0000)
+- Database: `d6qm0ppaqrupal` (host e credenziali mascherati)
 
-⚠️ **IMPORTANTE**: Prima di andare in produzione:
+### Credenziali correnti (sensibili)
 
-1. ✅ Cambia `SECRET_KEY` con una chiave casuale sicura
-2. ✅ Imposta una password admin forte (`OTREE_ADMIN_PASSWORD`)
-3. ✅ Verifica che `OTREE_PRODUCTION=1` sia impostato
-4. ✅ Non committare mai password o chiavi nel repository
-5. ✅ Usa HTTPS (tutte le piattaforme sopra lo forniscono automaticamente)
-
----
-
-## Costi
-
-- **Heroku**: Postgres Essential-0 da ~$5/mese; piano app hobby da $7/mese
-- **Railway**: $5 crediti gratuiti/mese, poi pay-as-you-go
-- **Render**: Piano gratuito disponibile (con limitazioni), poi $7/mese
-
-Per esperimenti di testing, il piano gratuito è generalmente sufficiente.
-
-
-
-
-
+- `OTREE_PRODUCTION=1`
+- `OTREE_AUTH_LEVEL` da verificare (target: `STUDY`)
+- `OTREE_ADMIN_PASSWORD=********`
+- `SECRET_KEY=********`
+- `PROLIFIC_COMPLETION_URL` da impostare/verificare
 

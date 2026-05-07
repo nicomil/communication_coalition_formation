@@ -3,6 +3,14 @@
 
 {{ block global_styles  }}
 <style>
+    /* Hide oTree timeout widget by default on all pages.
+       Chat page explicitly re-enables it. */
+    .otree-timer,
+    .otree-timer__time-left,
+    #otree-timer {
+        display: none !important;
+    }
+
     /* Override Bootstrap primary button color for oTree next buttons - same style as OK button */
     /* Using very high specificity to override Bootstrap */
     body .otree-body button.otree-btn-next.btn-primary,
@@ -138,12 +146,6 @@
         var pageStartTime = Date.now();
         var timeOnPage = 0;
         
-        console.log('========================================');
-        console.log('⏱️ Time tracking initialized for new page');
-        console.log('Page URL:', window.location.pathname);
-        console.log('Timestamp:', new Date().toISOString());
-        console.log('========================================');
-        
         // Create the time_on_page hidden field if it doesn't exist
         function ensureTimeField() {
             // Try to find existing field first - check multiple possible names
@@ -180,9 +182,6 @@
                     timeField.value = '0';
                     // Insert it at the beginning of the form
                     form.insertBefore(timeField, form.firstChild);
-                    console.log('Created time_on_page field dynamically');
-                } else {
-                    console.warn('No form found to add time_on_page field');
                 }
             }
             return timeField;
@@ -221,17 +220,9 @@
                 // Ensure we always have a valid number (at least 0)
                 const timeValue = Math.max(0, timeOnPage).toFixed(2);
                 timeField.value = timeValue;
-                // Log for debugging - only log every 5 seconds to avoid spam
-                const now = Date.now();
-                if (!window._lastTimeLog || (now - window._lastTimeLog) > 5000) {
-                    console.log('⏱️ Time tracking updated:', timeValue, 'seconds on page:', window.location.pathname);
-                    window._lastTimeLog = now;
-                }
                 return true;
-            } else {
-                console.error('❌ Time field not found on page:', window.location.pathname);
-                return false;
             }
+            return false;
         }
         
         // Update time field periodically (every 0.5 seconds)
@@ -249,7 +240,6 @@
                 const timeValue = Math.max(0, timeOnPage).toFixed(2);
                 timeField.value = timeValue;
                 timeField.setAttribute('value', timeValue);
-                console.log('Time update on beforeunload:', timeValue);
             }
         };
         window.addEventListener('beforeunload', beforeUnloadHandler);
@@ -271,20 +261,11 @@
                     const timeValue = Math.max(0, timeOnPage).toFixed(2);
                     timeField.value = timeValue;
                     timeField.setAttribute('value', timeValue);
-                    
-                    // Verify the value was set
-                    if (timeField.value === timeValue || parseFloat(timeField.value) > 0) {
-                        console.log('✅ Final time update before submit:', timeValue, 'seconds');
-                    } else {
-                        console.error('❌ Failed to set time value! Expected:', timeValue, 'Got:', timeField.value);
-                    }
-                    
+
                     // Trigger events
                     timeField.dispatchEvent(new Event('change', { bubbles: true }));
                     timeField.dispatchEvent(new Event('input', { bubbles: true }));
                     timeField.dispatchEvent(new Event('blur', { bubbles: true }));
-                } else {
-                    console.error('❌ Time field not found during form submit on page:', window.location.pathname);
                 }
             }, true); // Use capture phase to run early
         });
@@ -304,7 +285,6 @@
                     const timeValue = Math.max(0, timeOnPage).toFixed(2);
                     timeField.value = timeValue;
                     timeField.setAttribute('value', timeValue);
-                    console.log('Time update on button click:', timeValue);
                     
                     // Trigger events
                     timeField.dispatchEvent(new Event('change', { bubbles: true }));
@@ -331,7 +311,6 @@
             ensureTimeField();
             const found = updateTimeField();
             if (!found) {
-                console.warn('Time field not found on initial load, retrying...');
                 // Retry after a short delay
                 setTimeout(function() {
                     ensureTimeField();
@@ -347,8 +326,6 @@
         setTimeout(initField, 100);
         setTimeout(initField, 500);
         setTimeout(initField, 1000);
-        
-        console.log('✅ Time tracking setup complete');
     })(); // Execute immediately
 
 </script>

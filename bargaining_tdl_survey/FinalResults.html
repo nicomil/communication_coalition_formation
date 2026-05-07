@@ -1,3 +1,4 @@
+{{ extends "_templates/global/Page.html" }}
 {{ block title }}Final Results{{ endblock }}
 {{ block content }}
 
@@ -29,7 +30,9 @@
         </p>
 
         <div class="alert alert-info">
-            {% if selected == 1 %}
+            {% if not part1_payoff_eligible %}
+            Your group interaction in Part 1 was interrupted. Therefore, Part 1 is not eligible for payment.
+            {% elif selected == 1 %}
             Your payoff from Part 1 is: <strong>{{ part1_payoff }}</strong>
             {% else %}
             Your Part 2 payoff will be determined by the researcher after data collection.
@@ -48,7 +51,7 @@
                 <tr>
                     <td>Part 1 payoff:</td>
                     <td class="text-end">
-                        {% if selected == 1 %}
+                        {% if selected == 1 and part1_payoff_eligible %}
                         {{ part1_payoff }}
                         {% else %}
                         0
@@ -79,9 +82,54 @@
                 determine your payoff based on the selected SENDER's choice.</li>
             {% endif %}
         </ul>
+
+        <hr>
+        <p class="mb-2">
+            You will be redirected to Prolific completion page in
+            <strong><span id="redirect-countdown">60</span> seconds</strong>.
+        </p>
+        <p class="mb-3">
+            If you prefer, complete now using this button:
+        </p>
+        <p class="mb-0">
+            <a id="completion-button" href="#" class="btn btn-primary">Complete on Prolific now</a>
+            <br>
+            <small class="text-muted">
+                If button does not work, use
+                <a id="completion-link" href="#">this direct link</a>.
+            </small>
+        </p>
     </div>
 </div>
 
 {{ include '_templates/global/_time_tracking_field.html' }}
+
+<script>
+    (function () {
+        const REDIRECT_DELAY_SECONDS = 60;
+        const completionlink = (js_vars && js_vars.completionlink) ? String(js_vars.completionlink).trim() : '';
+        const fallbackLink = document.getElementById('completion-link');
+        const completionButton = document.getElementById('completion-button');
+        const countdownEl = document.getElementById('redirect-countdown');
+        if (!fallbackLink || !completionButton || !countdownEl || !completionlink) {
+            return;
+        }
+
+        fallbackLink.href = completionlink;
+        completionButton.href = completionlink;
+        let secondsLeft = REDIRECT_DELAY_SECONDS;
+        const countdownTimer = window.setInterval(function () {
+            secondsLeft = Math.max(0, secondsLeft - 1);
+            countdownEl.textContent = String(secondsLeft);
+            if (secondsLeft <= 0) {
+                window.clearInterval(countdownTimer);
+            }
+        }, 1000);
+
+        window.setTimeout(function () {
+            window.location.href = completionlink;
+        }, REDIRECT_DELAY_SECONDS * 1000);
+    })();
+</script>
 
 {{ endblock }}
