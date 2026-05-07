@@ -199,10 +199,13 @@
 
         function applyStatus(payload) {
             if (!payload) return;
+            const leftActive = Boolean(payload.left_partner_active);
+            const rightActive = Boolean(payload.right_partner_active);
+            setColumnStatus(leftColumn, leftActive);
+            setColumnStatus(rightColumn, rightActive);
+
             if (reconnectWait) {
                 if (payload.waiting_on_reconnect) {
-                    setColumnStatus(leftColumn, false);
-                    setColumnStatus(rightColumn, false);
                     setNextButtonBlocked(true);
                     reconnectWait.style.display = 'block';
                     const seconds = Math.max(0, Number(payload.reconnect_seconds_left) || 0);
@@ -210,14 +213,9 @@
                     startLocalReconnectCountdown(seconds);
                 } else {
                     stopLocalReconnectCountdown();
-                    setColumnStatus(leftColumn, Boolean(payload.left_partner_active));
-                    setColumnStatus(rightColumn, Boolean(payload.right_partner_active));
                     setNextButtonBlocked(false);
                     reconnectWait.style.display = 'none';
                 }
-            } else {
-                setColumnStatus(leftColumn, Boolean(payload.left_partner_active));
-                setColumnStatus(rightColumn, Boolean(payload.right_partner_active));
             }
             if (payload.should_auto_advance) {
                 requestAutoSubmit('two-left');
