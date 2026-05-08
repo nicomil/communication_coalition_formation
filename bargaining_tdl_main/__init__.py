@@ -58,7 +58,9 @@ class C(BaseConstants):
     PAYOFF_SPLIT = cu(4)
     PAYOFF_DISAGREEMENT = cu(0)
     CHAT_RECONNECT_WINDOW_SECONDS = 90
-    CHAT_DISCONNECT_DETECTION_SECONDS = 3
+    # Heartbeat tolerance tuned to avoid false disconnect flicker under network jitter.
+    CHAT_DISCONNECT_DETECTION_SECONDS = 8
+    CHAT_DISCONNECT_CONFIRMATION_SECONDS = 12
 
 class Subsession(BaseSubsession):
     pass
@@ -258,7 +260,7 @@ def _evaluate_chat_dropout(group: Group):
         if grace_until and now < grace_until:
             continue
         last_ping = _get_last_ping(group, player_id)
-        if last_ping and (now - last_ping) > C.CHAT_DISCONNECT_DETECTION_SECONDS:
+        if last_ping and (now - last_ping) > C.CHAT_DISCONNECT_CONFIRMATION_SECONDS:
             group.interrupted_player_id = player_id
             group.reconnect_deadline_ts = now + C.CHAT_RECONNECT_WINDOW_SECONDS
             participant = group.get_player_by_id(player_id)
