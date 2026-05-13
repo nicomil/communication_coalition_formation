@@ -175,11 +175,11 @@ def _signal_display_text(code, target_color, other_color):
     """Human-readable text for a signal internal code."""
     if code == 'split_you':
         # "you" refers to the receiver, so do not append a color label.
-        return "I wish to split the $ 12 equally with you only."
+        return "I wish to split the $12 equally with you only."
     elif code == 'split_other':
-        return f"I wish to split the $ 12 equally with the other Participant only, the {other_color} Participant."
+        return f"I wish to split the $12 equally with the other Participant only, the {other_color} Participant."
     elif code == 'split_both':
-        return f"I wish to split the $ 12 equally with both you and the {other_color} Participant."
+        return f"I wish to split the $12 equally with both you and the {other_color} Participant."
     return code or ""
 
 
@@ -430,7 +430,7 @@ class GroupingAfterControlQuestions(WaitPage):
 class Chat(Page):
     form_model = 'player'
     form_fields = ['time_on_page']
-    timeout_seconds = 180
+    timeout_seconds = 600
     timer_text = "Chat time remaining:"
 
     @staticmethod
@@ -559,10 +559,10 @@ class DataMappingWaitPage(WaitPage):
 class Decision(Page):
     form_model = 'player'
     form_fields = ['decision_choice', 'time_on_page']
-    timeout_seconds = 180
+    timeout_seconds = 300
     timeout_submission = dict(
         decision_choice='Left',
-        time_on_page=180,
+        time_on_page=300,
     )
 
     @staticmethod
@@ -751,11 +751,11 @@ class Results(Page):
         colors = _color_context(player)
         choice = player.decision_choice
         if choice == 'Left':
-            choice_display = f"I would like to divide the $ 12 equally with the {colors['left_partner_color']} Participant"
+            choice_display = f"I would like to divide the $12 equally with the {colors['left_partner_color']} Participant"
         elif choice == 'Right':
-            choice_display = f"I would like to divide the $ 12 equally with the {colors['right_partner_color']} Participant"
+            choice_display = f"I would like to divide the $12 equally with the {colors['right_partner_color']} Participant"
         else:
-            choice_display = "I would like to divide the $ 12 equally among all the members of the group"
+            choice_display = "I would like to divide the $12 equally among all the members of the group"
         return dict(choice_display=choice_display, **colors)
 
     @staticmethod

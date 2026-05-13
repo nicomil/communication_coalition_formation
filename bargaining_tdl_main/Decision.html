@@ -1,5 +1,5 @@
 {{ extends "_templates/global/Page.html" }}
-{{ block title }}Your Decision{{ endblock }}
+{{ block title }}Your Final Decision{{ endblock }}
 {{ block content }}
 
 <style>
@@ -50,10 +50,84 @@
         display: none !important;
     }
 </style>
+
+<style>
+    /* Timer hidden by default; JS will reveal it at 1 minute remaining */
+    .otree-timer,
+    .otree-timer__time-left,
+    #otree-timer {
+        display: none !important;
+    }
+
+    /* Urgent style when timer is shown */
+    #otree-timer.timer-visible,
+    .otree-timer.timer-visible {
+        display: block !important;
+        background-color: #f8d7da;
+        color: #842029;
+        border: 2px solid #f5c2c7;
+        border-radius: 6px;
+        padding: 10px 16px;
+        font-weight: bold;
+        font-size: 1.1em;
+        text-align: center;
+        margin-bottom: 12px;
+    }
+
+    /* Also show inner time display when parent is revealed */
+    .otree-timer.timer-visible .otree-timer__time-left,
+    #otree-timer.timer-visible .otree-timer__time-left,
+    .otree-timer.timer-visible * {
+        display: inline !important;
+    }
+</style>
+
+<script>
+    (function () {
+        var SHOW_AT_SECONDS = 60;
+        var timerShown = false;
+
+        function revealTimer() {
+            var els = [
+                document.getElementById('otree-timer'),
+                document.querySelector('.otree-timer'),
+                document.querySelector('.otree-timer__time-left')
+            ];
+            els.forEach(function (el) {
+                if (el && !timerShown) {
+                    el.classList.add('timer-visible');
+                }
+            });
+            timerShown = true;
+        }
+
+        function checkTimer() {
+            if (timerShown) return;
+            var timerEl = document.getElementById('otree-timer') || document.querySelector('.otree-timer');
+            if (!timerEl) return;
+            var text = timerEl.innerText || timerEl.textContent || '';
+            var match = text.match(/(\d+):(\d{2})/);
+            if (match) {
+                var minutes = parseInt(match[1], 10);
+                var seconds = parseInt(match[2], 10);
+                var totalSeconds = minutes * 60 + seconds;
+                if (totalSeconds <= SHOW_AT_SECONDS) {
+                    revealTimer();
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            setInterval(checkTimer, 500);
+        });
+    })();
+</script>
+<p><strong>Please make your final decision. Note that if you have not made your decision within 5 minutes, the
+        experiment will end and you will not be paid.</strong></p>
 <h4> You are the {{ my_color }} Participant.</h4>
 <p>
-    Here are the Chat between you and the other participants, and the intentions
-    received by each of
+    Here are the Chats between you and the other participants, and the final messages
+    received from each of
     them.
     Based on this information, please make your decision.
 </p>
@@ -66,7 +140,7 @@
             </div>
             <div class="card-body px-5 py-4">
                 <div class="signal-box">
-                    Intentions: {{ received_signal_left_display }}
+                    Final Message: {{ received_signal_left_display }}
                 </div>
                 <h6>Chat Log (Read-Only):</h6>
                 <div class="message-box read-only-chat">
@@ -82,7 +156,7 @@
             </div>
             <div class="card-body px-5 py-4">
                 <div class="signal-box">
-                    Intentions: {{ received_signal_right_display }}
+                    Final Message: {{ received_signal_right_display }}
                 </div>
                 <h6>Chat Log (Read-Only):</h6>
                 <div class="message-box read-only-chat">
@@ -97,7 +171,7 @@
 
 <div class="card border-secondary">
     <div class="card-header bg-secondary text-white">
-        <h4>Select your choice:</h4>
+        <h4>Select your option:</h4>
     </div>
     <div class="card-body px-5 py-4">
         <p>
@@ -110,9 +184,9 @@
                 <input type="radio" name="decision_choice" value="Left" id="dc_left" class="form-check-input" required>
                 <label class="form-check-label" for="dc_left">
                     <strong>I would like to divide the $12 equally with the {{ left_partner_color }}
-                        Participant</strong> <em>( $ 6 to
+                        Participant</strong> <em>($6 to
 
-                        {{my_color}} Participant, $ 6 to the {{left_partner_color}} Participant, $ 0 to the
+                        you, $6 to the {{left_partner_color}} Participant, $0 to the
                         {{right_partner_color}}
                         Participant)</em>.
                 </label>
@@ -121,8 +195,8 @@
                 <input type="radio" name="decision_choice" value="Right" id="dc_right" class="form-check-input">
                 <label class="form-check-label" for="dc_right">
                     <strong>I would like to divide the $12 equally with the {{ right_partner_color }}
-                        Participant</strong> <em>( $ 6 to
-                        {{my_color}} Participant, $ 6 to the {{right_partner_color}} Participant, $ 0 to the
+                        Participant</strong> <em>($6 to
+                        you, $6 to the {{right_partner_color}} Participant, $0 to the
                         {{left_partner_color}}
                         Participant)</em>.
 
@@ -131,8 +205,8 @@
             <div class="form-check mb-3">
                 <input type="radio" name="decision_choice" value="Both" id="dc_both" class="form-check-input">
                 <label class="form-check-label" for="dc_both">
-                    <strong>I would like to divide the $12 equally with the two other Participants</strong> <em>( $ 4 to
-                        {{my_color}} Participant, $ 4 to the {{left_partner_color}} Participant, $ 4 to the
+                    <strong>I would like to divide the $12 equally with the two other Participants</strong> <em>($4 to
+                        you, $4 to the {{left_partner_color}} Participant, $4 to the
                         {{right_partner_color}}
                         Participant)</em>.
 

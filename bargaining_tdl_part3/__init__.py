@@ -256,7 +256,7 @@ def create_control_questions_part3_class(attempt_number):
             return {
                 'max_attempts': max_attempts,
                 'current_attempt': attempt_number,
-                'attempts_remaining': max_attempts - attempt_number,
+                'attempts_remaining': max_attempts - attempt_number + 1,
                 'is_first_attempt': attempt_number == 1,
                 **colors,
             }

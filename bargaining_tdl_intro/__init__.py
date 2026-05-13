@@ -325,7 +325,7 @@ def create_control_questions_class(attempt_number):
         template_name = 'bargaining_tdl_intro/ControlQuestions.html'
         form_model = 'player'
         preserve_unsubmitted_inputs = True
-        timeout_seconds = 180
+        timeout_seconds = 300
         timeout_submission = dict(
             example1_earnings_you='6',
             example1_earnings_left='0',
@@ -336,7 +336,7 @@ def create_control_questions_class(attempt_number):
             example3_earnings_you='0',
             example3_earnings_left='0',
             example3_earnings_right='0',
-            time_on_page=180,
+            time_on_page=300,
         )
         form_fields = [
             'example1_earnings_you',
@@ -379,23 +379,23 @@ def create_control_questions_class(attempt_number):
             
             return {
                 'example1_scenario': (
-                    "Imagine that you are the Green Participant, and chose to 'Split equally the $ 12 only with the Orange Participant' ($ 6 to you, $ 6 to the Orange Participant, $ 0 to the Purple Participant);<br>"
-                    "- The Purple Participant chooses to 'Split equally the $ 12 with both the two Participants'($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant); <br>"
-                    "- The Orange Participant chooses to 'Split equally the $ 12 only with the Green Participant'($ 6 to you, $ 6 to the Orange Participant, $ 0 to the Purple Participant)."
+                    "Imagine that you are the Green Participant, and chose to 'Split equally the $12 only with the Orange Participant' ($6 to you, $6 to the Orange Participant, $0 to the Purple Participant);<br>"
+                    "- The Purple Participant chooses to 'Split equally the $12 with both the two Participants'($4 to you, $4 to the Orange Participant, $4 to the Purple Participant); <br>"
+                    "- The Orange Participant chooses to 'Split equally the $12 only with the Green Participant'($6 to you, $6 to the Orange Participant, $0 to the Purple Participant)."
                 ),
                 'example2_scenario': (
-                    "Imagine that you are the Green Participant, and chose to 'Split equally the $ 12 only with the two Participants' ($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant);<br>"
-                    "- The Purple Participant chooses to 'Split equally the $ 12 with the Orange Participant' ($ 0 to you, $ 6 to the Orange Participant, $ 6 to the Purple Participant);<br>"
-                    "- The Orange Participant chooses to 'Split equally the $ 12 only with the two Participants' ($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant)."
+                    "Imagine that you are the Green Participant, and chose to 'Split equally the $12 only with the two Participants' ($4 to you, $4 to the Orange Participant, $4 to the Purple Participant);<br>"
+                    "- The Purple Participant chooses to 'Split equally the $12 with the Orange Participant' ($0 to you, $6 to the Orange Participant, $6 to the Purple Participant);<br>"
+                    "- The Orange Participant chooses to 'Split equally the $12 only with the two Participants' ($4 to you, $4 to the Orange Participant, $4 to the Purple Participant)."
                 ),
                 'example3_scenario': (
-                    "Imagine that you are the Green Participant, and chose to 'Split equally the $ 12 with the two Participants' ($ 4 to you, $ 4 to the Orange Participant, $ 4 to the Purple Participant);<br>"
-                    "- The Purple Participant chooses to 'Split equally the $ 12 with the Green Participant' ($ 6 to you, $ 0 to the Orange Participant, $ 6 to the Purple Participant);<br>"
-                    "- The Orange Participant chooses to 'Split equally the $ 12 with the Purple Participant' ($ 0 to you, $ 6 to the Orange Participant, $ 6 to the Purple Participant)."
+                    "Imagine that you are the Green Participant, and chose to 'Split equally the $12 with the two Participants' ($4 to you, $4 to the Orange Participant, $4 to the Purple Participant);<br>"
+                    "- The Purple Participant chooses to 'Split equally the $12 with the Green Participant' ($6 to you, $0 to the Orange Participant, $6 to the Purple Participant);<br>"
+                    "- The Orange Participant chooses to 'Split equally the $12 with the Purple Participant' ($0 to you, $6 to the Orange Participant, $6 to the Purple Participant)."
                 ),
                 'max_attempts': max_attempts,
                 'current_attempt': attempt_number,
-                'attempts_remaining': max_attempts - attempt_number,
+                'attempts_remaining': max_attempts - attempt_number + 1,
                 'is_first_attempt': attempt_number == 1,
                 'cq_errors': player.participant.vars.get('intro_cq_errors', []),
                 'cq_errors_str': ", ".join(player.participant.vars.get('intro_cq_errors', [])),

@@ -13,14 +13,15 @@
 <div class="card bg-white mt-4 mb-4 shadow-sm">
     <div class="card-body px-5 py-4">
         <p>
-        <h4> You are the {{ my_color }}</h4>
+        <h4> You are the {{ my_color }} Participant</h4>
         </p>
         <p>
             You chose: <strong>{{ choice_display }}</strong>
         </p>
 
         <p class="lead">
-            Your payoff for this part will be comunicated at the end of the experiment
+            The choices of the other two participants and your payoff for this part will be comunicated at the end of
+            the experiment.
         </p>
 
         <hr>
@@ -29,7 +30,7 @@
 </div>
 
 <p style="margin-top: 15px;">
-    Thank you! You finish Part 1 of the experiment. Please click on the next button to proceed with Part 2.
+    Thank you! You have finished Part 1 of the experiment. Please click on the next button to proceed with Part 2.
 </p>
 
 {{ include '_templates/global/_time_tracking_field.html' }}
