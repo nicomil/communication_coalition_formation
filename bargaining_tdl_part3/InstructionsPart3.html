@@ -6,21 +6,94 @@
     .otree-body {
         max-width: 1000px;
     }
+
+    /* Timer hidden by default; JS will reveal it at 1 minute remaining */
+    .otree-timer,
+    .otree-timer__time-left,
+    #otree-timer {
+        display: none !important;
+    }
+
+    /* Urgent style when timer is shown */
+    #otree-timer.timer-visible,
+    .otree-timer.timer-visible {
+        display: block !important;
+        background-color: #f8d7da;
+        color: #842029;
+        border: 2px solid #f5c2c7;
+        border-radius: 6px;
+        padding: 10px 16px;
+        font-weight: bold;
+        font-size: 1.1em;
+        text-align: center;
+        margin-bottom: 12px;
+    }
+
+    /* Also show inner time display when parent is revealed */
+    .otree-timer.timer-visible .otree-timer__time-left,
+    #otree-timer.timer-visible .otree-timer__time-left,
+    .otree-timer.timer-visible * {
+        display: inline !important;
+    }
 </style>
+
+<script>
+    (function () {
+        var SHOW_AT_SECONDS = 60;
+        var timerShown = false;
+
+        function revealTimer() {
+            var els = [
+                document.getElementById('otree-timer'),
+                document.querySelector('.otree-timer'),
+                document.querySelector('.otree-timer__time-left')
+            ];
+            els.forEach(function (el) {
+                if (el && !timerShown) {
+                    el.classList.add('timer-visible');
+                }
+            });
+            timerShown = true;
+        }
+
+        function checkTimer() {
+            if (timerShown) return;
+            var timerEl = document.getElementById('otree-timer') || document.querySelector('.otree-timer');
+            if (!timerEl) return;
+            var text = timerEl.innerText || timerEl.textContent || '';
+            var match = text.match(/(\d+):(\d{2})/);
+            if (match) {
+                var minutes = parseInt(match[1], 10);
+                var seconds = parseInt(match[2], 10);
+                var totalSeconds = minutes * 60 + seconds;
+                if (totalSeconds <= SHOW_AT_SECONDS) {
+                    revealTimer();
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            setInterval(checkTimer, 500);
+        });
+    })();
+</script>
 
 {{ include_sibling '_button_style.html' }}
 
+<!-- ── INSTRUCTIONS ─────────────────────────────────────────────── -->
 <div class="card bg-white mt-4 mb-4 shadow-sm">
     <div class="card-body px-5 py-4">
-
+        <p><strong>Please make your decision for Part 2. Note that if you have not made your decision within 10 minutes,
+                the
+                experiment will end and you will not be paid.</strong></p>
         <p>
             Please note that in Part 2 of the experiment, each participant will be randomly matched
             with <strong>different</strong> group members from those they were matched with in Part 1
         </p>
         <p>
             In this part of the experiment, you will be asked how you would like to divide $12 between yourself
-            (<strong> SENDER </strong>) and other two participants
-            (<strong> RECEIVERS </strong>).
+            (<strong>SENDER</strong>) and other two participants
+            (<strong>RECEIVERS</strong>).
         </p>
         <p>You have <strong> two options to choose how to divide the $12 </strong>:
         </p>
@@ -31,19 +104,16 @@
             <li><strong>Option 2</strong>: Split equally the $12 with only one of the
                 two participant ($6 to you, $6
                 to one RECEIVER, and $0 to the other RECEIVER).</li>
-
         </ul>
-        <p><strong>Please note:</strong> In case you choose Option 2, which of the two RECEIVERS get $ 6 and which gets
-            $0
-            will be chosen randomly by the computer.</p>
+        <p><strong>Please note:</strong> In case you choose Option 2, which of the two RECEIVERS get $6 and which gets
+            $0 will be chosen randomly by the computer.</p>
         <p>
             <li> After the experiment is over, in case Part 2 is paid out, the computer will randomly decide whether
                 you are to be a SENDER or a RECEIVER from another participant.</li>
         </p>
         <p>
             <li>If you are randomly selected to be a SENDER, you and your two RECEIVERS <strong>will be paid according
-                    to your
-                    decision.</strong></li>
+                    to your decision.</strong></li>
         </p>
         <p>
             <li>If you are randomly selected to be a RECEIVER:</li>
@@ -55,6 +125,32 @@
         </ul>
         </p>
 
+    </div>
+</div>
+
+<!-- ── DECISION ──────────────────────────────────────────────────── -->
+
+
+<div class="card border-secondary mt-4 mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h4>Select your option:</h4>
+    </div>
+    <div class="card-body px-5 py-4">
+        <p>
+            Please choose how you would like to divide the $12, by choosing one of the following options:
+        </p>
+        <p></p>
+        <div class="form-group">
+            {{ for opt in decision_options }}
+            <div class="form-check mb-3">
+                <input type="radio" name="decision" value="{{ opt.value }}" id="decision_{{ opt.value }}"
+                    class="form-check-input" required>
+                <label class="form-check-label" for="decision_{{ opt.value }}">
+                    {{ opt.label|safe }}
+                </label>
+            </div>
+            {{ endfor }}
+        </div>
     </div>
 </div>
 

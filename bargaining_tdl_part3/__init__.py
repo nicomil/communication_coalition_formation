@@ -164,23 +164,45 @@ def _decision_display_text(decision_code, colors):
     Convert internal decision code (share_one/share_both) to participant-facing text.
     """
     if decision_code == 'share_one':
-        return "Equally split the $ 12 with only one of the two RECEIVERS"
+        return "Equally split the $12 with only one of the two RECEIVERS($6 to you, $6 to one RECEIVER, and $0 to the other RECEIVER)."
     if decision_code == 'share_both':
-        return "Equally split the $ 12 between myself and the other two RECEIVERS"
+        return "Equally split the $12 between myself and the other two RECEIVERS."
     return ""
 
 
 class InstructionsPart3(Page):
     form_model = 'player'
-    form_fields = ['time_on_page']
+    form_fields = ['decision', 'time_on_page']
+    timeout_seconds = 600
+    timeout_submission = dict(
+        decision='share_one',
+        time_on_page=600,
+    )
 
     @staticmethod
     def vars_for_template(player):
-        return _part3_color_context(player)
+        import random
+        order_key = 'decision_part3_option_order'
+        if order_key not in player.participant.vars:
+            options = [
+                {'value': 'share_one',  'label': '<strong>Equally split the $12 with only one of the two RECEIVERS</strong> <em>($6 to you, $6 to one RECEIVER, and $0 to the other RECEIVER).</em>'},
+                {'value': 'share_both', 'label': '<strong>Equally split the $12 between myself and the other two RECEIVERS</strong> <em>($4 to you and $4 to each of the RECEIVERS).</em>'},
+            ]
+            random.shuffle(options)
+            player.participant.vars[order_key] = options
+        colors = _part3_color_context(player)
+        return {
+            'decision_options': player.participant.vars[order_key],
+            **colors,
+        }
 
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_instructions_part3 = save_time_value(player.time_on_page)
+        player.time_decision_part3 = player.time_instructions_part3
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'part3_decision_timeout')
+            set_control_questions_failed(player, 'part3', failed=True)
 
 class SummaryPart3(Page):
     form_model = 'player'
@@ -356,8 +378,8 @@ class DecisionPart3(Page):
         order_key = 'decision_part3_option_order'
         if order_key not in player.participant.vars:
             options = [
-                {'value': 'share_one',  'label': 'Equally split the $ 12 with only one of the two RECEIVERS'},
-                {'value': 'share_both', 'label': 'Equally split the $ 12 between myself and the other two RECEIVERS'},
+                {'value': 'share_one',  'label': '<strong>Equally split the $ 12 with only one of the two RECEIVERS</strong> <em>($6 to you, $6 to one of the two RECEIVERS, $0 to the other RECEIVER).</em>'},
+                {'value': 'share_both', 'label': '<strong>Equally split the $ 12 between myself and the other two RECEIVERS</strong> <em>($4 to you, $4 to each of the two RECEIVERS).</em>'},
             ]
             random.shuffle(options)
             player.participant.vars[order_key] = options
@@ -403,7 +425,6 @@ class ResultsPart3(Page):
 
 page_sequence = [
     InstructionsPart3,
-    DecisionPart3,
     ThankYouPart3,
     ResultsPart3,
 ]

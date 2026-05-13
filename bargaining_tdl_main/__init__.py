@@ -463,6 +463,20 @@ class Chat(Page):
         _set_player_left_chat(player)
         player.time_chat = save_time_value(player.time_on_page)
         logger.debug(f"Chat - time_chat saved: {player.time_chat}")
+        # Record why the player left the Chat page (used by Signals page for context messages)
+        if timeout_happened:
+            player.participant.vars['chat_advanced_reason'] = 'timeout'
+        elif player.group.group_dropped:
+            player.participant.vars['chat_advanced_reason'] = 'group_dropped'
+        else:
+            my_id = player.id_in_group
+            left_id = get_left_partner_id(my_id)
+            right_id = get_right_partner_id(my_id)
+            statuses = _chat_left_state(player.group)
+            if statuses.get(left_id) and statuses.get(right_id):
+                player.participant.vars['chat_advanced_reason'] = 'partners_left'
+            else:
+                player.participant.vars['chat_advanced_reason'] = 'normal'
 
     @staticmethod
     def live_method(player: Player, data):
@@ -502,7 +516,12 @@ class Signals(Page):
     @staticmethod
     def vars_for_template(player: Player):
         colors = _color_context(player)
-        return dict(**colors)
+        reason = player.participant.vars.get('chat_advanced_reason', 'normal')
+        return dict(
+            chat_timeout=(reason == 'timeout'),
+            chat_partners_left=(reason in ('group_dropped', 'partners_left')),
+            **colors,
+        )
 
     @staticmethod
     def before_next_page(player, timeout_happened):
