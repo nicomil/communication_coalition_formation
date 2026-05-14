@@ -12,7 +12,8 @@
 
 {% if signals_expired %}
 <div class="alert alert-warning mt-3" role="alert">
-    <strong>Note:</strong> Your time for sending the final message has expired.
+    <strong>Note:</strong> Your time for sending the final message has expired. Your final message has not been sent to
+    the other participants.
 </div>
 {% endif %}
 
@@ -129,7 +130,8 @@
     })();
 </script>
 <p><strong>Please make your final decision. Note that if you have not made your decision within 5 minutes, the
-        experiment will end and you will not be paid.</strong></p>
+        experiment will end and you will not be paid. In this case the computer will randomly take your choice.</strong>
+</p>
 <h4> You are the {{ my_color }} Participant.</h4>
 <p>
     Here are the Chats between you and the other participants, and the final messages

@@ -421,6 +421,53 @@ class FinalResults(Page):
             if selected != 1:
                 part1_payoff_val = "TBD"
 
+        from bargaining_tdl_common import get_main_group_player, TOPOLOGY, COLOR_MAPPING
+        
+        main_player = get_main_group_player(player)
+        left_choice_display = ""
+        right_choice_display = ""
+        left_color = ""
+        right_color = ""
+        left_inactive = False
+        right_inactive = False
+        
+        if main_player:
+            my_id = main_player.id_in_group
+            partners = TOPOLOGY[my_id]
+            left_id = partners['left']
+            right_id = partners['right']
+            
+            left_partner = main_player.group.get_player_by_id(left_id)
+            right_partner = main_player.group.get_player_by_id(right_id)
+            
+            left_color = COLOR_MAPPING[left_id]
+            right_color = COLOR_MAPPING[right_id]
+            
+            left_inactive = (left_partner.decision_inactive == 99)
+            right_inactive = (right_partner.decision_inactive == 99)
+            
+            # Formatta la scelta del left partner
+            left_c = left_partner.decision_choice
+            if left_c == 'Both':
+                left_choice_display = "I would like to divide the $12 equally among all the members of the group"
+            elif left_c == 'Left':
+                left_partner_left_id = TOPOLOGY[left_id]['left']
+                left_choice_display = f"I would like to divide the $12 equally with the {COLOR_MAPPING[left_partner_left_id]} Participant"
+            else:
+                left_partner_right_id = TOPOLOGY[left_id]['right']
+                left_choice_display = f"I would like to divide the $12 equally with the {COLOR_MAPPING[left_partner_right_id]} Participant"
+
+            # Formatta la scelta del right partner
+            right_c = right_partner.decision_choice
+            if right_c == 'Both':
+                right_choice_display = "I would like to divide the $12 equally among all the members of the group"
+            elif right_c == 'Left':
+                right_partner_left_id = TOPOLOGY[right_id]['left']
+                right_choice_display = f"I would like to divide the $12 equally with the {COLOR_MAPPING[right_partner_left_id]} Participant"
+            else:
+                right_partner_right_id = TOPOLOGY[right_id]['right']
+                right_choice_display = f"I would like to divide the $12 equally with the {COLOR_MAPPING[right_partner_right_id]} Participant"
+
         return {
             'part1_group_id': part1_group_id,
             'selected': selected,
@@ -429,6 +476,12 @@ class FinalResults(Page):
             'subtotal': subtotal,
             'base_fee': base_fee,
             'beauty_contest_bonus': beauty_contest_bonus,
+            'left_color': left_color,
+            'right_color': right_color,
+            'left_choice_display': left_choice_display,
+            'right_choice_display': right_choice_display,
+            'left_inactive': left_inactive,
+            'right_inactive': right_inactive,
         }
 
     @staticmethod

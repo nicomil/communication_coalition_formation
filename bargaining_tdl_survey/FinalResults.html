@@ -33,7 +33,21 @@
             {% if not part1_payoff_eligible %}
             Your group interaction in Part 1 was interrupted. Therefore, Part 1 is not eligible for payment.
             {% elif selected == 1 %}
-            Your payoff from Part 1 is: <strong>{{ part1_payoff }}</strong>
+            <p class="mb-2">Your payoff from Part 1 is: <strong>{{ part1_payoff }}</strong></p>
+            <hr class="mt-3 mb-3" style="border-top: 1px solid #b8daff;">
+            <p class="mb-2"><strong>Other participants' choices:</strong></p>
+            <ul class="mb-0">
+                <li>
+                    <strong>{{ left_color }} Participant:</strong> "{{ left_choice_display }}"
+                    {% if left_inactive %} <span class="fst-italic">(random choice made by the computer for inactive
+                        participant)</span>{% endif %}
+                </li>
+                <li class="mt-1">
+                    <strong>{{ right_color }} Participant:</strong> "{{ right_choice_display }}"
+                    {% if right_inactive %} <span class="fst-italic">(random choice made by the computer for inactive
+                        participant)</span>{% endif %}
+                </li>
+            </ul>
             {% else %}
             Your Part 2 payoff will be determined by the researcher after data collection.
             {% endif %}
