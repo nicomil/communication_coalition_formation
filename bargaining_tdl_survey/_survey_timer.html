@@ -1,0 +1,75 @@
+<style>
+    /* Timer hidden by default; JS will reveal it at 1 minute remaining */
+    .otree-timer,
+    .otree-timer__time-left,
+    #otree-timer {
+        display: none !important;
+    }
+
+    /* Urgent style when timer is shown */
+    #otree-timer.timer-visible,
+    .otree-timer.timer-visible {
+        display: block !important;
+        background-color: #f8d7da;
+        color: #842029;
+        border: 2px solid #f5c2c7;
+        border-radius: 6px;
+        padding: 10px 16px;
+        font-weight: bold;
+        font-size: 1.1em;
+        text-align: center;
+        margin-bottom: 12px;
+    }
+
+    /* Also show inner time display when parent is revealed */
+    .otree-timer.timer-visible .otree-timer__time-left,
+    #otree-timer.timer-visible .otree-timer__time-left,
+    .otree-timer.timer-visible * {
+        display: inline !important;
+    }
+</style>
+
+<script>
+    (function () {
+        var SHOW_AT_SECONDS = 60;
+        var timerShown = false;
+
+        function revealTimer() {
+            var els = [
+                document.getElementById('otree-timer'),
+                document.querySelector('.otree-timer'),
+                document.querySelector('.otree-timer__time-left')
+            ];
+            els.forEach(function (el) {
+                if (el && !timerShown) {
+                    el.classList.add('timer-visible');
+                }
+            });
+            timerShown = true;
+        }
+
+        function checkTimer() {
+            if (timerShown) return;
+
+            // oTree renders the remaining time as text like "4:32" inside the timer element
+            var timerEl = document.getElementById('otree-timer') || document.querySelector('.otree-timer');
+            if (!timerEl) return;
+
+            var text = timerEl.innerText || timerEl.textContent || '';
+            var match = text.match(/(\d+):(\d{2})/);
+            if (match) {
+                var minutes = parseInt(match[1], 10);
+                var seconds = parseInt(match[2], 10);
+                var totalSeconds = minutes * 60 + seconds;
+                if (totalSeconds <= SHOW_AT_SECONDS) {
+                    revealTimer();
+                }
+            }
+        }
+
+        // Start checking once DOM is ready
+        document.addEventListener('DOMContentLoaded', function () {
+            setInterval(checkTimer, 500);
+        });
+    })();
+</script>

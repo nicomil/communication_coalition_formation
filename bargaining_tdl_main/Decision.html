@@ -10,6 +10,12 @@
 
 {{ include_sibling '_button_style.html' }}
 
+{% if signals_expired %}
+<div class="alert alert-warning mt-3" role="alert">
+    <strong>Note:</strong> Your time for sending the final message has expired.
+</div>
+{% endif %}
+
 <style>
     .message-box {
         border: 1px solid #ddd;
@@ -129,7 +135,7 @@
     Here are the Chats between you and the other participants, and the final messages
     received from each of
     them.
-    Based on this information, please make your decision.
+    Based on this information, please make your final decision.
 </p>
 
 <div class="row">

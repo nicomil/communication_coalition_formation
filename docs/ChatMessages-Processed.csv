@@ -1,0 +1,80 @@
+session_code,group_id,chat_id,From,To,body,timestamp,nickname,participant_code,channel
+6vf3sgej,4,1,Red,Blue,we we,1777974722.6930473,RightPartner,1i6iv58t,2-bargaining_tdl_main-4_1_3
+6vf3sgej,4,2,Red,Blue,allo,1777974723.9738932,RightPartner,1i6iv58t,2-bargaining_tdl_main-4_1_3
+6vf3sgej,4,3,Red,Blue,che famo?,1777974726.6129978,RightPartner,1i6iv58t,2-bargaining_tdl_main-4_1_3
+6vf3sgej,4,4,Red,Green,we che vuoi fare?,1777974734.1584022,LeftPartner,1i6iv58t,2-bargaining_tdl_main-4_1_2
+6vf3sgej,4,5,Green,Red,facciamo split 50/50?,1777974745.5647128,RightPartner,eidw00zh,2-bargaining_tdl_main-4_1_2
+6vf3sgej,4,6,Green,Blue,facciamo una split io e te?,1777974761.1688643,LeftPartner,eidw00zh,2-bargaining_tdl_main-4_2_3
+6vf3sgej,4,7,Blue,Green,ma sei fuori?,1777974770.6943233,RightPartner,59r488q8,2-bargaining_tdl_main-4_2_3
+6vf3sgej,4,8,Blue,Red,facciamo tutti per tutti va,1777974780.7481012,LeftPartner,59r488q8,2-bargaining_tdl_main-4_1_3
+6vf3sgej,5,1,Red,Blue,avavavav,1777978751.326904,RightPartner,btqhauwi,2-bargaining_tdl_main-5_1_3
+6vf3sgej,5,2,Red,Blue,sgshbehehtethn,1777978779.1513257,RightPartner,btqhauwi,2-bargaining_tdl_main-5_1_3
+pw1f4pme,2,1,Green,Red,prova,1777966092.3500078,RightPartner,wy7rg0s3,1-bargaining_tdl_main-2_1_2
+pw1f4pme,2,2,Green,Red,prova,1777966094.4051158,RightPartner,wy7rg0s3,1-bargaining_tdl_main-2_1_2
+pw1f4pme,2,3,Green,Red,sa,1777966095.241595,RightPartner,wy7rg0s3,1-bargaining_tdl_main-2_1_2
+pw1f4pme,2,4,Green,Red,sa,1777966096.0742416,RightPartner,wy7rg0s3,1-bargaining_tdl_main-2_1_2
+pw1f4pme,2,5,Green,Blue,prova,1777966104.9008353,LeftPartner,wy7rg0s3,1-bargaining_tdl_main-2_2_3
+pw1f4pme,2,6,Green,Blue,sa,1777966107.6286988,LeftPartner,wy7rg0s3,1-bargaining_tdl_main-2_2_3
+pw1f4pme,2,7,Green,Blue,sa,1777966108.434588,LeftPartner,wy7rg0s3,1-bargaining_tdl_main-2_2_3
+pw1f4pme,2,8,Green,Blue,sa,1777966109.2057512,LeftPartner,wy7rg0s3,1-bargaining_tdl_main-2_2_3
+pw1f4pme,2,9,Green,Blue,sa,1777966110.4664297,LeftPartner,wy7rg0s3,1-bargaining_tdl_main-2_2_3
+pw1f4pme,2,10,Red,Green,we,1777966155.263776,LeftPartner,94udhtjo,1-bargaining_tdl_main-2_1_2
+pw1f4pme,2,11,Red,Green,io so il red,1777966158.280088,LeftPartner,94udhtjo,1-bargaining_tdl_main-2_1_2
+pw1f4pme,2,12,Red,Green,prova prova ,1777966161.8507164,LeftPartner,94udhtjo,1-bargaining_tdl_main-2_1_2
+pw1f4pme,2,13,Red,Green,sa,1777966163.4336925,LeftPartner,94udhtjo,1-bargaining_tdl_main-2_1_2
+pw1f4pme,2,14,Red,Green,sa,1777966165.693718,LeftPartner,94udhtjo,1-bargaining_tdl_main-2_1_2
+pw1f4pme,2,15,Red,Blue,"ciao blu, io so er red",1777966176.0859408,RightPartner,94udhtjo,1-bargaining_tdl_main-2_1_3
+pw1f4pme,2,16,Red,Blue,che fammo?,1777966178.762925,RightPartner,94udhtjo,1-bargaining_tdl_main-2_1_3
+pw1f4pme,2,17,Red,Blue,dividiamo equalmente?,1777966188.1752648,RightPartner,94udhtjo,1-bargaining_tdl_main-2_1_3
+pw1f4pme,2,18,Blue,Green,io so il blu,1777966199.8697946,RightPartner,cgkblckg,1-bargaining_tdl_main-2_2_3
+pw1f4pme,2,19,Blue,Green,che famo?,1777966201.9487314,RightPartner,cgkblckg,1-bargaining_tdl_main-2_2_3
+pw1f4pme,2,20,Blue,Green,uno split equo ci stai?,1777966209.5860722,RightPartner,cgkblckg,1-bargaining_tdl_main-2_2_3
+pw1f4pme,2,21,Blue,Red,facciamo 50/50 e amen dai,1777966224.0502965,LeftPartner,cgkblckg,1-bargaining_tdl_main-2_1_3
+pw1f4pme,2,22,Green,Blue,dai si perchè no,1777966238.1692102,LeftPartner,wy7rg0s3,1-bargaining_tdl_main-2_2_3
+pw1f4pme,2,23,Green,Blue,tutti prendiamo qualcosa e siamo più contenti,1777966251.0739806,LeftPartner,wy7rg0s3,1-bargaining_tdl_main-2_2_3
+splv0pa2,11,1,Red,Blue,"Ciao Blu, io sono il Red",1778076929.4041388,RightPartner,004uob5s,6-bargaining_tdl_main-11_1_3
+splv0pa2,11,2,Red,Blue,che vuoi fare?,1778076933.0211074,RightPartner,004uob5s,6-bargaining_tdl_main-11_1_3
+splv0pa2,11,3,Red,Blue,io sarei per fare 6 a testa e via. andiamo al prossimo gioco,1778076952.4067218,RightPartner,004uob5s,6-bargaining_tdl_main-11_1_3
+splv0pa2,11,4,Red,Blue,che ne pensi?,1778076955.4837012,RightPartner,004uob5s,6-bargaining_tdl_main-11_1_3
+splv0pa2,11,5,Blue,Red,"Ciao red, io sono il blu. Dai si potrebbe fare perchè no",1778076981.8622942,LeftPartner,re47i6yv,6-bargaining_tdl_main-11_1_3
+splv0pa2,11,6,Blue,Red,prendiamo 6 a testa e via,1778076990.9901392,LeftPartner,re47i6yv,6-bargaining_tdl_main-11_1_3
+splv0pa2,11,7,Blue,Green,we green che dici?,1778076999.7119417,RightPartner,re47i6yv,6-bargaining_tdl_main-11_2_3
+splv0pa2,11,8,Blue,Green,vuoi  prendere 2 punti in più del minimo?,1778077011.426999,RightPartner,re47i6yv,6-bargaining_tdl_main-11_2_3
+splv0pa2,11,9,Green,Blue,"ciao Blue, si sono il green",1778077026.3333092,LeftPartner,2g8ikea0,6-bargaining_tdl_main-11_2_3
+splv0pa2,11,10,Green,Blue,mah ti direi,1778077035.93468,LeftPartner,2g8ikea0,6-bargaining_tdl_main-11_2_3
+splv0pa2,11,11,Green,Blue,2 in più?,1778077039.8438168,LeftPartner,2g8ikea0,6-bargaining_tdl_main-11_2_3
+splv0pa2,11,12,Green,Red,ehi red,1778077045.634677,RightPartner,2g8ikea0,6-bargaining_tdl_main-11_1_2
+splv0pa2,11,13,Green,Red,che vuoi fare?,1778077048.378811,RightPartner,2g8ikea0,6-bargaining_tdl_main-11_1_2
+splv0pa2,11,14,Red,Green,ok ok,1778077053.9927,LeftPartner,004uob5s,6-bargaining_tdl_main-11_1_2
+y1ycsbji,9,1,Green,Red,we,1777991579.4786673,RightPartner,jnkcelh9,5-bargaining_tdl_main-9_1_2
+y1ycsbji,9,2,Green,Red,ew,1777991580.5031395,RightPartner,jnkcelh9,5-bargaining_tdl_main-9_1_2
+ydcii5mf,26,1,Blue,Red,sno il blu e ,1778769072.3486538,LeftPartner,nhtas8ou,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,2,Blue,Red,lasciero,1778769076.0766735,LeftPartner,nhtas8ou,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,3,Blue,Red,la chat,1778769078.6115112,LeftPartner,nhtas8ou,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,4,Red,Blue,ok cazzo mene,1778769101.3415327,RightPartner,frsokvko,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,5,Red,Blue,fai quello che credi,1778769107.671523,RightPartner,frsokvko,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,6,Red,Green,c m fa?,1778769114.797361,LeftPartner,frsokvko,13-bargaining_tdl_main-26_1_2
+ydcii5mf,26,7,Green,Red,c we fa?,1778769130.319341,RightPartner,vjee2hk6,13-bargaining_tdl_main-26_1_2
+ydcii5mf,26,8,Green,Blue,che ti fraga a te?,1778769137.9922295,LeftPartner,vjee2hk6,13-bargaining_tdl_main-26_2_3
+ydcii5mf,26,9,Blue,Green,io lascio appena scade,1778769146.2922037,RightPartner,nhtas8ou,13-bargaining_tdl_main-26_2_3
+ydcii5mf,26,10,Blue,Green,me ne fotto,1778769149.3358285,RightPartner,nhtas8ou,13-bargaining_tdl_main-26_2_3
+ydcii5mf,26,11,Green,Blue,dai oh,1778769155.8054142,LeftPartner,vjee2hk6,13-bargaining_tdl_main-26_2_3
+ydcii5mf,26,12,Green,Blue,stai al gioco,1778769159.9691918,LeftPartner,vjee2hk6,13-bargaining_tdl_main-26_2_3
+ydcii5mf,26,13,Green,Blue,c caz,1778769162.89137,LeftPartner,vjee2hk6,13-bargaining_tdl_main-26_2_3
+ydcii5mf,26,14,Blue,Red,il green mi dice di restare,1778769175.3553874,LeftPartner,nhtas8ou,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,15,Blue,Red,che ne pensi?,1778769178.3672116,LeftPartner,nhtas8ou,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,16,Blue,Red,lo fottiamo?,1778769182.605353,LeftPartner,nhtas8ou,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,17,Red,Blue,eh eh tu c disc?,1778769194.8950062,RightPartner,frsokvko,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,18,Red,Blue,6-6?,1778769198.3561437,RightPartner,frsokvko,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,19,Blue,Red,essi dai,1778769204.844069,LeftPartner,nhtas8ou,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,20,Blue,Red,mo gli dico che sfanculo,1778769211.34506,LeftPartner,nhtas8ou,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,21,Blue,Red,e poi scelgo comunqueeeeee,1778769220.0883908,LeftPartner,nhtas8ou,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,22,Blue,Green,wa fa l bkkin,1778769226.7877414,RightPartner,nhtas8ou,13-bargaining_tdl_main-26_2_3
+ydcii5mf,26,23,Red,Green,equal split bro,1778769244.3767197,LeftPartner,frsokvko,13-bargaining_tdl_main-26_1_2
+ydcii5mf,26,24,Green,Red,ok allora vado per equal split,1778769257.511443,RightPartner,vjee2hk6,13-bargaining_tdl_main-26_1_2
+ydcii5mf,26,25,Green,Red,mi sembra più giusto,1778769263.812981,RightPartner,vjee2hk6,13-bargaining_tdl_main-26_1_2
+ydcii5mf,26,26,Green,Blue,io farò equal split,1778769286.9850147,LeftPartner,vjee2hk6,13-bargaining_tdl_main-26_2_3
+ydcii5mf,26,27,Green,Blue,ho accordo con il rosso,1778769299.0554798,LeftPartner,vjee2hk6,13-bargaining_tdl_main-26_2_3
+ydcii5mf,26,28,Red,Blue,vai famo 6-6,1778769337.124209,RightPartner,frsokvko,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,29,Red,Blue,stratop,1778769345.7453818,RightPartner,frsokvko,13-bargaining_tdl_main-26_1_3
+ydcii5mf,26,30,Blue,Red,oooooookkkkk,1778769354.6951542,LeftPartner,nhtas8ou,13-bargaining_tdl_main-26_1_3

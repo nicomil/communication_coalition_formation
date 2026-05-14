@@ -154,6 +154,12 @@ class Player(BasePlayer):
     chat_interrupted = models.BooleanField(initial=False)
     participant_left_ts = models.FloatField(initial=0)
     part1_payoff_eligible = models.BooleanField(initial=True)
+    # 0 = active, 99 = timed out on Decision without making a choice
+    decision_inactive = models.IntegerField(initial=0)
+    # 0 = active, 99 = timed out on Signals without making a choice
+    signal_inactive = models.IntegerField(initial=0)
+    received_signal_left_inactive = models.IntegerField(initial=0)
+    received_signal_right_inactive = models.IntegerField(initial=0)
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -171,8 +177,10 @@ def _color_context(player):
     )
 
 
-def _signal_display_text(code, target_color, other_color):
+def _signal_display_text(code, target_color, other_color, sender_inactive=False):
     """Human-readable text for a signal internal code."""
+    if sender_inactive:
+        return "The participant did not send a message."
     if code == 'split_you':
         # "you" refers to the receiver, so do not append a color label.
         return "I wish to split the $12 equally with you only."
@@ -385,6 +393,8 @@ def map_player_data_in_group(group: Group):
         # - receiver.received_signal_right stores the signal that right partner sent to receiver
         receiver.received_signal_left = left_sender.participant.vars.get('signal_right', "")
         receiver.received_signal_right = right_sender.participant.vars.get('signal_left', "")
+        receiver.received_signal_left_inactive = left_sender.participant.vars.get('signal_inactive', 0)
+        receiver.received_signal_right_inactive = right_sender.participant.vars.get('signal_inactive', 0)
 
 # PAGES
 
@@ -528,13 +538,13 @@ class Signals(Page):
         player.time_signals = save_time_value(player.time_on_page)
         player.time_chat_and_signals = player.time_chat + player.time_signals
         if timeout_happened:
-            _mark_inactive_exclusion(player, 'main_signals_timeout')
-            set_control_questions_failed(player, 'intro', failed=True)
+            player.signal_inactive = 99
         else:
             set_control_questions_failed(player, 'intro', failed=False)
         logger.debug(f"Signals - time_signals saved: {player.time_signals}, time_chat_and_signals: {player.time_chat_and_signals}")
         player.participant.vars['signal_left'] = player.signal_left
         player.participant.vars['signal_right'] = player.signal_right
+        player.participant.vars['signal_inactive'] = player.signal_inactive
 
 
 class ExperimentTerminated(Page):
@@ -596,15 +606,21 @@ class Decision(Page):
         channel_right = f"{group_id}_{min(my_id, right_id)}_{max(my_id, right_id)}"
         
         colors = _color_context(player)
+        
+        left_inactive = bool(player.received_signal_left_inactive == 99)
+        right_inactive = bool(player.received_signal_right_inactive == 99)
+        
         received_left_display = _signal_display_text(
             player.received_signal_left,
             colors['left_partner_color'],
             colors['right_partner_color'],
+            sender_inactive=left_inactive,
         )
         received_right_display = _signal_display_text(
             player.received_signal_right,
             colors['right_partner_color'],
             colors['left_partner_color'],
+            sender_inactive=right_inactive,
         )
         left_chat_rows = _chat_rows_for_decision(
             player,
@@ -623,6 +639,7 @@ class Decision(Page):
             received_signal_right_display=received_right_display,
             left_chat_rows=left_chat_rows,
             right_chat_rows=right_chat_rows,
+            signals_expired=bool(player.signal_inactive == 99),
             **colors,
         )
 
@@ -635,10 +652,10 @@ class Decision(Page):
     def before_next_page(player, timeout_happened):
         player.time_decision = save_time_value(player.time_on_page)
         if timeout_happened:
-            _mark_inactive_exclusion(player, 'main_decision_timeout')
-            player.participant.vars['part1_payoff'] = cu(0)
-            player.participant.vars['part1_payoff_eligible'] = False
-            player.participant.part1_payoff_eligible = False
+            # Mark as inactive (99) for dataset tracking.
+            # Player is NOT excluded: flows normally to ResultsWaitPage.
+            # A random decision_choice will be assigned before payoff calculation.
+            player.decision_inactive = 99
 
 
 class InactivityGoodbyeMain(Page):
@@ -648,7 +665,7 @@ class InactivityGoodbyeMain(Page):
 
     @staticmethod
     def is_displayed(player):
-        return _is_inactive_excluded(player)
+        return _is_inactive_excluded(player) or player.decision_inactive == 99
 
     @staticmethod
     def js_vars(player):
@@ -672,6 +689,13 @@ class ResultsWaitPage(WaitPage):
         p2 = group.get_player_by_id(2)
         p3 = group.get_player_by_id(3)
         players = [p1, p2, p3]
+
+        # If any player timed out without choosing, assign a random choice now.
+        # The payoff logic below runs unchanged on whatever value is assigned.
+        import random
+        for p in [p1, p2, p3]:
+            if p.decision_inactive == 99:
+                p.decision_choice = random.choice(['Left', 'Right', 'Both'])
 
         # Choices
         c1 = p1.decision_choice
@@ -763,7 +787,7 @@ class Results(Page):
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        return not has_failed_control_questions(player, 'intro') and not _is_inactive_excluded(player)
+        return not has_failed_control_questions(player, 'intro') and not _is_inactive_excluded(player) and player.decision_inactive != 99
 
     @staticmethod
     def vars_for_template(player: Player):
@@ -788,8 +812,8 @@ page_sequence = [
     ExperimentTerminated,
     DataMappingWaitPage,
     Decision,
-    InactivityGoodbyeMain,
     ResultsWaitPage,
-    Results
+    Results,
+    InactivityGoodbyeMain
 ]
 

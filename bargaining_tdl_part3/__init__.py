@@ -164,7 +164,7 @@ def _decision_display_text(decision_code, colors):
     Convert internal decision code (share_one/share_both) to participant-facing text.
     """
     if decision_code == 'share_one':
-        return "Equally split the $12 with only one of the two RECEIVERS($6 to you, $6 to one RECEIVER, and $0 to the other RECEIVER)."
+        return "Equally split the $12 with only one of the two RECEIVERS."
     if decision_code == 'share_both':
         return "Equally split the $12 between myself and the other two RECEIVERS."
     return ""
