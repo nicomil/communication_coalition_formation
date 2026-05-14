@@ -1,4 +1,4 @@
-session_code,group_id,chat_id,From,To,body,timestamp,nickname,participant_code,channel
+﻿session_code,group_id,chat_id,From,To,body,timestamp,nickname,participant_code,channel
 6vf3sgej,4,1,Red,Blue,we we,1777974722.6930473,RightPartner,1i6iv58t,2-bargaining_tdl_main-4_1_3
 6vf3sgej,4,2,Red,Blue,allo,1777974723.9738932,RightPartner,1i6iv58t,2-bargaining_tdl_main-4_1_3
 6vf3sgej,4,3,Red,Blue,che famo?,1777974726.6129978,RightPartner,1i6iv58t,2-bargaining_tdl_main-4_1_3

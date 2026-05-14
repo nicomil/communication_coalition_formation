@@ -81,7 +81,7 @@ def process_chat(input_file, output_file):
         clean_row = {k: row.get(k, '') for k in fieldnames}
         clean_rows.append(clean_row)
 
-    with open(output_file, 'w', encoding='utf-8', newline='') as f:
+    with open(output_file, 'w', encoding='utf-8-sig', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(clean_rows)
