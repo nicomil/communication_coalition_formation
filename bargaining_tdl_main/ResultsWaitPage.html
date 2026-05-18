@@ -1,0 +1,27 @@
+{% extends 'otree/WaitPage.html' %}
+
+{% block internal_scripts %}
+    {{ super() }}
+    <script>
+        (function () {
+            // Keep server-side dropout advancement logic running even if users do not refresh manually.
+            var inFlight = false;
+            window.setInterval(function () {
+                if (inFlight) return;
+                inFlight = true;
+                var separator = window.location.search ? '&' : '?';
+                var url = window.location.pathname + window.location.search + separator + 'autopoll=' + Date.now();
+                fetch(url, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).catch(function () {
+                    // Best-effort poll: ignore transient failures.
+                }).finally(function () {
+                    inFlight = false;
+                });
+            }, 3000);
+        })();
+    </script>
+{% endblock %}

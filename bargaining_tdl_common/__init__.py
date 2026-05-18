@@ -8,7 +8,13 @@ This module provides shared functionality across:
 - bargaining_tdl_part3
 """
 
-from .helpers import save_time_value
+from .helpers import (
+    save_time_value,
+    TEST_TIMER_SECONDS,
+    use_test_timers,
+    get_page_timeout_seconds,
+    timeout_submission_with_time,
+)
 from .validators import (
     set_control_questions_failed,
     has_failed_control_questions,
@@ -42,6 +48,10 @@ from .logger import get_logger, logger, info, warning, error, debug
 
 __all__ = [
     'save_time_value',
+    'TEST_TIMER_SECONDS',
+    'use_test_timers',
+    'get_page_timeout_seconds',
+    'timeout_submission_with_time',
     'set_control_questions_failed',
     'has_failed_control_questions',
     'check_control_questions_intro',

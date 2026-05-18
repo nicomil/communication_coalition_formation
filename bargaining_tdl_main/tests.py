@@ -42,7 +42,7 @@ class PlayerBot(Bot):
         
         # GroupingAfterControlQuestions is a WaitPage - handled automatically by oTree
         # Chat - native chat is not simulated by bots
-        expect(Chat.get_timeout_seconds(self.player), 180)
+        expect(Chat.get_timeout_seconds(self.player), 600)
         yield Chat, dict(
             time_on_page=1.0,
         )

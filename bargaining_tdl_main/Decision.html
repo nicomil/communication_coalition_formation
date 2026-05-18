@@ -190,7 +190,7 @@
             {% for opt in decision_options %}
             <div class="form-check mb-3">
                 <input type="radio" name="decision_choice" value="{{ opt.value }}" id="{{ opt.id }}" class="form-check-input" required
-                    {% if player.decision_choice == opt.value %}checked{% endif %}>
+                    {% if player.field_maybe_none('decision_choice') == opt.value %}checked{% endif %}>
                 <label class="form-check-label" for="{{ opt.id }}">
                     <strong>{{ opt.label }}</strong> <em>{{ opt.details }}</em>.
                 </label>

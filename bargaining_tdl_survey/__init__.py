@@ -7,6 +7,19 @@ from otree.api import (  # type: ignore
     BasePlayer,
     Page,
 )
+from bargaining_tdl_common import (  # type: ignore
+    get_page_timeout_seconds,
+    timeout_submission_with_time,
+)
+
+_SURVEY_PAGE_TIMEOUT = 180
+
+
+class _SurveyTimedPage(Page):
+    @staticmethod
+    def get_timeout_seconds(player):
+        return get_page_timeout_seconds(player, _SURVEY_PAGE_TIMEOUT)
+
 
 doc = """
 Post-experiment survey.
@@ -165,10 +178,9 @@ class SurveyIntro(Page):
         player.time_survey_intro = player.time_on_page or 0
 
 
-class SurveyQuestions(Page):
+class SurveyQuestions(_SurveyTimedPage):
     """Demographic questions page."""
     form_model = 'player'
-    timeout_seconds = 180
     form_fields = [
         'gender',
         'age',
@@ -178,13 +190,13 @@ class SurveyQuestions(Page):
         'time_on_page',
     ]
 
-    timeout_submission = dict(
+    timeout_submission = timeout_submission_with_time(
+        _SURVEY_PAGE_TIMEOUT,
         gender=0,
         age=18,
         field_of_study='N/A',
         university_years=1,
         job_status='employee',
-        time_on_page=180,
     )
 
     @staticmethod
@@ -214,12 +226,11 @@ class SurveyScaleIntro(Page):
         return not _is_inactive_excluded(player)
 
 
-class SurveyPage4(Page):
+class SurveyPage4(_SurveyTimedPage):
     """Willingness to delay gratification — 0–10 scale."""
     form_model = 'player'
-    timeout_seconds = 180
     form_fields = ['willingness_future', 'time_on_page']
-    timeout_submission = dict(willingness_future=0, time_on_page=180)
+    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, willingness_future=0)
 
     @staticmethod
     def vars_for_template(player):
@@ -236,12 +247,11 @@ class SurveyPage4(Page):
         return not _is_inactive_excluded(player)
 
 
-class SurveyPage5(Page):
+class SurveyPage5(_SurveyTimedPage):
     """General willingness to take risks — 0–10 scale."""
     form_model = 'player'
-    timeout_seconds = 180
     form_fields = ['willingness_risk', 'time_on_page']
-    timeout_submission = dict(willingness_risk=0, time_on_page=180)
+    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, willingness_risk=0)
 
     @staticmethod
     def vars_for_template(player):
@@ -258,12 +268,11 @@ class SurveyPage5(Page):
         return not _is_inactive_excluded(player)
 
 
-class SurveyPage6(Page):
+class SurveyPage6(_SurveyTimedPage):
     """Positive reciprocity self-assessment — 0–10 scale."""
     form_model = 'player'
-    timeout_seconds = 180
     form_fields = ['reciprocity_positive', 'time_on_page']
-    timeout_submission = dict(reciprocity_positive=0, time_on_page=180)
+    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, reciprocity_positive=0)
 
     @staticmethod
     def vars_for_template(player):
@@ -280,12 +289,11 @@ class SurveyPage6(Page):
         return not _is_inactive_excluded(player)
 
 
-class SurveyPage7(Page):
+class SurveyPage7(_SurveyTimedPage):
     """Negative reciprocity self-assessment — 0–10 scale."""
     form_model = 'player'
-    timeout_seconds = 180
     form_fields = ['reciprocity_negative', 'time_on_page']
-    timeout_submission = dict(reciprocity_negative=0, time_on_page=180)
+    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, reciprocity_negative=0)
 
     @staticmethod
     def vars_for_template(player):
@@ -302,12 +310,11 @@ class SurveyPage7(Page):
         return not _is_inactive_excluded(player)
 
 
-class SurveyPage8(Page):
+class SurveyPage8(_SurveyTimedPage):
     """Altruism — willingness to donate to good causes — 0–10 scale."""
     form_model = 'player'
-    timeout_seconds = 180
     form_fields = ['willingness_donate', 'time_on_page']
-    timeout_submission = dict(willingness_donate=0, time_on_page=180)
+    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, willingness_donate=0)
 
     @staticmethod
     def vars_for_template(player):
@@ -324,12 +331,11 @@ class SurveyPage8(Page):
         return not _is_inactive_excluded(player)
 
 
-class SurveyPage9(Page):
+class SurveyPage9(_SurveyTimedPage):
     """General trust self-assessment — 0–10 scale."""
     form_model = 'player'
-    timeout_seconds = 180
     form_fields = ['trust_general', 'time_on_page']
-    timeout_submission = dict(trust_general=0, time_on_page=180)
+    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, trust_general=0)
 
     @staticmethod
     def vars_for_template(player):
@@ -346,12 +352,11 @@ class SurveyPage9(Page):
         return not _is_inactive_excluded(player)
 
 
-class SurveyPage10(Page):
+class SurveyPage10(_SurveyTimedPage):
     """11-20 game — guess a number between 110 and 200."""
     form_model = 'player'
-    timeout_seconds = 180
     form_fields = ['beauty_contest_guess', 'time_on_page']
-    timeout_submission = dict(beauty_contest_guess=1.1, time_on_page=180)
+    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, beauty_contest_guess=1.1)
 
     @staticmethod
     def beauty_contest_guess_error_message(player, value):

@@ -10,7 +10,46 @@ Tests cover:
 
 from otree.api import Currency as c, expect, Bot
 from . import *
+from .helpers import (
+    TEST_TIMER_SECONDS,
+    get_page_timeout_seconds,
+    use_test_timers,
+    timeout_submission_with_time,
+)
 import unittest
+from unittest.mock import MagicMock
+
+
+class TestTimerHelpers(unittest.TestCase):
+    """Test page timeout helpers."""
+
+    def _player_with_test_timers(self, enabled):
+        session = MagicMock()
+        session.config = {'use_test_timers': enabled}
+        player = MagicMock()
+        player.session = session
+        return player
+
+    def test_get_page_timeout_seconds_production(self):
+        player = self._player_with_test_timers(False)
+        self.assertEqual(get_page_timeout_seconds(player, 300), 300)
+        self.assertEqual(get_page_timeout_seconds(player, 600), 600)
+
+    def test_get_page_timeout_seconds_test_mode(self):
+        player = self._player_with_test_timers(True)
+        self.assertEqual(get_page_timeout_seconds(player, 300), TEST_TIMER_SECONDS)
+        self.assertEqual(get_page_timeout_seconds(player, 600), TEST_TIMER_SECONDS)
+
+    def test_use_test_timers(self):
+        session = MagicMock()
+        session.config = {'use_test_timers': True}
+        self.assertTrue(use_test_timers(session))
+        session.config = {}
+        self.assertFalse(use_test_timers(session))
+
+    def test_timeout_submission_with_time(self):
+        submission = timeout_submission_with_time(180, willingness_risk=0)
+        self.assertEqual(submission, {'willingness_risk': 0, 'time_on_page': 180})
 
 
 class TestHelpers(unittest.TestCase):

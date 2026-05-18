@@ -11,6 +11,8 @@ from otree.api import (  # type: ignore
 )
 from bargaining_tdl_common import (  # type: ignore
     save_time_value,
+    get_page_timeout_seconds,
+    timeout_submission_with_time,
     check_control_questions_part3,
     set_control_questions_failed,
     has_failed_control_questions,
@@ -173,11 +175,15 @@ def _decision_display_text(decision_code, colors):
 class InstructionsPart3(Page):
     form_model = 'player'
     form_fields = ['decision', 'time_on_page']
-    timeout_seconds = 600
-    timeout_submission = dict(
+    _INSTRUCTIONS_TIMEOUT = 600
+    timeout_submission = timeout_submission_with_time(
+        _INSTRUCTIONS_TIMEOUT,
         decision='share_one',
-        time_on_page=600,
     )
+
+    @staticmethod
+    def get_timeout_seconds(player):
+        return get_page_timeout_seconds(player, InstructionsPart3._INSTRUCTIONS_TIMEOUT)
 
     @staticmethod
     def vars_for_template(player):
@@ -232,16 +238,22 @@ def create_control_questions_part3_class(attempt_number):
         template_name = 'bargaining_tdl_part3/ControlQuestionsPart3.html'
         form_model = 'player'
         preserve_unsubmitted_inputs = True
-        timeout_seconds = 180
-        timeout_submission = dict(
+        _CONTROL_QUESTIONS_TIMEOUT = 180
+        timeout_submission = timeout_submission_with_time(
+            _CONTROL_QUESTIONS_TIMEOUT,
             example1_earnings_you='4',
             example1_earnings_left='4',
             example1_earnings_right='4',
             example2_earnings_you='4',
             example2_earnings_left='4',
             example2_earnings_right='4',
-            time_on_page=180,
         )
+
+        @staticmethod
+        def get_timeout_seconds(player):
+            return get_page_timeout_seconds(
+                player, ControlQuestionsPart3Page._CONTROL_QUESTIONS_TIMEOUT
+            )
         form_fields = [
             'example1_earnings_you',
             'example1_earnings_left',
@@ -359,11 +371,15 @@ class ThankYouPart3(Page):
 class DecisionPart3(Page):
     form_model = 'player'
     form_fields = ['decision', 'time_on_page']
-    timeout_seconds = 180
-    timeout_submission = dict(
+    _DECISION_TIMEOUT = 180
+    timeout_submission = timeout_submission_with_time(
+        _DECISION_TIMEOUT,
         decision='share_one',
-        time_on_page=180,
     )
+
+    @staticmethod
+    def get_timeout_seconds(player):
+        return get_page_timeout_seconds(player, DecisionPart3._DECISION_TIMEOUT)
     
     @staticmethod
     def is_displayed(player):

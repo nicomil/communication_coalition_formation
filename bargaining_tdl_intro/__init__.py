@@ -80,6 +80,8 @@ except Exception:
 
 from bargaining_tdl_common import (  # type: ignore
     save_time_value,
+    get_page_timeout_seconds,
+    timeout_submission_with_time,
     check_control_questions_intro,
     set_control_questions_failed,
     has_failed_control_questions,
@@ -325,8 +327,9 @@ def create_control_questions_class(attempt_number):
         template_name = 'bargaining_tdl_intro/ControlQuestions.html'
         form_model = 'player'
         preserve_unsubmitted_inputs = True
-        timeout_seconds = 300
-        timeout_submission = dict(
+        _CONTROL_QUESTIONS_TIMEOUT = 300
+        timeout_submission = timeout_submission_with_time(
+            _CONTROL_QUESTIONS_TIMEOUT,
             example1_earnings_you='6',
             example1_earnings_left='0',
             example1_earnings_right='6',
@@ -336,8 +339,11 @@ def create_control_questions_class(attempt_number):
             example3_earnings_you='0',
             example3_earnings_left='0',
             example3_earnings_right='0',
-            time_on_page=300,
         )
+
+        @staticmethod
+        def get_timeout_seconds(player):
+            return get_page_timeout_seconds(player, ControlQuestionsPage._CONTROL_QUESTIONS_TIMEOUT)
         form_fields = [
             'example1_earnings_you',
             'example1_earnings_left',

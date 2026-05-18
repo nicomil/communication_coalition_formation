@@ -6,6 +6,25 @@ from .logger import get_logger
 
 logger = get_logger('helpers')
 
+TEST_TIMER_SECONDS = 60
+
+
+def use_test_timers(session):
+    """Return True when session config requests shortened timers for testing."""
+    return bool(session.config.get('use_test_timers', False))
+
+
+def get_page_timeout_seconds(player, default_seconds):
+    """Return production timeout or TEST_TIMER_SECONDS when use_test_timers is enabled."""
+    if use_test_timers(player.session):
+        return TEST_TIMER_SECONDS
+    return default_seconds
+
+
+def timeout_submission_with_time(default_seconds, **fields):
+    """Build timeout_submission dict with time_on_page aligned to default timeout."""
+    return {**fields, 'time_on_page': default_seconds}
+
 
 def save_time_value(time_value, default=0.0):
     """

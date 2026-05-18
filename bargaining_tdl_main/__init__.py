@@ -12,6 +12,8 @@ from otree.api import (  # type: ignore
 import time
 from bargaining_tdl_common import (  # type: ignore
     save_time_value,
+    get_page_timeout_seconds,
+    timeout_submission_with_time,
     has_failed_control_questions,
     set_control_questions_failed,
     get_logger,
@@ -232,6 +234,110 @@ def _set_submit_grace_until(group: Group, player_id: int, ts: float):
 
 def _get_submit_grace_until(group: Group, player_id: int):
     return getattr(group, f'submit_grace_until_p{player_id}', 0)
+
+
+def _advance_interrupted_player_to_waitpage(group: Group, wait_page_index: int):
+    """
+    Advance interrupted participant by timeout flow until wait page index.
+
+    Important: submissions are triggered only after each page timeout expires,
+    so auto-advance respects Chat/Signals/Decision timers.
+    """
+    interrupted_id = group.interrupted_player_id
+    if not interrupted_id:
+        return
+
+    interrupted_player = group.get_player_by_id(interrupted_id)
+    participant = interrupted_player.participant
+
+    def _page_timeout_seconds(page_name: str):
+        if page_name == 'Chat':
+            return get_page_timeout_seconds(interrupted_player, Chat._CHAT_TIMEOUT)
+        if page_name == 'Signals':
+            return get_page_timeout_seconds(interrupted_player, Signals._SIGNALS_TIMEOUT)
+        if page_name == 'Decision':
+            return get_page_timeout_seconds(interrupted_player, Decision._DECISION_TIMEOUT)
+        return None
+
+    safety_steps = 10
+    while participant._index_in_pages < wait_page_index and safety_steps > 0:
+        safety_steps -= 1
+        page = participant._get_page_instance()
+        if not page:
+            break
+        if page._lookup.app_name != C.NAME_IN_URL:
+            break
+
+        # On wait pages rely on standard oTree polling/redirect behavior.
+        if isinstance(page, WaitPage):
+            before_idx = participant._index_in_pages
+            try:
+                participant._visit_current_page()
+            except Exception as exc:
+                logger.warning(
+                    f"Could not visit wait page for interrupted participant {participant.code}: {exc}"
+                )
+                break
+            if participant._index_in_pages == before_idx:
+                break
+            continue
+
+        page_name = page.__class__.__name__
+        timeout_seconds = _page_timeout_seconds(page_name)
+
+        # If 2 peers already moved past Chat, force third to leave Chat immediately.
+        if page_name == 'Chat':
+            players = group.get_players()
+            peers_ahead = sum(
+                1
+                for p in players
+                if p.id_in_group != interrupted_id
+                and p.participant._index_in_pages > participant._index_in_pages
+            )
+            if peers_ahead >= 2:
+                try:
+                    participant._submit_current_page()
+                    participant._visit_current_page()
+                except Exception as exc:
+                    logger.warning(
+                        f"Could not force Chat->Signals for interrupted participant {participant.code}: {exc}"
+                    )
+                    break
+                continue
+
+        if timeout_seconds is not None:
+            # Never call page.remaining_timeout_seconds(): it can reset timeout state.
+            # Read stored timeout markers directly from participant.
+            if (
+                participant._timeout_page_index == participant._index_in_pages
+                and participant._timeout_expiration_time is not None
+            ):
+                remaining = participant._timeout_expiration_time - time.time()
+            elif page_name == 'Signals' and interrupted_player.participant_left_ts:
+                elapsed_offline = max(0.0, time.time() - interrupted_player.participant_left_ts)
+                remaining = timeout_seconds - elapsed_offline
+            else:
+                remaining = timeout_seconds
+
+            # If we moved an offline participant to Signals, oTree sets a fresh timeout.
+            # For dropout handling we must also account for time already spent offline.
+            if page_name == 'Signals' and interrupted_player.participant_left_ts:
+                elapsed_offline = max(0.0, time.time() - interrupted_player.participant_left_ts)
+                offline_remaining = timeout_seconds - elapsed_offline
+                remaining = min(remaining, offline_remaining)
+
+            if remaining > 0:
+                # Timer still running on this page; do not force-skip early.
+                break
+
+        try:
+            participant._submit_current_page()
+            participant._visit_current_page()
+        except Exception as exc:
+            logger.warning(
+                f"Could not auto-advance interrupted participant {participant.code}: {exc}"
+            )
+            break
 
 
 def _mark_group_dropped(group: Group):
@@ -460,12 +566,12 @@ class GroupingAfterControlQuestions(WaitPage):
 class Chat(Page):
     form_model = 'player'
     form_fields = ['time_on_page']
-    timeout_seconds = 600
+    _CHAT_TIMEOUT = 600
     timer_text = "Chat time remaining:"
 
     @staticmethod
     def get_timeout_seconds(player):
-        return Chat.timeout_seconds
+        return get_page_timeout_seconds(player, Chat._CHAT_TIMEOUT)
 
     @staticmethod
     def vars_for_template(player: Player):
@@ -482,7 +588,7 @@ class Chat(Page):
         return dict(
             channel_left=channel_left,
             channel_right=channel_right,
-            chat_timeout_seconds=Chat.timeout_seconds,
+            chat_timeout_seconds=get_page_timeout_seconds(player, Chat._CHAT_TIMEOUT),
             reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
             **_chat_status_payload(player),
             **colors,
@@ -535,28 +641,20 @@ class Chat(Page):
 class Signals(Page):
     form_model = 'player'
     form_fields = ['signal_left', 'signal_right', 'first_intention_selected', 'time_on_page']
-    timeout_seconds = 300
-    timeout_submission = dict(
+    _SIGNALS_TIMEOUT = 300
+    timeout_submission = timeout_submission_with_time(
+        _SIGNALS_TIMEOUT,
         signal_left='split_you',
         signal_right='split_you',
         first_intention_selected='left',
-        time_on_page=300,
     )
 
     @staticmethod
+    def get_timeout_seconds(player):
+        return get_page_timeout_seconds(player, Signals._SIGNALS_TIMEOUT)
+
+    @staticmethod
     def is_displayed(player: Player):
-        # Se il giocatore è "caduto" (dropout confermato in chat), saltiamo la pagina
-        # assegnando valori casuali per non bloccare gli altri al WaitPage successivo.
-        if player.participant.vars.get('group_dropped'):
-            import random
-            player.signal_left = random.choice(['split_you', 'split_other', 'split_both'])
-            player.signal_right = random.choice(['split_you', 'split_other', 'split_both'])
-            player.signal_inactive = 99
-            # Salviamo nei vars perché verranno letti dal DataMappingWaitPage
-            player.participant.vars['signal_left'] = player.signal_left
-            player.participant.vars['signal_right'] = player.signal_right
-            player.participant.vars['signal_inactive'] = player.signal_inactive
-            return False
         return True
 
     @staticmethod
@@ -644,17 +742,29 @@ class DataMappingWaitPage(WaitPage):
         return not has_failed_control_questions(player, 'intro')
 
     @staticmethod
+    def vars_for_template(player):
+        _evaluate_dropout(player.group)
+        _advance_interrupted_player_to_waitpage(
+            player.group, player.participant._index_in_pages
+        )
+        return {}
+
+    @staticmethod
     def after_all_players_arrive(group: Group):
         map_player_data_in_group(group)
 
 class Decision(Page):
     form_model = 'player'
     form_fields = ['decision_choice', 'time_on_page']
-    timeout_seconds = 300
-    timeout_submission = dict(
+    _DECISION_TIMEOUT = 300
+    timeout_submission = timeout_submission_with_time(
+        _DECISION_TIMEOUT,
         decision_choice='Left',
-        time_on_page=300,
     )
+
+    @staticmethod
+    def get_timeout_seconds(player):
+        return get_page_timeout_seconds(player, Decision._DECISION_TIMEOUT)
 
     @staticmethod
     def live_method(player: Player, data):
@@ -793,6 +903,14 @@ class ResultsWaitPage(WaitPage):
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
         return not has_failed_control_questions(player, 'intro') and not _is_inactive_excluded(player)
+
+    @staticmethod
+    def vars_for_template(player):
+        _evaluate_dropout(player.group)
+        _advance_interrupted_player_to_waitpage(
+            player.group, player.participant._index_in_pages
+        )
+        return {}
     
     @staticmethod
     def after_all_players_arrive(group: Group):
