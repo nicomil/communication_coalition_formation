@@ -1,0 +1,104 @@
+
+
+<script>
+    (function () {
+        const form = document.querySelector('form');
+        if (!form) return;
+        const reconnectWait = document.getElementById('reconnect-wait');
+        const nextButton = document.querySelector('.otree-btn-next') || document.querySelector('.btn-primary.next-button');
+        let hasSubmitted = false;
+        let liveSyncTimer = null;
+        let reconnectUiTimer = null;
+        let localReconnectSeconds = 0;
+
+        function setNextButtonBlocked(blocked) {
+            if (!nextButton) return;
+            nextButton.disabled = blocked;
+            nextButton.style.opacity = blocked ? '0.5' : '1';
+            nextButton.style.cursor = blocked ? 'not-allowed' : 'pointer';
+        }
+
+        function stopLocalReconnectCountdown() {
+            if (reconnectUiTimer) {
+                clearInterval(reconnectUiTimer);
+                reconnectUiTimer = null;
+            }
+        }
+
+        function startLocalReconnectCountdown(seconds) {
+            stopLocalReconnectCountdown();
+            localReconnectSeconds = Math.max(0, Number(seconds) || 0);
+            reconnectUiTimer = setInterval(function () {
+                localReconnectSeconds = Math.max(0, localReconnectSeconds - 1);
+                if (reconnectWait && reconnectWait.style.display !== 'none') {
+                    reconnectWait.textContent = 'One participant disconnected. Waiting up to ' + localReconnectSeconds + ' seconds for reconnection.';
+                }
+                if (localReconnectSeconds <= 0) {
+                    stopLocalReconnectCountdown();
+                }
+            }, 1000);
+        }
+
+        function requestAutoSubmit(reason) {
+            if (hasSubmitted) return;
+            hasSubmitted = true;
+            form.dataset.autoSubmit = reason || '1';
+            // Previene il blocco nativo del form durante l'invio automatico
+            form.requestSubmit();
+        }
+
+        function applyStatus(payload) {
+            if (!payload) return;
+            
+            if (payload.should_auto_advance) {
+                requestAutoSubmit('dropout-advance');
+            }
+        }
+
+        function tryStartLiveSync() {
+            if (typeof window.liveSend !== 'function') return false;
+            if (liveSyncTimer) return true;
+
+            window.liveSend({ type: 'status_ping' });
+            liveSyncTimer = setInterval(function () {
+                if (!hasSubmitted && typeof window.liveSend === 'function') {
+                    window.liveSend({ type: 'status_ping' });
+                }
+            }, 1000);
+            return true;
+        }
+
+        // Initial status
+        applyStatus({
+            should_auto_advance: {{ should_auto_advance|json }},
+            waiting_on_reconnect: {{ waiting_on_reconnect|json }},
+            reconnect_seconds_left: {{ reconnect_seconds_left|json }}
+        });
+
+        window.liveRecv = function (data) {
+            applyStatus(data);
+        };
+
+        if (!tryStartLiveSync()) {
+            let attempts = 0;
+            const waitForLive = setInterval(function () {
+                attempts += 1;
+                if (tryStartLiveSync() || attempts > 30) {
+                    clearInterval(waitForLive);
+                }
+            }, 300);
+        }
+
+        window.addEventListener('beforeunload', function () {
+            if (hasSubmitted || typeof window.liveSend !== 'function') return;
+            try {
+                window.liveSend({ type: 'client_leaving' });
+            } catch (e) {}
+        });
+
+        // Intercettiamo il submit normale per marcare che stiamo uscendo regolarmente
+        form.addEventListener('submit', function() {
+            hasSubmitted = true;
+        });
+    })();
+</script>

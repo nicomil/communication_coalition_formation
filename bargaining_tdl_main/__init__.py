@@ -179,8 +179,8 @@ def _color_context(player):
 
 def _signal_display_text(code, target_color, other_color, sender_inactive=False):
     """Human-readable text for a signal internal code."""
-    if sender_inactive:
-        return "The participant did not send a message."
+    # We no longer show "did not send a message" for inactive participants
+    # as per user request to show the random choice instead.
     if code == 'split_you':
         # "you" refers to the receiver, so do not append a color label.
         return "I wish to split the $12 equally with you only."
@@ -192,10 +192,12 @@ def _signal_display_text(code, target_color, other_color, sender_inactive=False)
 
 
 def _chat_left_state(group: Group):
+    interrupted_id = group.interrupted_player_id
+    is_dropped = group.group_dropped
     return {
-        1: group.chat_left_p1,
-        2: group.chat_left_p2,
-        3: group.chat_left_p3,
+        1: group.chat_left_p1 or (is_dropped and interrupted_id == 1),
+        2: group.chat_left_p2 or (is_dropped and interrupted_id == 2),
+        3: group.chat_left_p3 or (is_dropped and interrupted_id == 3),
     }
 
 
@@ -234,17 +236,25 @@ def _get_submit_grace_until(group: Group, player_id: int):
 
 def _mark_group_dropped(group: Group):
     group.group_dropped = True
-    group.part1_payoff_eligible = False
+    # We do NOT set group.part1_payoff_eligible = False globally anymore.
+    # The interaction continues with random choices for the missing player.
+    interrupted_id = group.interrupted_player_id
     for p in group.get_players():
-        p.part1_payoff_eligible = False
-        p.participant.group_dropped = True
-        p.participant.part1_payoff_eligible = False
-        p.participant.vars['group_dropped'] = True
-        p.participant.vars['part1_payoff_eligible'] = False
-        p.participant.vars['part1_payoff'] = cu(0)
+        if p.id_in_group == interrupted_id:
+            p.part1_payoff_eligible = False
+            p.participant.part1_payoff_eligible = False
+            p.participant.vars['part1_payoff_eligible'] = False
+            p.decision_inactive = 99  # Garantisce la scelta casuale
+            p.participant.vars['group_dropped'] = True
+        else:
+            # Gli attivi rimangono idonei e NON vengono spinti avanti
+            p.part1_payoff_eligible = True
+            p.participant.part1_payoff_eligible = True
+            p.participant.vars['part1_payoff_eligible'] = True
+            p.participant.vars['group_dropped'] = False
 
 
-def _evaluate_chat_dropout(group: Group):
+def _evaluate_dropout(group: Group):
     if group.group_dropped:
         return
 
@@ -253,27 +263,34 @@ def _evaluate_chat_dropout(group: Group):
 
     if interrupted_id:
         last_ping = _get_last_ping(group, interrupted_id)
+        # Se il giocatore è tornato (ping recente), annulliamo l'interruzione
         if last_ping and (now - last_ping) <= 5:
             group.interrupted_player_id = 0
             group.reconnect_deadline_ts = 0
             return
+        # Se il tempo di riconnessione è scaduto, marchiamo il dropout definitivo
         if group.reconnect_deadline_ts and now >= group.reconnect_deadline_ts:
             _mark_group_dropped(group)
         return
 
+    # Controlliamo se qualcuno è sparito (nessun ping recente e non ha ancora finito la fase)
+    # Nota: escludiamo chi ha già finito la fase di chat (chat_left_pX)
     for player_id in [1, 2, 3]:
-        if getattr(group, f'chat_left_p{player_id}'):
-            continue
+        # Se il giocatore ha già lasciato la chat regolarmente, non è un dropout qui
+        # Ma se siamo in Signals/Decision, dobbiamo monitorare comunque.
+        # Per semplicità monitoriamo chiunque non sia in "grace period" (invio form)
         grace_until = _get_submit_grace_until(group, player_id)
         if grace_until and now < grace_until:
             continue
+            
         last_ping = _get_last_ping(group, player_id)
         if last_ping and (now - last_ping) > C.CHAT_DISCONNECT_CONFIRMATION_SECONDS:
+            # Dropout rilevato: diamo 90 secondi per tornare
             group.interrupted_player_id = player_id
             group.reconnect_deadline_ts = now + C.CHAT_RECONNECT_WINDOW_SECONDS
-            participant = group.get_player_by_id(player_id)
-            participant.chat_interrupted = True
-            participant.participant_left_ts = now
+            participant_player = group.get_player_by_id(player_id)
+            participant_player.chat_interrupted = True
+            participant_player.participant_left_ts = now
             break
 
 
@@ -294,13 +311,16 @@ def _chat_status_payload(player: Player):
     right_partner_temporarily_offline = bool(
         interrupted_id == right_id and reconnect_seconds_left > 0 and not player.group.group_dropped
     )
+    left_partner_permanently_dropped = bool(player.group.group_dropped and interrupted_id == left_id)
+    right_partner_permanently_dropped = bool(player.group.group_dropped and interrupted_id == right_id)
+
     both_partners_left_chat = bool(statuses[left_id] and statuses[right_id])
     return dict(
         left_partner_id=left_id,
         right_partner_id=right_id,
-        left_partner_active=not statuses[left_id] and not left_partner_temporarily_offline,
-        right_partner_active=not statuses[right_id] and not right_partner_temporarily_offline,
-        should_auto_advance=((player.group.group_dropped or both_partners_left_chat) and not statuses[my_id]),
+        left_partner_active=not statuses[left_id] and not left_partner_temporarily_offline and not left_partner_permanently_dropped,
+        right_partner_active=not statuses[right_id] and not right_partner_temporarily_offline and not right_partner_permanently_dropped,
+        should_auto_advance=both_partners_left_chat and not statuses[my_id],
         left_count=left_count,
         group_dropped=player.group.group_dropped,
         interrupted_player_id=interrupted_id,
@@ -505,7 +525,7 @@ class Chat(Page):
             player.chat_interrupted = True
             player.participant_left_ts = now
 
-        _evaluate_chat_dropout(player.group)
+        _evaluate_dropout(player.group)
         return {
             p.id_in_group: _chat_status_payload(p)
             for p in player.group.get_players()
@@ -515,13 +535,47 @@ class Chat(Page):
 class Signals(Page):
     form_model = 'player'
     form_fields = ['signal_left', 'signal_right', 'first_intention_selected', 'time_on_page']
-    timeout_seconds = 180
+    timeout_seconds = 300
     timeout_submission = dict(
         signal_left='split_you',
         signal_right='split_you',
         first_intention_selected='left',
-        time_on_page=180,
+        time_on_page=300,
     )
+
+    @staticmethod
+    def is_displayed(player: Player):
+        # Se il giocatore è "caduto" (dropout confermato in chat), saltiamo la pagina
+        # assegnando valori casuali per non bloccare gli altri al WaitPage successivo.
+        if player.participant.vars.get('group_dropped'):
+            import random
+            player.signal_left = random.choice(['split_you', 'split_other', 'split_both'])
+            player.signal_right = random.choice(['split_you', 'split_other', 'split_both'])
+            player.signal_inactive = 99
+            # Salviamo nei vars perché verranno letti dal DataMappingWaitPage
+            player.participant.vars['signal_left'] = player.signal_left
+            player.participant.vars['signal_right'] = player.signal_right
+            player.participant.vars['signal_inactive'] = player.signal_inactive
+            return False
+        return True
+
+    @staticmethod
+    def live_method(player: Player, data):
+        now = time.time()
+        _set_last_ping(player.group, player.id_in_group, now)
+        
+        payload_type = (data or {}).get('type')
+        if payload_type == 'client_leaving' and not player.group.group_dropped:
+            player.group.interrupted_player_id = player.id_in_group
+            player.group.reconnect_deadline_ts = now + C.CHAT_RECONNECT_WINDOW_SECONDS
+            player.chat_interrupted = True
+            player.participant_left_ts = now
+
+        _evaluate_dropout(player.group)
+        return {
+            p.id_in_group: _chat_status_payload(p)
+            for p in player.group.get_players()
+        }
 
     @staticmethod
     def vars_for_template(player: Player):
@@ -530,6 +584,8 @@ class Signals(Page):
         return dict(
             chat_timeout=(reason == 'timeout'),
             chat_partners_left=(reason in ('group_dropped', 'partners_left')),
+            reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
+            **_chat_status_payload(player),
             **colors,
         )
 
@@ -539,6 +595,12 @@ class Signals(Page):
         player.time_chat_and_signals = player.time_chat + player.time_signals
         if timeout_happened:
             player.signal_inactive = 99
+            # Inattività rilevata: escludiamo dal pagamento come richiesto
+            player.part1_payoff_eligible = False
+            player.participant.vars['part1_payoff_eligible'] = False
+            import random
+            player.signal_left = random.choice(['split_you', 'split_other', 'split_both'])
+            player.signal_right = random.choice(['split_you', 'split_other', 'split_both'])
         else:
             set_control_questions_failed(player, 'intro', failed=False)
         logger.debug(f"Signals - time_signals saved: {player.time_signals}, time_chat_and_signals: {player.time_chat_and_signals}")
@@ -595,6 +657,24 @@ class Decision(Page):
     )
 
     @staticmethod
+    def live_method(player: Player, data):
+        now = time.time()
+        _set_last_ping(player.group, player.id_in_group, now)
+        
+        payload_type = (data or {}).get('type')
+        if payload_type == 'client_leaving' and not player.group.group_dropped:
+            player.group.interrupted_player_id = player.id_in_group
+            player.group.reconnect_deadline_ts = now + C.CHAT_RECONNECT_WINDOW_SECONDS
+            player.chat_interrupted = True
+            player.participant_left_ts = now
+
+        _evaluate_dropout(player.group)
+        return {
+            p.id_in_group: _chat_status_payload(p)
+            for p in player.group.get_players()
+        }
+
+    @staticmethod
     def vars_for_template(player: Player):
         my_id = player.id_in_group
         partners = TOPOLOGY[my_id]
@@ -632,6 +712,29 @@ class Decision(Page):
             channel_right,
             f"{colors['right_partner_color']} Participant",
         )
+        options = [
+            {
+                'value': 'Left', 
+                'id': 'dc_left', 
+                'label': f'I would like to divide the $12 equally with the {colors["left_partner_color"]} Participant', 
+                'details': f'($6 to you, $6 to the {colors["left_partner_color"]} Participant, $0 to the {colors["right_partner_color"]} Participant)'
+            },
+            {
+                'value': 'Right', 
+                'id': 'dc_right', 
+                'label': f'I would like to divide the $12 equally with the {colors["right_partner_color"]} Participant', 
+                'details': f'($6 to you, $6 to the {colors["right_partner_color"]} Participant, $0 to the {colors["left_partner_color"]} Participant)'
+            },
+            {
+                'value': 'Both', 
+                'id': 'dc_both', 
+                'label': 'I would like to divide the $12 equally with the two other Participants', 
+                'details': f'($4 to you, $4 to the {colors["left_partner_color"]} Participant, $4 to the {colors["right_partner_color"]} Participant)'
+            },
+        ]
+        import random
+        random.shuffle(options)
+
         return dict(
             channel_left=channel_left,
             channel_right=channel_right,
@@ -640,12 +743,18 @@ class Decision(Page):
             left_chat_rows=left_chat_rows,
             right_chat_rows=right_chat_rows,
             signals_expired=bool(player.signal_inactive == 99),
+            reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
+            decision_options=options,
+            **_chat_status_payload(player),
             **colors,
         )
 
     @staticmethod
     def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
+        """Non mostrare questa pagina se il partecipante ha fallito le control questions o se è caduto."""
+        if player.participant.vars.get('group_dropped'):
+            player.decision_inactive = 99
+            return False
         return not has_failed_control_questions(player, 'intro')
     
     @staticmethod
@@ -653,9 +762,10 @@ class Decision(Page):
         player.time_decision = save_time_value(player.time_on_page)
         if timeout_happened:
             # Mark as inactive (99) for dataset tracking.
-            # Player is NOT excluded: flows normally to ResultsWaitPage.
-            # A random decision_choice will be assigned before payoff calculation.
             player.decision_inactive = 99
+            # Inattività rilevata: escludiamo dal pagamento
+            player.part1_payoff_eligible = False
+            player.participant.vars['part1_payoff_eligible'] = False
 
 
 class InactivityGoodbyeMain(Page):
@@ -665,7 +775,8 @@ class InactivityGoodbyeMain(Page):
 
     @staticmethod
     def is_displayed(player):
-        return _is_inactive_excluded(player) or player.decision_inactive == 99
+        # Se il giocatore è stato escluso per inattività o dropout, vede questa pagina
+        return _is_inactive_excluded(player) or player.decision_inactive == 99 or not player.part1_payoff_eligible
 
     @staticmethod
     def js_vars(player):
@@ -706,22 +817,8 @@ class ResultsWaitPage(WaitPage):
         for p in players:
             p.payoff = C.PAYOFF_DISAGREEMENT
 
-        if group.group_dropped:
-            for p in players:
-                p.payoff = cu(0)
-                p.part1_calculated_payoff = cu(0)
-                p.participant.vars['part1_payoff'] = cu(0)
-                p.participant.vars['part1_group_id'] = group.id
-                p.participant.vars['selected_part_for_payment'] = 1
-                p.participant.vars['group_dropped'] = True
-                p.participant.vars['part1_payoff_eligible'] = False
-                p.participant.group_dropped = True
-                p.participant.part1_payoff_eligible = False
-                p.part1_payoff_eligible = False
-            group.selected_part_for_payment = 1
-            group.grp_coordinate = 0
-            group.grp_triadicsplit = 0
-            return
+        # We NO LONGER abort payoffs if group.group_dropped is True.
+        # The logic below will use random choices for anyone with decision_inactive == 99.
 
         # Logic:
         # 1. At least 2 choose Both -> All get 4
@@ -771,6 +868,10 @@ class ResultsWaitPage(WaitPage):
             # Salva il vero payoff calcolato nel DB per tracciabilità
             p.part1_calculated_payoff = p.payoff
             
+            # If a player is not eligible (e.g. they dropped out), their official payoff is 0
+            if not p.part1_payoff_eligible:
+                p.payoff = cu(0)
+
             # Salva i valori originali in participant.vars
             p.participant.vars['part1_payoff'] = p.payoff
             p.participant.vars['selected_part_for_payment'] = selected

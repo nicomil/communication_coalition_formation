@@ -430,6 +430,8 @@ class FinalResults(Page):
         right_color = ""
         left_inactive = False
         right_inactive = False
+        my_choice_display = ""
+        my_color = ""
         
         if main_player:
             my_id = main_player.id_in_group
@@ -442,9 +444,21 @@ class FinalResults(Page):
             
             left_color = COLOR_MAPPING[left_id]
             right_color = COLOR_MAPPING[right_id]
+            my_color = COLOR_MAPPING[my_id]
             
             left_inactive = (left_partner.decision_inactive == 99)
             right_inactive = (right_partner.decision_inactive == 99)
+
+            # Formatta la propria scelta
+            my_c = main_player.decision_choice
+            if my_c == 'Both':
+                my_choice_display = "I would like to divide the $12 equally among all the members of the group"
+            elif my_c == 'Left':
+                my_left_id = TOPOLOGY[my_id]['left']
+                my_choice_display = f"I would like to divide the $12 equally with the {COLOR_MAPPING[my_left_id]} Participant"
+            else:
+                my_right_id = TOPOLOGY[my_id]['right']
+                my_choice_display = f"I would like to divide the $12 equally with the {COLOR_MAPPING[my_right_id]} Participant"
             
             # Formatta la scelta del left partner
             left_c = left_partner.decision_choice
@@ -480,6 +494,8 @@ class FinalResults(Page):
             'right_color': right_color,
             'left_choice_display': left_choice_display,
             'right_choice_display': right_choice_display,
+            'my_choice_display': my_choice_display,
+            'my_color': my_color,
             'left_inactive': left_inactive,
             'right_inactive': right_inactive,
         }

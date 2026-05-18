@@ -29,6 +29,7 @@
         border-radius: 5px;
         background-color: #f9f9f9;
     }
+
     .column.chat-disabled {
         opacity: 0.65;
     }
@@ -53,6 +54,7 @@
         margin-bottom: 8px;
         margin-top: 5px;
     }
+
     .participant-left-badge {
         margin: 6px 0 10px;
         padding: 8px 10px;
@@ -62,15 +64,7 @@
         font-size: 0.9rem;
         font-weight: 600;
     }
-    .reconnect-wait {
-        margin-bottom: 12px;
-        padding: 10px 12px;
-        border: 1px solid #ffe58f;
-        background: #fffbe6;
-        border-radius: 4px;
-        color: #8a6d3b;
-        font-weight: 600;
-    }
+
     .otree-timer {
         opacity: 0.35;
         margin-bottom: 8px;
@@ -79,20 +73,32 @@
 
 {{ include_sibling '_button_style.html' }}
 
+
 <p>
-    You can communicate in the text area below with each of the two participants. <strong>Please remember that messages are
-        private</strong>: the {{ left_partner_color }} Participant cannot read your exchanges with the {{ right_partner_color }}
-    Participant, and the {{ right_partner_color }} Participant cannot read your exchanges with the
-    {{ left_partner_color }} Participant.
+    <li>You can communicate in the text area below with each of the two participants.</li>
 </p>
+<p>
+    <li>If you don't want to send or receive messages, you can leave the chat by clicking the button <em>Next</em>.</li>
+</p>
+<p>
+    <li>When you finish to chat, click the button <em>Next</em> to proceed.</li>
+</p>
+<p>
+    <li><strong>Please remember that messages are
+            private</strong>: the {{ left_partner_color }} Participant cannot read your exchanges with the {{
+        right_partner_color }}
+        Participant, and the {{ right_partner_color }} Participant cannot read your exchanges with the
+        {{ left_partner_color }} Participant.</li>
+</p>
+<p></p>
 <p>
 <h4> You are the {{ my_color }} Participant.</h4>
 </p>
-<div class="reconnect-wait" id="reconnect-wait" style="display:none;"></div>
 <div class="container-columns">
     <div class="column {% if not left_partner_active %}chat-disabled{% endif %}" data-chat-column="left">
         <h4>{{ left_partner_color }} Participant</h4>
-        <div class="participant-left-badge" data-left-badge {% if left_partner_active %}style="display:none;"{% endif %}>
+        <div class="participant-left-badge" data-left-badge {% if left_partner_active %}style="display:none;" {% endif
+            %}>
             This Participant has already left the chat. Sending messages is disabled.
         </div>
         <div class="section-title">Your Messages</div>
@@ -102,7 +108,8 @@
     </div>
     <div class="column {% if not right_partner_active %}chat-disabled{% endif %}" data-chat-column="right">
         <h4>{{ right_partner_color }} Participant</h4>
-        <div class="participant-left-badge" data-left-badge {% if right_partner_active %}style="display:none;"{% endif %}>
+        <div class="participant-left-badge" data-left-badge {% if right_partner_active %}style="display:none;" {% endif
+            %}>
             This Participant has already left the chat. Sending messages is disabled.
         </div>
         <div class="section-title">Your Messages</div>
@@ -194,7 +201,7 @@
             if (hasSubmitted) return;
             hasSubmitted = true;
             form.dataset.autoSubmit = reason || '1';
-            form.requestSubmit();
+            form.submit(); // safer for auto-advance, bypasses submit event listener
         }
 
         function applyStatus(payload) {
@@ -204,19 +211,6 @@
             setColumnStatus(leftColumn, leftActive);
             setColumnStatus(rightColumn, rightActive);
 
-            if (reconnectWait) {
-                if (payload.waiting_on_reconnect) {
-                    setNextButtonBlocked(true);
-                    reconnectWait.style.display = 'block';
-                    const seconds = Math.max(0, Number(payload.reconnect_seconds_left) || 0);
-                    reconnectWait.textContent = 'One participant disconnected. Waiting up to ' + seconds + ' seconds for reconnection.';
-                    startLocalReconnectCountdown(seconds);
-                } else {
-                    stopLocalReconnectCountdown();
-                    setNextButtonBlocked(false);
-                    reconnectWait.style.display = 'none';
-                }
-            }
             if (payload.should_auto_advance) {
                 requestAutoSubmit('two-left');
             }
@@ -247,63 +241,57 @@
             reconnect_seconds_left: {{ reconnect_seconds_left|json }}
         });
 
-        window.liveRecv = function (data) {
-            applyStatus(data);
-        };
-        if (!tryStartLiveSync()) {
-            let attempts = 0;
-            const waitForLive = setInterval(function () {
-                attempts += 1;
-                if (tryStartLiveSync() || attempts > 30) {
-                    clearInterval(waitForLive);
-                }
-            }, 300);
+    window.liveRecv = function (data) {
+        applyStatus(data);
+    };
+    if (!tryStartLiveSync()) {
+        let attempts = 0;
+        const waitForLive = setInterval(function () {
+            attempts += 1;
+            if (tryStartLiveSync() || attempts > 30) {
+                clearInterval(waitForLive);
+            }
+        }, 300);
+    }
+
+    form.addEventListener('submit', function (e) {
+        if (form.dataset.autoSubmit) {
+            return;
         }
-
-        form.addEventListener('submit', function (e) {
-                if (form.dataset.autoSubmit) {
-                    return;
-                }
-                if (reconnectWait && reconnectWait.style.display !== 'none') {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    e.stopPropagation();
-                    return false;
-                }
-                if (typeof window.liveSend === 'function') {
-                    try {
-                        window.liveSend({ type: 'next_button_intent' });
-                    } catch (err) {
-                        // best effort only
-                    }
-                }
-                const ok = window.confirm(
-                    'Are you sure you want to move to the next screen? You will not be able to go back to this chat.'
-                );
-                if (!ok) {
-                    if (typeof window.liveSend === 'function') {
-                        try {
-                            window.liveSend({ type: 'next_button_cancelled' });
-                        } catch (err) {
-                            // best effort only
-                        }
-                    }
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    e.stopPropagation();
-                    return false;
-                }
-                // se confermato, lasciamo procedere normale handler oTree
-            }, true);
-
-        window.addEventListener('beforeunload', function () {
-            if (hasSubmitted || typeof window.liveSend !== 'function') return;
+        if (typeof window.liveSend === 'function') {
             try {
-                window.liveSend({ type: 'client_leaving' });
-            } catch (e) {
+                window.liveSend({ type: 'next_button_intent' });
+            } catch (err) {
                 // best effort only
             }
-        });
+        }
+        const ok = window.confirm(
+            'Are you sure you want to move to the next screen? You will not be able to go back to this chat.'
+        );
+        if (!ok) {
+            if (typeof window.liveSend === 'function') {
+                try {
+                    window.liveSend({ type: 'next_button_cancelled' });
+                } catch (err) {
+                    // best effort only
+                }
+            }
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            e.stopPropagation();
+            return false;
+        }
+        // se confermato, lasciamo procedere normale handler oTree
+    }, true);
+
+    window.addEventListener('beforeunload', function () {
+        if (hasSubmitted || typeof window.liveSend !== 'function') return;
+        try {
+            window.liveSend({ type: 'client_leaving' });
+        } catch (e) {
+            // best effort only
+        }
+    });
     })();
 </script>
 

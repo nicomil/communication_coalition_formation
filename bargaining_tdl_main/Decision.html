@@ -129,8 +129,8 @@
         });
     })();
 </script>
-<p><strong>Please make your final decision. Note that if you have not made your decision within 5 minutes, the
-        experiment will end and you will not be paid. In this case the computer will randomly take your choice.</strong>
+<p><strong>Please make your final decision. Note that if you have not made your decision within 5 minutes, you will be
+        excluded from the experiment.</strong>
 </p>
 <h4> You are the {{ my_color }} Participant.</h4>
 <p>
@@ -187,39 +187,15 @@
         </p>
         <p></p>
         <div class="form-group">
-
+            {% for opt in decision_options %}
             <div class="form-check mb-3">
-                <input type="radio" name="decision_choice" value="Left" id="dc_left" class="form-check-input" required>
-                <label class="form-check-label" for="dc_left">
-                    <strong>I would like to divide the $12 equally with the {{ left_partner_color }}
-                        Participant</strong> <em>($6 to
-
-                        you, $6 to the {{left_partner_color}} Participant, $0 to the
-                        {{right_partner_color}}
-                        Participant)</em>.
+                <input type="radio" name="decision_choice" value="{{ opt.value }}" id="{{ opt.id }}" class="form-check-input" required
+                    {% if player.decision_choice == opt.value %}checked{% endif %}>
+                <label class="form-check-label" for="{{ opt.id }}">
+                    <strong>{{ opt.label }}</strong> <em>{{ opt.details }}</em>.
                 </label>
             </div>
-            <div class="form-check mb-3">
-                <input type="radio" name="decision_choice" value="Right" id="dc_right" class="form-check-input">
-                <label class="form-check-label" for="dc_right">
-                    <strong>I would like to divide the $12 equally with the {{ right_partner_color }}
-                        Participant</strong> <em>($6 to
-                        you, $6 to the {{right_partner_color}} Participant, $0 to the
-                        {{left_partner_color}}
-                        Participant)</em>.
-
-                </label>
-            </div>
-            <div class="form-check mb-3">
-                <input type="radio" name="decision_choice" value="Both" id="dc_both" class="form-check-input">
-                <label class="form-check-label" for="dc_both">
-                    <strong>I would like to divide the $12 equally with the two other Participants</strong> <em>($4 to
-                        you, $4 to the {{left_partner_color}} Participant, $4 to the
-                        {{right_partner_color}}
-                        Participant)</em>.
-
-                </label>
-            </div>
+            {% endfor %}
         </div>
     </div>
 </div>
