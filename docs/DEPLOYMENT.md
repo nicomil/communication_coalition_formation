@@ -39,28 +39,6 @@ heroku addons:attach <nome-addon-postgres> --app <nome-app> --as DATABASE
 git push heroku main
 ```
 
-## Migrazione schema DB (automatica)
-
-Dopo ogni deploy, Heroku esegue la fase `release` del `Procfile`:
-
-```text
-release: python scripts/sync_db_schema.py
-```
-
-Lo script confronta i modelli oTree con il DB Postgres e aggiunge **solo colonne mancanti** (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`). Non cancella dati (a differenza di `otree resetdb`).
-
-Comandi utili:
-
-```bash
-# Anteprima SQL senza modificare il DB
-python scripts/sync_db_schema.py --dry-run
-
-# Esecuzione manuale (es. su Heroku)
-heroku run python scripts/sync_db_schema.py --app ccf
-```
-
-**Limiti:** aggiunge colonne, non rimuove/rinomina colonne obsolete e non cambia tipi esistenti. Per breaking change serve migrazione SQL dedicata o staging con `resetdb`.
-
 ## Deploy successivi (produzione)
 
 1. Backup prima del push:
