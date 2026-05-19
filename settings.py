@@ -6,7 +6,7 @@ SESSION_CONFIGS = [
         name='bargaining_tdl',
         display_name="Bargaining Game (TDL + Async)",
         app_sequence=['bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_part3', 'bargaining_tdl_survey'],
-        num_demo_participants=9,
+        num_demo_participants=3,
         completionlink=environ.get(
             'PROLIFIC_COMPLETION_URL',
             'https://app.prolific.com/submissions/complete?cc=C1HQEIID',
