@@ -173,6 +173,7 @@ def _decision_display_text(decision_code, colors):
 
 
 class InstructionsPart3(Page):
+    """Istruzioni Part 3 + scelta decisione sulla stessa pagina."""
     form_model = 'player'
     form_fields = ['decision', 'time_on_page']
     _INSTRUCTIONS_TIMEOUT = 600
@@ -367,51 +368,6 @@ class ThankYouPart3(Page):
     def app_after_this_page(player, upcoming_apps):
         """Termina l'esperimento dopo questa pagina."""
         return []
-
-class DecisionPart3(Page):
-    form_model = 'player'
-    form_fields = ['decision', 'time_on_page']
-    _DECISION_TIMEOUT = 180
-    timeout_submission = timeout_submission_with_time(
-        _DECISION_TIMEOUT,
-        decision='share_one',
-    )
-
-    @staticmethod
-    def get_timeout_seconds(player):
-        return get_page_timeout_seconds(player, DecisionPart3._DECISION_TIMEOUT)
-    
-    @staticmethod
-    def is_displayed(player):
-        return not _is_inactive_excluded(player)
-
-    @staticmethod
-    def vars_for_template(player):
-        import random
-
-        # Genera l'ordine delle opzioni una sola volta per soggetto e lo persiste
-        # per evitare che cambi se il partecipante ricarica la pagina.
-        order_key = 'decision_part3_option_order'
-        if order_key not in player.participant.vars:
-            options = [
-                {'value': 'share_one',  'label': '<strong>Equally split the $ 12 with only one of the two RECEIVERS</strong> <em>($6 to you, $6 to one of the two RECEIVERS, $0 to the other RECEIVER).</em>'},
-                {'value': 'share_both', 'label': '<strong>Equally split the $ 12 between myself and the other two RECEIVERS</strong> <em>($4 to you, $4 to each of the two RECEIVERS).</em>'},
-            ]
-            random.shuffle(options)
-            player.participant.vars[order_key] = options
-
-        colors = _part3_color_context(player)
-        return {
-            'decision_options': player.participant.vars[order_key],
-            **colors,
-        }
-
-    @staticmethod
-    def before_next_page(player, timeout_happened):
-        player.time_decision_part3 = save_time_value(player.time_on_page)
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'part3_decision_timeout')
-            set_control_questions_failed(player, 'part3', failed=True)
 
 class ResultsPart3(Page):
     """Payoff Page - mostra i payoff dell'esperimento."""

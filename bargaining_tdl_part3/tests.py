@@ -21,7 +21,7 @@ class PlayerBot(Bot):
     def play_round(self):
         """Simula il comportamento del partecipante nella Part 3."""
         
-        # InstructionsPart3 now includes the decision field.
+        # InstructionsPart3 collects instructions and decision on one page.
         case = self.case
         if case in ['share_one', 'selfish']:
             decision = 'share_one'
