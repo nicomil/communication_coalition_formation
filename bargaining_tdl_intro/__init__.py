@@ -106,6 +106,10 @@ def _skip_intro_control_questions(player):
     return bool(player.session.config.get('skip_intro_control_questions', False))
 
 
+def _require_prolific_id(player):
+    return bool(player.session.config.get('require_prolific_id', True))
+
+
 def _mark_inactive_exclusion(player, reason):
     player.participant.inactive_excluded = True
     player.participant.inactive_excluded_reason = reason
@@ -283,11 +287,25 @@ class Welcome(Page):
     ]
 
     @staticmethod
+    def vars_for_template(player):
+        return dict(require_prolific_id=_require_prolific_id(player))
+
+    @staticmethod
+    def prolific_pid_url_error_message(player, value):
+        if not _require_prolific_id(player):
+            return
+        has_pid = bool((value or '').strip() or (player.participant.label or '').strip())
+        if not has_pid:
+            return 'Please enter your Prolific participant ID.'
+
+    @staticmethod
     def before_next_page(player, timeout_happened):
         time_value = save_time_value(player.time_on_page)
         player.time_welcome = time_value
         player.participant.vars['time_welcome'] = time_value
-        prolific_pid = (player.participant.label or '').strip() or (player.prolific_pid_url or '').strip()
+        prolific_pid = (player.prolific_pid_url or '').strip() or (player.participant.label or '').strip()
+        if not prolific_pid and not _require_prolific_id(player):
+            prolific_pid = f'local-{player.participant.code}'
         player.prolific_id = prolific_pid
         player.participant.prolific_id = prolific_pid
         player.participant.prolific_study_id = (player.prolific_study_id or '').strip()

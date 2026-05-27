@@ -13,6 +13,7 @@ from bargaining_tdl_common import (  # type: ignore
 )
 
 _SURVEY_PAGE_TIMEOUT = 180
+_SURVEY_PAGE10_TIMEOUT = 300
 
 
 class _SurveyTimedPage(Page):
@@ -149,6 +150,17 @@ class Player(BasePlayer):
         label="What amount of money would you request?",
     )
 
+    instructions_clarity = models.IntegerField(
+        min=1,
+        max=5,
+        label="How clear were the experiment instructions?",
+    )
+
+    general_comment = models.LongStringField(
+        label="Please write any general comment about the experiment:",
+        blank=False,
+    )
+
     # Time tracking
     time_on_page = models.FloatField(initial=0, blank=True)
     time_survey_intro = models.FloatField(initial=0)
@@ -161,6 +173,7 @@ class Player(BasePlayer):
     time_survey_page8 = models.FloatField(initial=0)
     time_survey_page9 = models.FloatField(initial=0)
     time_survey_page10 = models.FloatField(initial=0)
+    time_survey_feedback = models.FloatField(initial=0)
     time_final_results = models.FloatField(initial=0)
 
 
@@ -356,7 +369,14 @@ class SurveyPage10(_SurveyTimedPage):
     """11-20 game — guess a number between 110 and 200."""
     form_model = 'player'
     form_fields = ['beauty_contest_guess', 'time_on_page']
-    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, beauty_contest_guess=1.1)
+    timeout_submission = timeout_submission_with_time(
+        _SURVEY_PAGE10_TIMEOUT,
+        beauty_contest_guess=1.1,
+    )
+
+    @staticmethod
+    def get_timeout_seconds(player):
+        return get_page_timeout_seconds(player, _SURVEY_PAGE10_TIMEOUT)
 
     @staticmethod
     def beauty_contest_guess_error_message(player, value):
@@ -370,6 +390,31 @@ class SurveyPage10(_SurveyTimedPage):
         player.time_survey_page10 = player.time_on_page or 0
         if timeout_happened:
             _mark_inactive_exclusion(player, 'survey_page10_timeout')
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
+
+
+class SurveyFeedback(_SurveyTimedPage):
+    """Feedback page shown after survey page 10 and before final results."""
+    form_model = 'player'
+    form_fields = ['instructions_clarity', 'general_comment', 'time_on_page']
+    timeout_submission = timeout_submission_with_time(
+        _SURVEY_PAGE_TIMEOUT,
+        instructions_clarity=1,
+        general_comment='No comment provided (timeout).',
+    )
+
+    @staticmethod
+    def vars_for_template(player):
+        return {'scale_values': list(range(1, 6))}
+
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        player.time_survey_feedback = player.time_on_page or 0
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'survey_feedback_timeout')
 
     @staticmethod
     def is_displayed(player):
@@ -527,6 +572,7 @@ page_sequence = [
     SurveyPage8,
     SurveyPage9,
     SurveyPage10,
+    SurveyFeedback,
     SurveyTerminated,
     FinalResults,
 ]

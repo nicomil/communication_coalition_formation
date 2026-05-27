@@ -10,9 +10,6 @@
 
 {{ include_sibling '_button_style.html' }}
 {{ include '_templates/global/_time_tracking_field.html' }}
-<input type="hidden" name="prolific_pid_url" id="prolific_pid_url">
-<input type="hidden" name="prolific_study_id" id="prolific_study_id">
-<input type="hidden" name="prolific_session_id" id="prolific_session_id">
 
 <div class="card bg-white mt-4 mb-4 shadow-sm">
     <div class="card-body px-5 py-4">
@@ -42,6 +39,55 @@
                 not receive any payment.</strong>
         </p>
 
+        <hr class="my-4">
+
+        <p class="fw-bold mb-2">Prolific participant information</p>
+        <p class="text-muted mb-3" style="font-size:0.9rem;">
+            If you arrived from Prolific, these fields should be pre-filled automatically.
+            Otherwise, please enter your Prolific ID manually.
+        </p>
+        {{ if not require_prolific_id }}
+        <p class="alert alert-info py-2 px-3" style="font-size:0.9rem;">
+            Local testing mode: Prolific ID is optional and will be auto-filled if left empty.
+        </p>
+        {{ endif }}
+
+        <div class="mb-3">
+            <label for="prolific_pid_url" class="form-label fw-bold">Prolific ID</label>
+            <input
+                type="text"
+                name="prolific_pid_url"
+                id="prolific_pid_url"
+                class="form-control"
+                {{ if require_prolific_id }}required{{ endif }}
+                autocomplete="off"
+                placeholder="Your Prolific participant ID"
+            >
+        </div>
+
+        <div class="mb-3">
+            <label for="prolific_study_id" class="form-label">Study ID (optional)</label>
+            <input
+                type="text"
+                name="prolific_study_id"
+                id="prolific_study_id"
+                class="form-control"
+                autocomplete="off"
+                placeholder="Study ID from Prolific URL"
+            >
+        </div>
+
+        <div class="mb-0">
+            <label for="prolific_session_id" class="form-label">Session ID (optional)</label>
+            <input
+                type="text"
+                name="prolific_session_id"
+                id="prolific_session_id"
+                class="form-control"
+                autocomplete="off"
+                placeholder="Session ID from Prolific URL"
+            >
+        </div>
 
     </div>
 </div>

@@ -6,7 +6,7 @@ SESSION_CONFIGS = [
         name='bargaining_tdl',
         display_name="Bargaining Game (TDL + Async)",
         app_sequence=['bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_part3', 'bargaining_tdl_survey'],
-        num_demo_participants=3,
+        num_demo_participants=9,
         completionlink=environ.get(
             'PROLIFIC_COMPLETION_URL',
             'https://app.prolific.com/submissions/complete?cc=C1HQEIID',
@@ -22,8 +22,9 @@ SESSION_CONFIGS = [
 SESSION_CONFIG_DEFAULTS = dict(
     real_world_currency_per_point=1.00, participation_fee=0.00, doc="",
     control_questions_max_attempts=5,  # Numero massimo di tentativi per le control questions
-    skip_intro_control_questions=False,  # Temporarily disable intro control questions
-    use_test_timers=False,  # Set all page timers to 60s for testing
+    skip_intro_control_questions=True,  # Temporarily disable intro control questions
+    use_test_timers=True,  # Set all page timers to 60s for testing
+    require_prolific_id=False,  # Allow bypass of Prolific ID during local testing
 )
 
 PARTICIPANT_FIELDS = [

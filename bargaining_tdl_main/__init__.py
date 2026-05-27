@@ -345,12 +345,19 @@ def _mark_group_dropped(group: Group):
     # We do NOT set group.part1_payoff_eligible = False globally anymore.
     # The interaction continues with random choices for the missing player.
     interrupted_id = group.interrupted_player_id
+    import random
     for p in group.get_players():
         if p.id_in_group == interrupted_id:
             p.part1_payoff_eligible = False
             p.participant.part1_payoff_eligible = False
             p.participant.vars['part1_payoff_eligible'] = False
             p.decision_inactive = 99  # Garantisce la scelta casuale
+            p.signal_inactive = 99
+            p.signal_left = random.choice(['split_you', 'split_other', 'split_both'])
+            p.signal_right = random.choice(['split_you', 'split_other', 'split_both'])
+            p.participant.vars['signal_left'] = p.signal_left
+            p.participant.vars['signal_right'] = p.signal_right
+            p.participant.vars['signal_inactive'] = 99
             p.participant.vars['group_dropped'] = True
         else:
             # Gli attivi rimangono idonei e NON vengono spinti avanti
@@ -1002,7 +1009,13 @@ class ResultsWaitPage(WaitPage):
 class Results(Page):
     form_model = 'player'
     form_fields = ['time_on_page']
-    
+    _RESULTS_TIMEOUT = 180
+    timeout_submission = timeout_submission_with_time(_RESULTS_TIMEOUT)
+
+    @staticmethod
+    def get_timeout_seconds(player):
+        return get_page_timeout_seconds(player, Results._RESULTS_TIMEOUT)
+
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""

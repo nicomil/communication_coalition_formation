@@ -1,6 +1,9 @@
 from otree.api import Currency as c, currency_range, expect, Bot
 from . import *
-from bargaining_tdl_common import set_control_questions_failed
+from bargaining_tdl_common import (
+    get_page_timeout_seconds,
+    set_control_questions_failed,
+)
 
 
 class PlayerBot(Bot):
@@ -109,10 +112,15 @@ class PlayerBot(Bot):
                 decision = 'Both'
         
         yield Decision, dict(decision_choice=decision, time_on_page=1.5)
-        
+
+        expect(
+            Results.get_timeout_seconds(self.player),
+            get_page_timeout_seconds(self.player, Results._RESULTS_TIMEOUT),
+        )
+
         # ResultsWaitPage - oTree gestisce automaticamente l'attesa
         # Il calcolo del payoff viene fatto in after_all_players_arrive
-        
+
         yield Results, dict(time_on_page=2.0)
         
         # Verifica che i time tracking fields siano stati salvati
