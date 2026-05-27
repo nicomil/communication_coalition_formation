@@ -134,6 +134,33 @@ class TestDropoutSyncHelpers(unittest.TestCase):
         _advance_interrupted_player_to_waitpage(group, 12)
         group.get_player_by_id.assert_not_called()
 
+    def test_mark_group_dropped_sets_random_signal_fallback(self):
+        from bargaining_tdl_main import _mark_group_dropped
+
+        group = self._make_group(interrupted_id=2)
+        p1 = MagicMock()
+        p1.id_in_group = 1
+        p1.participant.vars = {}
+        p2 = MagicMock()
+        p2.id_in_group = 2
+        p2.participant.vars = {}
+        p3 = MagicMock()
+        p3.id_in_group = 3
+        p3.participant.vars = {}
+        group.get_players.return_value = [p1, p2, p3]
+
+        _mark_group_dropped(group)
+
+        self.assertTrue(group.group_dropped)
+        self.assertEqual(p2.signal_inactive, 99)
+        self.assertIn(p2.signal_left, ['split_you', 'split_other', 'split_both'])
+        self.assertIn(p2.signal_right, ['split_you', 'split_other', 'split_both'])
+        self.assertFalse(p2.part1_payoff_eligible)
+        self.assertEqual(p2.participant.vars.get('signal_inactive'), 99)
+        self.assertEqual(p2.participant.vars.get('group_dropped'), True)
+        self.assertTrue(p1.part1_payoff_eligible)
+        self.assertTrue(p3.part1_payoff_eligible)
+
 
 if __name__ == '__main__':
     unittest.main()

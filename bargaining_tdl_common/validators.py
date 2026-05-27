@@ -22,7 +22,7 @@ def get_control_questions_attempts(player, part_name):
     
     Args:
         player: oTree Player instance
-        part_name: Name of the part ('intro', 'part2', 'part3')
+        part_name: Name of the part ('intro', 'part3')
     
     Returns:
         int: Numero di tentativi effettuati (default: 0)
@@ -37,7 +37,7 @@ def increment_control_questions_attempts(player, part_name):
     
     Args:
         player: oTree Player instance
-        part_name: Name of the part ('intro', 'part2', 'part3')
+        part_name: Name of the part ('intro', 'part3')
     
     Returns:
         int: Nuovo numero di tentativi
@@ -55,7 +55,7 @@ def reset_control_questions_attempts(player, part_name):
     
     Args:
         player: oTree Player instance
-        part_name: Name of the part ('intro', 'part2', 'part3')
+        part_name: Name of the part ('intro', 'part3')
     """
     key = f'control_questions_attempts_{part_name}'
     player.participant.vars[key] = 0
@@ -67,7 +67,7 @@ def has_passed_control_questions(player, part_name):
     
     Args:
         player: oTree Player instance
-        part_name: Name of the part ('intro', 'part2', 'part3')
+        part_name: Name of the part ('intro', 'part3')
     
     Returns:
         bool: True se ha passato, False altrimenti
@@ -82,7 +82,7 @@ def set_control_questions_passed(player, part_name, passed=True):
     
     Args:
         player: oTree Player instance
-        part_name: Name of the part ('intro', 'part2', 'part3')
+        part_name: Name of the part ('intro', 'part3')
         passed: Whether the control questions were passed (default: True)
     """
     key = f'control_questions_passed_{part_name}'
@@ -98,13 +98,11 @@ def set_control_questions_failed(player, part_name, failed=True):
     
     Args:
         player: oTree Player instance
-        part_name: Name of the part ('intro', 'part2', 'part3')
+        part_name: Name of the part ('intro', 'part3')
         failed: Whether the control questions were failed (default: True)
     """
     if part_name == 'intro':
         player.participant.vars['failed_control_questions'] = failed
-    elif part_name == 'part2':
-        player.participant.vars['failed_control_questions_part2'] = failed
     elif part_name == 'part3':
         player.participant.vars['failed_control_questions_part3'] = failed
 
@@ -115,15 +113,13 @@ def has_failed_control_questions(player, part_name):
     
     Args:
         player: oTree Player instance
-        part_name: Name of the part ('intro', 'part2', 'part3')
+        part_name: Name of the part ('intro', 'part3')
     
     Returns:
         bool: True if control questions were failed, False otherwise
     """
     if part_name == 'intro':
         return player.participant.vars.get('failed_control_questions', False)
-    elif part_name == 'part2':
-        return player.participant.vars.get('failed_control_questions_part2', False)
     elif part_name == 'part3':
         return player.participant.vars.get('failed_control_questions_part3', False)
     return False
@@ -161,27 +157,6 @@ def check_control_questions_intro(player):
         player.example3_earnings_you == "0" and
         player.example3_earnings_left == "0" and
         player.example3_earnings_right == "0"
-    )
-    return correct
-
-
-def check_control_questions_part2(player):
-    """
-    Verifica se entrambe le risposte alle control questions di part2 sono corrette.
-    
-    Args:
-        player: Player instance from bargaining_tdl_part2
-    
-    Returns:
-        bool: True se entrambe le risposte sono corrette, False altrimenti
-    """
-    if not player.control_question_1 or not player.control_question_2:
-        return False
-    
-    # Entrambe le risposte corrette devono essere "5" ($5)
-    correct = (
-        player.control_question_1 == "5" and
-        player.control_question_2 == "5"
     )
     return correct
 

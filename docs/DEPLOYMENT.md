@@ -158,6 +158,20 @@ heroku config:get REDIS_URL --app <nome-app>
 - [ ] Smoke test completo: ingresso Prolific -> sessione oTree -> redirect completion
 - [ ] Backup DB eseguito (`heroku pg:backups:capture`)
 
+## Smoke test Prolific consigliato (step by step)
+
+1. Apri URL Prolific con parametri:
+   - `participant_label={{%PROLIFIC_PID%}}`
+   - `STUDY_ID={{%STUDY_ID%}}`
+   - `SESSION_ID={{%SESSION_ID%}}`
+2. Completa flusso fino a `FinalResults`.
+3. Verifica presenza bottone manuale "Complete on Prolific now".
+4. Attendi redirect automatico e conferma arrivo su completion URL.
+5. Verifica su export che siano valorizzati:
+   - `participant.prolific_id`
+   - `participant.prolific_study_id`
+   - `participant.prolific_session_id`
+
 ## Stato attuale Heroku (`ccf`)
 
 Ultimo check: 2026-05-05 14:13 (UTC+2)

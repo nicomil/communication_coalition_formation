@@ -246,7 +246,7 @@ def get_partner_colors(player):
     Returns a dict with 'my_color', 'left_partner_color', 'right_partner_color'
     based on the main group topology.
 
-    Works from any app (intro, main, part2, part3) by resolving the
+    Works from any app (intro, main, part3, survey) by resolving the
     player's id_in_group in bargaining_tdl_main.
     """
     main_player = get_main_group_player(player)

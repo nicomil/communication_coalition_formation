@@ -1,7 +1,6 @@
 from otree.api import Currency as c, currency_range, expect, Bot  # type: ignore
 from . import (  # type: ignore
     InstructionsPart3,
-    DecisionPart3,
     ResultsPart3,
 )
 
@@ -22,22 +21,14 @@ class PlayerBot(Bot):
     def play_round(self):
         """Simula il comportamento del partecipante nella Part 3."""
         
-        # Instructions page (no form)
-        yield InstructionsPart3, dict(time_on_page=1.0)
-        
-        # Decision - la scelta varia in base al case
+        # InstructionsPart3 now includes the decision field.
         case = self.case
-        
-        if case == 'share_one':
+        if case in ['share_one', 'selfish']:
             decision = 'share_one'
-        elif case == 'share_both':
-            decision = 'share_both'
-        elif case == 'selfish':
-            decision = 'share_one'
-        else:  # cooperative
+        else:
             decision = 'share_both'
         
-        yield DecisionPart3, dict(decision=decision, time_on_page=1.0)
+        yield InstructionsPart3, dict(decision=decision, time_on_page=1.0)
         
         # Verifica che la decisione sia stata salvata
         expect(self.player.decision, decision)

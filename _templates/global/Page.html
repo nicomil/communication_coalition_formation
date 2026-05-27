@@ -11,6 +11,33 @@
         display: none !important;
     }
 
+    #otree-timer.timer-visible,
+    .otree-timer.timer-visible {
+        display: block !important;
+        position: fixed !important;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10000;
+        min-width: 340px;
+        max-width: min(92vw, 760px);
+        background-color: #f8d7da;
+        color: #842029;
+        border: 2px solid #f5c2c7;
+        border-radius: 6px;
+        padding: 10px 16px;
+        font-weight: bold;
+        font-size: 1.05rem;
+        text-align: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+    }
+
+    .otree-timer.timer-visible .otree-timer__time-left,
+    #otree-timer.timer-visible .otree-timer__time-left,
+    .otree-timer.timer-visible * {
+        display: inline !important;
+    }
+
     /* Override Bootstrap primary button color for oTree next buttons - same style as OK button */
     /* Using very high specificity to override Bootstrap */
     body .otree-body button.otree-btn-next.btn-primary,
@@ -86,6 +113,46 @@
 {{ endblock }}
 {{ block global_scripts  }}
 <script>
+    // Show timeout warning when <= 60 seconds and keep it visible while scrolling.
+    (function () {
+        const SHOW_AT_SECONDS = 60;
+        let timerPinned = false;
+
+        function getTimerElement() {
+            return document.getElementById('otree-timer') || document.querySelector('.otree-timer');
+        }
+
+        function parseSeconds(text) {
+            const match = (text || '').match(/(\d+):(\d{2})/);
+            if (!match) return null;
+            const minutes = parseInt(match[1], 10);
+            const seconds = parseInt(match[2], 10);
+            if (Number.isNaN(minutes) || Number.isNaN(seconds)) return null;
+            return (minutes * 60) + seconds;
+        }
+
+        function pinTimerBanner() {
+            const timerEl = getTimerElement();
+            if (!timerEl || timerPinned) return;
+            timerEl.classList.add('timer-visible');
+            timerPinned = true;
+        }
+
+        function checkTimeoutWarning() {
+            if (timerPinned) return;
+            const timerEl = getTimerElement();
+            if (!timerEl) return;
+            const secondsLeft = parseSeconds(timerEl.innerText || timerEl.textContent || '');
+            if (secondsLeft !== null && secondsLeft <= SHOW_AT_SECONDS) {
+                pinTimerBanner();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            setInterval(checkTimeoutWarning, 500);
+        });
+    })();
+
     // Force gray style for all next buttons - runs immediately and repeatedly
     (function() {
         function forceGrayButton() {

@@ -19,17 +19,17 @@ Nel pannello **Debug info** (solo in sviluppo), le voci **Group** e **ID in grou
 - Il numero che vedi (8, 11, …) è l’**id del gruppo nell’app in cui ti trovi** (intro vs main). Se ad esempio nella main la vostra triade è l’11ª riga della matrice, in **main** vedrete **Group 11**.
 - “Tutti Group 8” significa che in quel momento state tutti nella stessa triade e quella triade, nella main, ha id 8. Il “cambio” da 7/8 a 8 (o a 11) non è un bug: è il passaggio dalla numerazione **intro** alla numerazione **main**.
 
-### 3. Part 2 – “tutti Group 6” pur essendo fase individuale
+### 3. Part 3 / Survey – id gruppo tecnico
 
-- **App:** `bargaining_tdl_part2`
-- **Meccanismo:** In part2 è impostato `PLAYERS_PER_GROUP = None` (fase individuale, nessun gruppo di gioco). oTree crea comunque gruppi tecnici (es. un gruppo per partecipante o una struttura interna); l’id mostrato è quello **del gruppo nell’app part2**.
-- Quindi **Group 6** in part2 non indica la vostra triade della Part 1: indica solo l’id del gruppo assegnato dal sistema in **part2**. Per la Part 2 il valore “Group” nel debug non ha significato per la logica dell’esperimento; può essere nascosto o interpretato come “N/A (fase individuale)”.
+- **App:** `bargaining_tdl_part3` e `bargaining_tdl_survey`
+- **Meccanismo:** sono fasi individuali (`PLAYERS_PER_GROUP = None`). oTree mostra comunque un id gruppo tecnico locale all'app.
+- Quel valore non rappresenta la triade della Part 1.
 
 ## Allineamento con il meccanismo dell’esperimento
 
 - **Intro:** Group / ID in group = triade formata per arrivo; coerente con `group_by_arrival_time`.
 - **Main:** Group / ID in group = triade nella main, dopo il sync dalla intro; coerente con la matrice impostata da `GroupingAfterWelcome` (e con eventuale `SyncWithMainWaitPage` se presente).
-- **Part 2:** Group / ID in group = solo id tecnico oTree; **non** rappresenta la triade della Part 1. In part2 le debug info sono state adattate (rimozione o “N/A”) per evitare confusione.
+- **Part 3 / Survey:** Group / ID in group = id tecnico oTree; **non** rappresenta la triade della Part 1.
 
 ## Riepilogo
 
@@ -37,6 +37,6 @@ Nel pannello **Debug info** (solo in sviluppo), le voci **Group** e **ID in grou
 |-------------------|------------|----------------------------------------------------------|
 | Dopo General Instr.| intro      | Id della triade in intro (ordine di arrivo)              |
 | Scelta segnali / Main | main   | Id della triade nella main (stessa triade, numerazione main) |
-| Part 2 (MPL)      | part2      | Nessun significato di gioco; fase individuale (N/A)     |
+| Part 3 / Survey   | part3/survey | Nessun significato di gioco; fase individuale (N/A)   |
 
-Il fatto che il numero cambi (7 → 8 → 11 → 6) è quindi atteso: ogni app ha la propria numerazione; l’importante è che **nella main** P1, P2 e P6 restino nella **stessa triade** (stesso Group nella main), così che Decision e Results usino la stessa composizione del gruppo.
+Il fatto che il numero cambi tra app è quindi atteso: ogni app ha la propria numerazione; l’importante è che **nella main** i 3 membri della triade restino nello stesso gruppo.

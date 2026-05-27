@@ -40,8 +40,8 @@ Tutte le cartelle delle app che sono incluse in `SESSION_CONFIGS` devono essere 
 
 - `bargaining_tdl_intro/` - App introduttiva
 - `bargaining_tdl_main/` - App principale
-- `bargaining_tdl_part2/` - Parte 2
 - `bargaining_tdl_part3/` - Parte 3
+- `bargaining_tdl_survey/` - Survey + risultati finali
 
 **Ogni cartella app deve contenere**:
 - `__init__.py` - Logica dell'app
@@ -52,8 +52,8 @@ Tutte le cartelle delle app che sono incluse in `SESSION_CONFIGS` devono essere 
 ```bash
 git ls-files bargaining_tdl_intro/
 git ls-files bargaining_tdl_main/
-git ls-files bargaining_tdl_part2/
 git ls-files bargaining_tdl_part3/
+git ls-files bargaining_tdl_survey/
 ```
 
 ## File Statici e Template
@@ -108,8 +108,8 @@ git ls-files runtime.txt  # opzionale
 # 2. Cartelle app sono tracciate
 git ls-files bargaining_tdl_intro/__init__.py
 git ls-files bargaining_tdl_main/__init__.py
-git ls-files bargaining_tdl_part2/__init__.py
 git ls-files bargaining_tdl_part3/__init__.py
+git ls-files bargaining_tdl_survey/__init__.py
 
 # 3. Directory _static esiste
 git ls-files _static/
@@ -177,11 +177,11 @@ progetto/
     ├── __init__.py
     ├── *.html
     └── tests.py
-└── bargaining_tdl_part2/        ⚠️ OBBLIGATORIO (se in SESSION_CONFIGS)
+└── bargaining_tdl_part3/        ⚠️ OBBLIGATORIO (se in SESSION_CONFIGS)
     ├── __init__.py
     ├── *.html
     └── tests.py
-└── bargaining_tdl_part3/        ⚠️ OBBLIGATORIO (se in SESSION_CONFIGS)
+└── bargaining_tdl_survey/       ⚠️ OBBLIGATORIO (se in SESSION_CONFIGS)
     ├── __init__.py
     ├── *.html
     └── tests.py
