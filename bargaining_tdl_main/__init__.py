@@ -203,13 +203,6 @@ def _chat_left_state(group: Group):
     }
 
 
-def _mark_inactive_exclusion(player: Player, reason: str):
-    player.participant.inactive_excluded = True
-    player.participant.inactive_excluded_reason = reason
-    player.participant.vars['inactive_excluded'] = True
-    player.participant.vars['inactive_excluded_reason'] = reason
-
-
 def _is_inactive_excluded(player: Player):
     return bool(player.participant.vars.get('inactive_excluded', False))
 
