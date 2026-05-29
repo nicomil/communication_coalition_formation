@@ -502,18 +502,18 @@ class FinalResults(Page):
             # Formatta la propria scelta
             my_c = main_player.decision_choice
             if my_c == 'Both':
-                my_choice_display = "I would like to divide the $12 equally among all the members of the group"
+                my_choice_display = "I would like to divide the $12 equally with the two participants"
             elif my_c == 'Left':
                 my_left_id = TOPOLOGY[my_id]['left']
-                my_choice_display = f"I would like to divide the $12 equally with the {COLOR_MAPPING[my_left_id]} Participant"
+                my_choice_display = f"I would like to divide the $12 equally only with the {COLOR_MAPPING[my_left_id]} Participant"
             else:
                 my_right_id = TOPOLOGY[my_id]['right']
-                my_choice_display = f"I would like to divide the $12 equally with the {COLOR_MAPPING[my_right_id]} Participant"
+                my_choice_display = f"I would like to divide the $12 equally only with the {COLOR_MAPPING[my_right_id]} Participant"
             
             # Formatta la scelta del left partner
             left_c = left_partner.decision_choice
             if left_c == 'Both':
-                left_choice_display = "I would like to divide the $12 equally among all the members of the group"
+                left_choice_display = "I would like to divide the $12 equally with the two participants"
             elif left_c == 'Left':
                 left_partner_left_id = TOPOLOGY[left_id]['left']
                 left_choice_display = f"I would like to divide the $12 equally with the {COLOR_MAPPING[left_partner_left_id]} Participant"
@@ -524,13 +524,13 @@ class FinalResults(Page):
             # Formatta la scelta del right partner
             right_c = right_partner.decision_choice
             if right_c == 'Both':
-                right_choice_display = "I would like to divide the $12 equally among all the members of the group"
+                right_choice_display = "I would like to divide the $12 equally with the two participants"
             elif right_c == 'Left':
                 right_partner_left_id = TOPOLOGY[right_id]['left']
-                right_choice_display = f"I would like to divide the $12 equally with the {COLOR_MAPPING[right_partner_left_id]} Participant"
+                right_choice_display = f"I would like to divide the $12 equally only with the {COLOR_MAPPING[right_partner_left_id]} Participant"
             else:
                 right_partner_right_id = TOPOLOGY[right_id]['right']
-                right_choice_display = f"I would like to divide the $12 equally with the {COLOR_MAPPING[right_partner_right_id]} Participant"
+                right_choice_display = f"I would like to divide the $12 equally only with the {COLOR_MAPPING[right_partner_right_id]} Participant"
 
         return {
             'part1_group_id': part1_group_id,

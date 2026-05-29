@@ -25,7 +25,9 @@ def process_all_apps(input_file, output_file):
     survey_prefix = 'bargaining_tdl_survey.1.player.'
 
     with open(input_file, 'r', encoding='utf-8-sig') as f:
-        reader = csv.DictReader(f)
+        first_line = f.readline(); f.seek(0)
+        delimiter = ';' if ';' in first_line else ','
+        reader = csv.DictReader(f, delimiter=delimiter)
         headers = reader.fieldnames
         
         # Identify survey columns

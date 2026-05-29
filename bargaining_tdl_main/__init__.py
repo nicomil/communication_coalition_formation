@@ -1019,11 +1019,11 @@ class Results(Page):
         colors = _color_context(player)
         choice = player.decision_choice
         if choice == 'Left':
-            choice_display = f"I would like to divide the $12 equally with the {colors['left_partner_color']} Participant"
+            choice_display = f"I would like to divide the $12 equally only with the {colors['left_partner_color']} Participant"
         elif choice == 'Right':
-            choice_display = f"I would like to divide the $12 equally with the {colors['right_partner_color']} Participant"
+            choice_display = f"I would like to divide the $12 equally only with the {colors['right_partner_color']} Participant"
         else:
-            choice_display = "I would like to divide the $12 equally among all the members of the group"
+            choice_display = "I would like to divide the $12 equally with the two participants"
         return dict(choice_display=choice_display, **colors)
 
     @staticmethod

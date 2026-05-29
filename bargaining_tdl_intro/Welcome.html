@@ -23,9 +23,10 @@
             In this experiment, you and the other participants will make a series of decisions that will directly affect
             your monetary rewards. Your earnings will depend on both your own choices and those made by the other
             participants. Similarly, your decisions will play a role in determining the earnings of others. All the data
-            are anonymous, and we only ask for your honest responses. The experiment consists of two parts: in either
-            <strong>Part 1</strong> and <strong> Part 2</strong>, you can earn between $0 and $6 in a group choice
-            task.
+            are anonymous, and we only ask for your honest responses. The experiment consists of: two parts,
+            <strong>Part 1</strong> and <strong> Part 2</strong>, in either you can earn between $0 and $6 in a group
+            choice
+            task; a final survey; and an additional question in a group choice task.
         </p>
 
         <p>
@@ -54,39 +55,20 @@
 
         <div class="mb-3">
             <label for="prolific_pid_url" class="form-label fw-bold">Prolific ID</label>
-            <input
-                type="text"
-                name="prolific_pid_url"
-                id="prolific_pid_url"
-                class="form-control"
-                {{ if require_prolific_id }}required{{ endif }}
-                autocomplete="off"
-                placeholder="Your Prolific participant ID"
-            >
+            <input type="text" name="prolific_pid_url" id="prolific_pid_url" class="form-control" {{ if
+                require_prolific_id }}required{{ endif }} autocomplete="off" placeholder="Your Prolific participant ID">
         </div>
 
         <div class="mb-3">
             <label for="prolific_study_id" class="form-label">Study ID (optional)</label>
-            <input
-                type="text"
-                name="prolific_study_id"
-                id="prolific_study_id"
-                class="form-control"
-                autocomplete="off"
-                placeholder="Study ID from Prolific URL"
-            >
+            <input type="text" name="prolific_study_id" id="prolific_study_id" class="form-control" autocomplete="off"
+                placeholder="Study ID from Prolific URL">
         </div>
 
         <div class="mb-0">
             <label for="prolific_session_id" class="form-label">Session ID (optional)</label>
-            <input
-                type="text"
-                name="prolific_session_id"
-                id="prolific_session_id"
-                class="form-control"
-                autocomplete="off"
-                placeholder="Session ID from Prolific URL"
-            >
+            <input type="text" name="prolific_session_id" id="prolific_session_id" class="form-control"
+                autocomplete="off" placeholder="Session ID from Prolific URL">
         </div>
 
     </div>
