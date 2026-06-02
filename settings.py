@@ -1,5 +1,21 @@
 from os import environ
+from pathlib import Path
 
+
+def _load_dotenv():
+    """Carica .env in dev (funziona con `otree devserver` e altri comandi oTree)."""
+    env_path = Path(__file__).resolve().parent / '.env'
+    if not env_path.is_file():
+        return
+    for line in env_path.read_text(encoding='utf-8').splitlines():
+        line = line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        key, _, value = line.partition('=')
+        environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_dotenv()
 
 SESSION_CONFIGS = [
     dict(
@@ -24,7 +40,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     control_questions_max_attempts=5,  # Numero massimo di tentativi per le control questions
     skip_intro_control_questions=False,  # Temporarily disable intro control questions
     use_test_timers=False,  # Set all page timers to 60s for testing
-    require_prolific_id=True,  # Allow bypass of Prolific ID during local testing
+    require_prolific_id=True,  # False solo in dev locale; produzione: sempre True
 )
 
 PARTICIPANT_FIELDS = [
