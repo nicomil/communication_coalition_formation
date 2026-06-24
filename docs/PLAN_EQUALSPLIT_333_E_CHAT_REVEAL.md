@@ -2,7 +2,7 @@
 
 **Data:** 2026-06-24
 **Autore:** Claude Code (per validazione del professore)
-**Stato:** ✅ Decisioni del professore confermate (vedi Parte E) — pronto per l'implementazione. NESSUNA modifica al codice ancora applicata.
+**Stato:** ✅ IMPLEMENTATO sul branch `feat/treatment-public-communication` (in attesa di test del professore + merge su `main`). Test automatici superati per i config `bargaining_tdl_public`, `bargaining_tdl_private` e `bargaining_tdl` (12, 6/6 bilanciato, triadi omogenee).
 **Sostituisce:** la prima bozza (singola variante) — qui l'architettura è a **flussi alternativi randomizzati**.
 
 ---
