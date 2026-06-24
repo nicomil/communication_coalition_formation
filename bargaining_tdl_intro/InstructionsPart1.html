@@ -13,6 +13,16 @@
 
 {{ include_sibling '_instructions_content.html' }}
 
+{# === GANCIO ISTRUZIONI SPECIFICHE DEL TRATTAMENTO ===
+   Il testo definitivo sarà inserito dal professore.
+   Ramo 'public': avviso che le conversazioni saranno mostrate al terzo
+   partecipante prima della decisione finale (trasparenza/consenso). #}
+{% if reveal_third_party_chat %}
+<div class="alert alert-info mt-3" role="alert">
+    {# TODO (prof.): testo del ramo PUBLIC da inserire qui. #}
+</div>
+{% endif %}
+
 {{ next_button }}
 
 {{ endblock }}

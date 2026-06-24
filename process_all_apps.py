@@ -12,6 +12,7 @@ def process_all_apps(input_file, output_file):
         'playerid': 'participant.id_in_session',
         'participant_code': 'participant.code',
         'groupid': 'bargaining_tdl_main.1.group.id_in_subsession',
+        'treatment': 'bargaining_tdl_main.1.player.treatment',
         'inactive': 'participant.inactive_excluded',
         'left_player': 'bargaining_tdl_main.1.player.id_player_on_the_left',
         'right_player': 'bargaining_tdl_main.1.player.id_player_on_the_right',

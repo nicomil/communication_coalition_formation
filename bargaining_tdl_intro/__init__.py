@@ -91,6 +91,9 @@ from bargaining_tdl_common import (  # type: ignore
     has_passed_control_questions,
     set_control_questions_passed,
     get_logger,
+    assign_treatment,
+    get_treatment,
+    treatment_flag,
 )
 
 logger = get_logger('intro')
@@ -175,7 +178,7 @@ class Player(BasePlayer):
     example1_earnings_you = models.StringField(
         choices=[
             ['6', '$6'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -184,7 +187,7 @@ class Player(BasePlayer):
     example1_earnings_left = models.StringField(
         choices=[
             ['6', '$6'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -193,7 +196,7 @@ class Player(BasePlayer):
     example1_earnings_right = models.StringField(
         choices=[
             ['6', '$6'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -202,11 +205,11 @@ class Player(BasePlayer):
     
     # Control Questions - Example 2
     # Scenario: You (Green) share with both. Blue shares with Red only. Red shares with both.
-    # Result: Red=4, Green=4, Blue=4
+    # Result: Red=3, Green=3, Blue=3
     example2_earnings_you = models.StringField(
         choices=[
             ['6', '$6'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -215,7 +218,7 @@ class Player(BasePlayer):
     example2_earnings_left = models.StringField(
         choices=[
             ['6', '$6'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -224,7 +227,7 @@ class Player(BasePlayer):
     example2_earnings_right = models.StringField(
         choices=[
             ['6', '$6'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -237,7 +240,7 @@ class Player(BasePlayer):
     example3_earnings_you = models.StringField(
         choices=[
             ['6', '$6'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -246,7 +249,7 @@ class Player(BasePlayer):
     example3_earnings_left = models.StringField(
         choices=[
             ['6', '$6'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -255,7 +258,7 @@ class Player(BasePlayer):
     example3_earnings_right = models.StringField(
         choices=[
             ['6', '$6'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -288,6 +291,9 @@ class Welcome(Page):
 
     @staticmethod
     def vars_for_template(player):
+        # Assegnazione del trattamento al primo accesso (ordine di arrivo, blocchi di 3).
+        # Idempotente: non riassegna su refresh.
+        assign_treatment(player)
         return dict(require_prolific_id=_require_prolific_id(player))
 
     @staticmethod
@@ -319,7 +325,15 @@ class Welcome(Page):
 class InstructionsPart1(Page):
     form_model = 'player'
     form_fields = ['time_on_page']
-    
+
+    @staticmethod
+    def vars_for_template(player):
+        # Gancio per istruzioni specifiche del trattamento (testo a cura del prof.).
+        return dict(
+            treatment=get_treatment(player),
+            reveal_third_party_chat=bool(treatment_flag(player, 'reveal_third_party_chat', False)),
+        )
+
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_instructions_part1 = save_time_value(player.time_on_page)
@@ -352,12 +366,12 @@ def create_control_questions_class(attempt_number):
         # before_next_page. Questo è un secondo livello di sicurezza.
         timeout_submission = timeout_submission_with_time(
             _CONTROL_QUESTIONS_TIMEOUT,
-            example1_earnings_you='4',   # sbagliato (corretto: '6')
-            example1_earnings_left='4',  # sbagliato (corretto: '0')
-            example1_earnings_right='4', # sbagliato (corretto: '6')
-            example2_earnings_you='6',   # sbagliato (corretto: '4')
-            example2_earnings_left='6',  # sbagliato (corretto: '4')
-            example2_earnings_right='6', # sbagliato (corretto: '4')
+            example1_earnings_you='3',   # sbagliato (corretto: '6')
+            example1_earnings_left='3',  # sbagliato (corretto: '0')
+            example1_earnings_right='3', # sbagliato (corretto: '6')
+            example2_earnings_you='6',   # sbagliato (corretto: '3')
+            example2_earnings_left='6',  # sbagliato (corretto: '3')
+            example2_earnings_right='6', # sbagliato (corretto: '3')
             example3_earnings_you='6',   # sbagliato (corretto: '0')
             example3_earnings_left='6',  # sbagliato (corretto: '0')
             example3_earnings_right='6', # sbagliato (corretto: '0')
@@ -408,16 +422,16 @@ def create_control_questions_class(attempt_number):
             return {
                 'example1_scenario': (
                     "Imagine that you are the Yellow Participant, and chose to 'Split equally the $12 only with the Orange Participant' ($6 to you, $6 to the Orange Participant, $0 to the Purple Participant);<br>"
-                    "- The Purple Participant chooses to 'Split equally the $12 with both the two Participants'($4 to you, $4 to the Orange Participant, $4 to the Purple Participant); <br>"
+                    "- The Purple Participant chooses to 'Split equally the $12 with both the two Participants'($3 to you, $3 to the Orange Participant, $3 to the Purple Participant); <br>"
                     "- The Orange Participant chooses to 'Split equally the $12 only with the Yellow Participant'($6 to you, $6 to the Orange Participant, $0 to the Purple Participant)."
                 ),
                 'example2_scenario': (
-                    "Imagine that you are the Yellow Participant, and chose to 'Split equally the $12 with both the two Participants' ($4 to you, $4 to the Orange Participant, $4 to the Purple Participant);<br>"
+                    "Imagine that you are the Yellow Participant, and chose to 'Split equally the $12 with both the two Participants' ($3 to you, $3 to the Orange Participant, $3 to the Purple Participant);<br>"
                     "- The Purple Participant chooses to 'Split equally the $12 only with the Orange Participant' ($0 to you, $6 to the Orange Participant, $6 to the Purple Participant);<br>"
-                    "- The Orange Participant chooses to 'Split equally the $12 with both the two Participants' ($4 to you, $4 to the Orange Participant, $4 to the Purple Participant)."
+                    "- The Orange Participant chooses to 'Split equally the $12 with both the two Participants' ($3 to you, $3 to the Orange Participant, $3 to the Purple Participant)."
                 ),
                 'example3_scenario': (
-                    "Imagine that you are the Yellow Participant, and chose to 'Split equally the $12 with both the two Participants' ($4 to you, $4 to the Orange Participant, $4 to the Purple Participant);<br>"
+                    "Imagine that you are the Yellow Participant, and chose to 'Split equally the $12 with both the two Participants' ($3 to you, $3 to the Orange Participant, $3 to the Purple Participant);<br>"
                     "- The Purple Participant chooses to 'Split equally the $12 only with the Yellow Participant' ($6 to you, $0 to the Orange Participant, $6 to the Purple Participant);<br>"
                     "- The Orange Participant chooses to 'Split equally the $12 only with the Purple Participant' ($0 to you, $6 to the Orange Participant, $6 to the Purple Participant)."
                 ),
@@ -448,7 +462,7 @@ def create_control_questions_class(attempt_number):
             errors = []
             if not (player.example1_earnings_you == "6" and player.example1_earnings_left == "0" and player.example1_earnings_right == "6"):
                 errors.append("Example 1")
-            if not (player.example2_earnings_you == "4" and player.example2_earnings_left == "4" and player.example2_earnings_right == "4"):
+            if not (player.example2_earnings_you == "3" and player.example2_earnings_left == "3" and player.example2_earnings_right == "3"):
                 errors.append("Example 2")
             if not (player.example3_earnings_you == "0" and player.example3_earnings_left == "0" and player.example3_earnings_right == "0"):
                 errors.append("Example 3")

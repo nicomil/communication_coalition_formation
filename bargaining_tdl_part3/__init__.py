@@ -73,7 +73,7 @@ class Player(BasePlayer):
     example1_earnings_you = models.StringField(
         choices=[
             ['0', '$ 0'],
-            ['4', '$ 4'],
+            ['3', '$ 3'],
             ['6', '$ 6'],
         ],
         widget=widgets.RadioSelect,
@@ -82,7 +82,7 @@ class Player(BasePlayer):
     example1_earnings_left = models.StringField(
         choices=[
             ['0', '$ 0'],
-            ['4', '$ 4'],
+            ['3', '$ 3'],
             ['6', '$ 6'],
         ],
         widget=widgets.RadioSelect,
@@ -91,7 +91,7 @@ class Player(BasePlayer):
     example1_earnings_right = models.StringField(
         choices=[
             ['0', '$0'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['6', '$6'],
         ],
         widget=widgets.RadioSelect,
@@ -102,7 +102,7 @@ class Player(BasePlayer):
     example2_earnings_you = models.StringField(
         choices=[
             ['0', '$0'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['6', '$6'],
         ],
         widget=widgets.RadioSelect,
@@ -111,7 +111,7 @@ class Player(BasePlayer):
     example2_earnings_left = models.StringField(
         choices=[
             ['0', '$0'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['6', '$6'],
         ],
         widget=widgets.RadioSelect,
@@ -120,7 +120,7 @@ class Player(BasePlayer):
     example2_earnings_right = models.StringField(
         choices=[
             ['0', '$0'],
-            ['4', '$4'],
+            ['3', '$3'],
             ['6', '$6'],
         ],
         widget=widgets.RadioSelect,
@@ -193,7 +193,7 @@ class InstructionsPart3(Page):
         if order_key not in player.participant.vars:
             options = [
                 {'value': 'share_one',  'label': '<strong>Equally split the $12 with only one of the two RECEIVERS</strong> <em>($6 to you, $6 to one RECEIVER, and $0 to the other RECEIVER).</em>'},
-                {'value': 'share_both', 'label': '<strong>Equally split the $12 between myself and the other two RECEIVERS</strong> <em>($4 to you and $4 to each of the RECEIVERS).</em>'},
+                {'value': 'share_both', 'label': '<strong>Equally split the $12 between myself and the other two RECEIVERS</strong> <em>($3 to you and $3 to each of the RECEIVERS).</em>'},
             ]
             random.shuffle(options)
             player.participant.vars[order_key] = options
@@ -242,12 +242,12 @@ def create_control_questions_part3_class(attempt_number):
         _CONTROL_QUESTIONS_TIMEOUT = 180
         timeout_submission = timeout_submission_with_time(
             _CONTROL_QUESTIONS_TIMEOUT,
-            example1_earnings_you='4',
-            example1_earnings_left='4',
-            example1_earnings_right='4',
-            example2_earnings_you='4',
-            example2_earnings_left='4',
-            example2_earnings_right='4',
+            example1_earnings_you='3',
+            example1_earnings_left='3',
+            example1_earnings_right='3',
+            example2_earnings_you='0',
+            example2_earnings_left='0',
+            example2_earnings_right='0',
         )
 
         @staticmethod

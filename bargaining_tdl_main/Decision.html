@@ -182,6 +182,38 @@
     </div>
 </div>
 
+{% if reveal_third_party_chat %}
+<div class="row mt-3">
+    <div class="col-md-12">
+        <div class="card border-info">
+            <div class="card-header">
+                Conversation between the <strong>{{ left_partner_color }}</strong> and
+                <strong>{{ right_partner_color }}</strong> Participants
+            </div>
+            <div class="card-body px-5 py-4">
+                <div class="signal-box">
+                    Final Message from {{ left_partner_color }} Participant: {{ third_signal_from_left }}
+                </div>
+                <div class="signal-box">
+                    Final Message from {{ right_partner_color }} Participant: {{ third_signal_from_right }}
+                </div>
+                <h6>Chat Log (Read-Only):</h6>
+                <div class="message-box read-only-chat">
+                    <div class="otree-chat__messages">
+                        {% for row in third_chat_rows %}
+                        <p class="mb-1"><strong>{{ row.speaker }}:</strong> {{ row.body }}</p>
+                        {% endfor %}
+                        {% if not third_chat_rows %}
+                        <p class="text-muted mb-0"><em>No messages were exchanged.</em></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <hr>
 
 <div class="card border-secondary">

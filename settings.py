@@ -17,16 +17,41 @@ def _load_dotenv():
 
 _load_dotenv()
 
+_BARGAINING_APP_SEQUENCE = [
+    'bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_part3', 'bargaining_tdl_survey',
+]
+_BARGAINING_COMPLETIONLINK = environ.get(
+    'PROLIFIC_COMPLETION_URL',
+    'https://app.prolific.com/submissions/complete?cc=C1HQEIID',
+)
+
 SESSION_CONFIGS = [
+    # Produzione A/B: entrambi i trattamenti, randomizzati internamente (blocchi di 3).
     dict(
         name='bargaining_tdl',
         display_name="Bargaining Game (TDL + Async)",
-        app_sequence=['bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_part3', 'bargaining_tdl_survey'],
+        app_sequence=_BARGAINING_APP_SEQUENCE,
+        num_demo_participants=12,
+        completionlink=_BARGAINING_COMPLETIONLINK,
+        active_treatments=['private', 'public'],
+    ),
+    # Solo nuovo trattamento (comunicazione pubblica), per test ISOLATO.
+    dict(
+        name='bargaining_tdl_public',
+        display_name="Bargaining Game — Public communication only",
+        app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=9,
-        completionlink=environ.get(
-            'PROLIFIC_COMPLETION_URL',
-            'https://app.prolific.com/submissions/complete?cc=C1HQEIID',
-        ),
+        completionlink=_BARGAINING_COMPLETIONLINK,
+        active_treatments=['public'],
+    ),
+    # Solo baseline (comunicazione privata), per test ISOLATO.
+    dict(
+        name='bargaining_tdl_private',
+        display_name="Bargaining Game — Private communication only",
+        app_sequence=_BARGAINING_APP_SEQUENCE,
+        num_demo_participants=9,
+        completionlink=_BARGAINING_COMPLETIONLINK,
+        active_treatments=['private'],
     ),
 ]
 

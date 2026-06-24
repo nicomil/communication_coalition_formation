@@ -22,6 +22,9 @@ from bargaining_tdl_common import (  # type: ignore
     TOPOLOGY,
     get_left_partner_id,
     get_right_partner_id,
+    get_partner_side,
+    get_treatment,
+    treatment_flag,
 )
 
 logger = get_logger('main')
@@ -57,7 +60,7 @@ class C(BaseConstants):
     PLAYERS_PER_GROUP = 3
     NUM_ROUNDS = 1
     PAYOFF_MAX = cu(6)
-    PAYOFF_SPLIT = cu(4)
+    PAYOFF_SPLIT = cu(3)
     PAYOFF_DISAGREEMENT = cu(0)
     CHAT_RECONNECT_WINDOW_SECONDS = 90
     # Heartbeat tolerance tuned to avoid false disconnect flicker under network jitter.
@@ -66,6 +69,27 @@ class C(BaseConstants):
 
 class Subsession(BaseSubsession):
     pass
+
+
+def group_by_arrival_time_method(subsession, waiting_players):
+    """
+    Forma triadi OMOGENEE per trattamento (requisito del gioco a 3) e composte
+    solo da chi ha superato le control questions.
+
+    Chi fallisce le CQ termina già nell'intro e non arriva qui; il filtro è
+    comunque difensivo. Per ogni trattamento si forma un gruppo non appena ci
+    sono almeno PLAYERS_PER_GROUP partecipanti in attesa con lo stesso trattamento.
+    """
+    from collections import defaultdict
+    pools = defaultdict(list)
+    for p in waiting_players:
+        if has_failed_control_questions(p, 'intro'):
+            continue
+        pools[get_treatment(p)].append(p)
+    for _treatment, players in pools.items():
+        if len(players) >= C.PLAYERS_PER_GROUP:
+            return players[:C.PLAYERS_PER_GROUP]
+    return None
 
 class Group(BaseGroup):
     # Group-level variables for CSV export
@@ -89,6 +113,8 @@ class Group(BaseGroup):
 class Player(BasePlayer):
     # Color assigned to this player (Red/Green/Blue), stored for CSV export clarity
     player_color = models.StringField(blank=True)
+    # Trattamento sperimentale del partecipante (es. 'private'/'public'), per CSV export
+    treatment = models.StringField(blank=True)
     
     # Campo per salvare il vero payoff calcolato per tracciabilità nel DB
     part1_calculated_payoff = models.CurrencyField(
@@ -460,6 +486,58 @@ def _chat_rows_for_decision(player: Player, channel: str, partner_label: str):
     return formatted
 
 
+def _third_party_chat_rows(player: Player, channel: str):
+    """
+    Righe della chat tra gli ALTRI due partecipanti (canale di cui il viewer non
+    fa parte), etichettate col colore reale del mittente. Sola lettura.
+    Usato dal trattamento 'public' nella Decision finale.
+    """
+    try:
+        from otree.models_concrete import ChatMessage  # type: ignore
+    except Exception:
+        return []
+    try:
+        rows = list(ChatMessage.objects_filter(channel=channel).order_by('timestamp'))
+    except Exception:
+        return []
+
+    color_by_pid = {
+        p.participant.id: COLOR_MAPPING[p.id_in_group]
+        for p in player.group.get_players()
+    }
+    formatted = []
+    for row in rows:
+        speaker_color = color_by_pid.get(row.participant_id, '')
+        speaker = f"{speaker_color} Participant" if speaker_color else 'Participant'
+        formatted.append(dict(speaker=speaker, body=row.body or ''))
+    return formatted
+
+
+def _third_party_signal_display(code, receiver_color, other_color):
+    """
+    Testo del 'Final Message' inviato da un partner all'altro, visto da un terzo.
+    A differenza di _signal_display_text, nomina il colore del destinatario invece
+    di usare "you" (il viewer non è il destinatario).
+    """
+    if code == 'split_you':
+        return f"I wish to split the $12 equally with the {receiver_color} Participant only."
+    elif code == 'split_other':
+        return f"I wish to split the $12 equally with the other Participant only, the {other_color} Participant."
+    elif code == 'split_both':
+        return f"I wish to split the $12 equally with both the {receiver_color} and the {other_color} Participants."
+    return code or ""
+
+
+def _directed_signal_code(sender: Player, target_id: int):
+    """Restituisce il codice del segnale che `sender` ha inviato al partner `target_id`."""
+    side = get_partner_side(sender.id_in_group, target_id)
+    if side == 'left':
+        return sender.field_maybe_none('signal_left')
+    if side == 'right':
+        return sender.field_maybe_none('signal_right')
+    return None
+
+
 def map_player_data_in_group(group: Group):
     """
     Mappa i dati tra i player nel gruppo seguendo la topology circolare.
@@ -549,6 +627,7 @@ class GroupingAfterControlQuestions(WaitPage):
         for p in group.get_players():
             p.time_welcome = p.participant.vars.get('time_welcome', 0)
             p.player_color = get_player_color(p.id_in_group)
+            p.treatment = get_treatment(p)
             p.chat_interrupted = False
             p.participant_left_ts = 0
             p.part1_payoff_eligible = True
@@ -822,6 +901,31 @@ class Decision(Page):
             channel_right,
             f"{colors['right_partner_color']} Participant",
         )
+
+        # ===== Trattamento 'public': rivelazione della coppia di terzi =====
+        # Canale tra i due partner (di cui il viewer NON fa parte).
+        reveal_third_party = bool(treatment_flag(player, 'reveal_third_party_chat', False))
+        third_chat_rows = []
+        third_signal_from_left = ""
+        third_signal_from_right = ""
+        if reveal_third_party:
+            third_a, third_b = sorted((left_id, right_id))
+            channel_third = f"{group_id}_{third_a}_{third_b}"
+            third_chat_rows = _third_party_chat_rows(player, channel_third)
+
+            left_partner = player.group.get_player_by_id(left_id)
+            right_partner = player.group.get_player_by_id(right_id)
+            # Final Message inviato dal partner left al partner right e viceversa.
+            third_signal_from_left = _third_party_signal_display(
+                _directed_signal_code(left_partner, right_id),
+                colors['right_partner_color'],
+                colors['my_color'],
+            )
+            third_signal_from_right = _third_party_signal_display(
+                _directed_signal_code(right_partner, left_id),
+                colors['left_partner_color'],
+                colors['my_color'],
+            )
         options = [
             {
                 'value': 'Left', 
@@ -838,8 +942,8 @@ class Decision(Page):
             {
                 'value': 'Both', 
                 'id': 'dc_both', 
-                'label': 'I would like to divide the $12 equally with the two other Participants', 
-                'details': f'($4 to you, $4 to the {colors["left_partner_color"]} Participant, $4 to the {colors["right_partner_color"]} Participant)'
+                'label': 'I would like to divide the $12 equally with the two other Participants',
+                'details': f'($3 to you, $3 to the {colors["left_partner_color"]} Participant, $3 to the {colors["right_partner_color"]} Participant)'
             },
         ]
         import random
@@ -852,6 +956,10 @@ class Decision(Page):
             received_signal_right_display=received_right_display,
             left_chat_rows=left_chat_rows,
             right_chat_rows=right_chat_rows,
+            reveal_third_party_chat=reveal_third_party,
+            third_chat_rows=third_chat_rows,
+            third_signal_from_left=third_signal_from_left,
+            third_signal_from_right=third_signal_from_right,
             signals_expired=bool(player.signal_inactive == 99),
             reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
             decision_options=options,

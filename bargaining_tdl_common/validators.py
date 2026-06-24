@@ -151,9 +151,9 @@ def check_control_questions_intro(player):
         player.example1_earnings_you == "6" and
         player.example1_earnings_left == "0" and
         player.example1_earnings_right == "6" and
-        player.example2_earnings_you == "4" and
-        player.example2_earnings_left == "4" and
-        player.example2_earnings_right == "4" and
+        player.example2_earnings_you == "3" and
+        player.example2_earnings_left == "3" and
+        player.example2_earnings_right == "3" and
         player.example3_earnings_you == "0" and
         player.example3_earnings_left == "0" and
         player.example3_earnings_right == "0"
@@ -180,7 +180,7 @@ def check_control_questions_part3(player):
         not player.example2_earnings_right):
         return False
     
-    # Example 1: tutte le risposte devono essere '4'
+    # Example 1: tutte le risposte devono essere '3'
     # Example 2: you='6', e poi (left='0', right='6') OPPURE (left='6', right='0')
     example2_correct = (
         player.example2_earnings_you == '6' and
@@ -191,9 +191,9 @@ def check_control_questions_part3(player):
     )
 
     correct = (
-        player.example1_earnings_you == '4' and
-        player.example1_earnings_left == '4' and
-        player.example1_earnings_right == '4' and
+        player.example1_earnings_you == '3' and
+        player.example1_earnings_left == '3' and
+        player.example1_earnings_right == '3' and
         example2_correct
     )
     return correct

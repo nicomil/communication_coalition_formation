@@ -42,6 +42,15 @@ from .utils import (
     get_partner_side,
     get_partner_colors,
 )
+from .treatments import (
+    TREATMENTS,
+    DEFAULT_TREATMENT,
+    DEFAULT_ACTIVE_TREATMENTS,
+    get_active_treatments,
+    get_treatment,
+    treatment_flag,
+    assign_treatment,
+)
 from .mixins import TimeTrackedPage
 from .logger import get_logger, logger, info, warning, error, debug
 
@@ -74,6 +83,13 @@ __all__ = [
     'get_right_partner_id',
     'get_partner_side',
     'get_partner_colors',
+    'TREATMENTS',
+    'DEFAULT_TREATMENT',
+    'DEFAULT_ACTIVE_TREATMENTS',
+    'get_active_treatments',
+    'get_treatment',
+    'treatment_flag',
+    'assign_treatment',
     'TimeTrackedPage',
     'get_logger',
     'logger',

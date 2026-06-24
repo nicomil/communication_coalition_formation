@@ -145,7 +145,7 @@ class PlayerBot(Bot):
         
         # Verifica payoff specifici in base al case
         if case == 'all_both':
-            expect(self.player.part1_calculated_payoff, C.PAYOFF_SPLIT)  # 4
+            expect(self.player.part1_calculated_payoff, C.PAYOFF_SPLIT)  # 3
         elif case == 'match_12':
             if id_in_group in [1, 2]:
                 expect(self.player.part1_calculated_payoff, C.PAYOFF_MAX)  # 6
