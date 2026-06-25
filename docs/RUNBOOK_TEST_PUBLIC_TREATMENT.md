@@ -41,11 +41,11 @@ cp .env.example .env               # config locale di default
 otree devserver
 ```
 
-Apri http://localhost:8000 . Se vedi errori di middleware Starlette, usa invece:
+Apri http://localhost:8000 .
 
-```bash
-python run_devserver.py
-```
+> La compatibilità con Starlette recente è gestita automaticamente in `settings.py`,
+> quindi `otree devserver` funziona nativamente. (Resta disponibile `python
+> run_devserver.py` come fallback, ma non è più necessario.)
 
 ---
 
