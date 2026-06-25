@@ -37,15 +37,18 @@ cp .env.example .env               # config locale di default
 
 ## 2. Avvia il server
 
+**Importante:** assicurati di avere il `.venv` ATTIVO (contiene le versioni
+esatte richieste da oTree 6.0.14: `starlette 0.14.1`, `sqlalchemy 1.3.22`).
+Se lanci `otree` dal Python di sistema/pyenv con pacchetti più recenti, va in
+errore (Starlette/SQLAlchemy incompatibili).
+
 ```bash
+source .venv/bin/activate     # Windows: .venv\Scripts\activate
 otree devserver
 ```
 
-Apri http://localhost:8000 .
-
-> La compatibilità con Starlette recente è gestita automaticamente in `settings.py`,
-> quindi `otree devserver` funziona nativamente. (Resta disponibile `python
-> run_devserver.py` come fallback, ma non è più necessario.)
+Apri http://localhost:8000 . Se per qualunque motivo `otree` punta al Python
+sbagliato, usa il binario del venv in modo esplicito: `.venv/bin/otree devserver`.
 
 ---
 
