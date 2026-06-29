@@ -213,7 +213,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earnings be ?"
+        label="What would your earnings be as Yellow Participant ?"
     )
     example2_earnings_left = models.StringField(
         choices=[
@@ -244,7 +244,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earnings be ?"
+        label="What would your earnings be as Yellow Participant ?"
     )
     example3_earnings_left = models.StringField(
         choices=[
