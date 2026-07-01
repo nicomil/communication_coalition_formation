@@ -359,6 +359,35 @@ def _advance_interrupted_player_to_waitpage(group: Group, wait_page_index: int):
             break
 
 
+def _force_advance_lagging_chat_player(group: Group):
+    """
+    Rete di sicurezza server-side: se 2 dei 3 giocatori hanno già lasciato la
+    Chat regolarmente ma il terzo no, lo facciamo avanzare noi (indipendentemente
+    da 'interrupted_player_id', che potrebbe essere occupato da un falso
+    positivo di dropout su uno degli altri due). Copre i casi in cui il push
+    client-side 'should_auto_advance' non arriva (tab in background, glitch di
+    rete) e non c'è nessun altro meccanismo che lo forzi avanti.
+    """
+    statuses = _chat_left_state(group)
+    lagging_ids = [pid for pid, left in statuses.items() if not left]
+    if len(lagging_ids) != 1:
+        return
+
+    lagging_player = group.get_player_by_id(lagging_ids[0])
+    participant = lagging_player.participant
+    page = participant._get_page_instance()
+    if not page or page.__class__.__name__ != 'Chat':
+        return
+
+    try:
+        participant._submit_current_page()
+        participant._visit_current_page()
+    except Exception as exc:
+        logger.warning(
+            f"Could not force-advance lagging chat participant {participant.code}: {exc}"
+        )
+
+
 def _mark_group_dropped(group: Group):
     group.group_dropped = True
     # We do NOT set group.part1_payoff_eligible = False globally anymore.
@@ -406,11 +435,14 @@ def _evaluate_dropout(group: Group):
         return
 
     # Controlliamo se qualcuno è sparito (nessun ping recente e non ha ancora finito la fase)
-    # Nota: escludiamo chi ha già finito la fase di chat (chat_left_pX)
+    # Nota: escludiamo chi ha già finito la fase di chat (chat_left_pX). L'heartbeat
+    # esiste solo su Chat.html, quindi dopo l'uscita dalla chat il last_ping si
+    # congela per design: non va interpretato come disconnessione.
+    left_state = _chat_left_state(group)
     for player_id in [1, 2, 3]:
-        # Se il giocatore ha già lasciato la chat regolarmente, non è un dropout qui
-        # Ma se siamo in Signals/Decision, dobbiamo monitorare comunque.
-        # Per semplicità monitoriamo chiunque non sia in "grace period" (invio form)
+        if left_state[player_id]:
+            continue
+
         grace_until = _get_submit_grace_until(group, player_id)
         if grace_until and now < grace_until:
             continue
@@ -459,31 +491,6 @@ def _chat_status_payload(player: Player):
         waiting_on_reconnect=bool(interrupted_id and interrupted_id != my_id and reconnect_seconds_left > 0),
         reconnect_seconds_left=reconnect_seconds_left,
     )
-
-
-def _chat_rows_for_decision(player: Player, channel: str, partner_label: str):
-    """Return chat history formatted for read-only rendering on Decision page."""
-    try:
-        from otree.models_concrete import ChatMessage  # type: ignore
-    except Exception:
-        return []
-
-    try:
-        rows = list(ChatMessage.objects_filter(channel=channel).order_by('timestamp'))
-    except Exception:
-        return []
-
-    my_participant_id = player.participant.id
-    formatted = []
-    for row in rows:
-        speaker = 'You' if row.participant_id == my_participant_id else partner_label
-        formatted.append(
-            dict(
-                speaker=speaker,
-                body=row.body or '',
-            )
-        )
-    return formatted
 
 
 def _third_party_chat_rows(player: Player, channel: str):
@@ -826,6 +833,7 @@ class DataMappingWaitPage(WaitPage):
         _advance_interrupted_player_to_waitpage(
             player.group, player.participant._index_in_pages
         )
+        _force_advance_lagging_chat_player(player.group)
         return {}
 
     @staticmethod
@@ -891,17 +899,6 @@ class Decision(Page):
             colors['left_partner_color'],
             sender_inactive=right_inactive,
         )
-        left_chat_rows = _chat_rows_for_decision(
-            player,
-            channel_left,
-            f"{colors['left_partner_color']} Participant",
-        )
-        right_chat_rows = _chat_rows_for_decision(
-            player,
-            channel_right,
-            f"{colors['right_partner_color']} Participant",
-        )
-
         # ===== Trattamento 'public': rivelazione della coppia di terzi =====
         # Canale tra i due partner (di cui il viewer NON fa parte).
         reveal_third_party = bool(treatment_flag(player, 'reveal_third_party_chat', False))
@@ -911,7 +908,11 @@ class Decision(Page):
         if reveal_third_party:
             third_a, third_b = sorted((left_id, right_id))
             channel_third = f"{group_id}_{third_a}_{third_b}"
-            third_chat_rows = _third_party_chat_rows(player, channel_third)
+            # ChatMessage.channel è salvato con lo stesso prefisso che oTree
+            # applica nel tag template {% chat %} (vedi otree/chat.py); qui
+            # interroghiamo il DB direttamente quindi dobbiamo replicarlo.
+            prefixed_channel_third = f"{player.session.id}-{C.NAME_IN_URL}-{channel_third}"
+            third_chat_rows = _third_party_chat_rows(player, prefixed_channel_third)
 
             left_partner = player.group.get_player_by_id(left_id)
             right_partner = player.group.get_player_by_id(right_id)
@@ -954,8 +955,6 @@ class Decision(Page):
             channel_right=channel_right,
             received_signal_left_display=received_left_display,
             received_signal_right_display=received_right_display,
-            left_chat_rows=left_chat_rows,
-            right_chat_rows=right_chat_rows,
             reveal_third_party_chat=reveal_third_party,
             third_chat_rows=third_chat_rows,
             third_signal_from_left=third_signal_from_left,
