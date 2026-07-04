@@ -441,6 +441,9 @@ def create_control_questions_class(attempt_number):
                 'is_first_attempt': attempt_number == 1,
                 'cq_errors': player.participant.vars.get('intro_cq_errors', []),
                 'cq_errors_str': ", ".join(player.participant.vars.get('intro_cq_errors', [])),
+                # Serve al partial _instructions_content.html per mostrare il testo
+                # di visibilità messaggi corretto per il trattamento.
+                'reveal_third_party_chat': bool(treatment_flag(player, 'reveal_third_party_chat', False)),
             }
 
         @staticmethod

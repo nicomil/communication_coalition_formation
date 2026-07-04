@@ -11,17 +11,9 @@
 {{ include_sibling '_button_style.html' }}
 {{ include '_templates/global/_time_tracking_field.html' }}
 
+{# Il partial contiene i due rami di testo (PUBLIC/PRIVATE) selezionati da
+   reveal_third_party_chat: le istruzioni dei due trattamenti sono indipendenti. #}
 {{ include_sibling '_instructions_content.html' }}
-
-{# === GANCIO ISTRUZIONI SPECIFICHE DEL TRATTAMENTO ===
-   Il testo definitivo sarà inserito dal professore.
-   Ramo 'public': avviso che le conversazioni saranno mostrate al terzo
-   partecipante prima della decisione finale (trasparenza/consenso). #}
-{% if reveal_third_party_chat %}
-<div class="alert alert-info mt-3" role="alert">
-    {# TODO (prof.): testo del ramo PUBLIC da inserire qui. #}
-</div>
-{% endif %}
 
 {{ next_button }}
 

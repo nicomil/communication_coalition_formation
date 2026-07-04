@@ -125,6 +125,15 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             setInterval(checkTimer, 500);
+            // Heartbeat verso il server: i giocatori già su Signals (usciti dalla
+            // chat) fanno da "traino" per l'eventuale terzo rimasto bloccato sulla
+            // Chat. Ad ogni ping il server valuta il dropout e, se due su tre hanno
+            // lasciato la chat, accompagna avanti il terzo (vedi Signals.live_method).
+            setInterval(function () {
+                if (typeof window.liveSend === 'function') {
+                    window.liveSend({ type: 'heartbeat' });
+                }
+            }, 2000);
         });
     })();
 </script>

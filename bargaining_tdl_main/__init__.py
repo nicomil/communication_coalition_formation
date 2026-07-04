@@ -386,6 +386,27 @@ def _force_advance_lagging_chat_player(group: Group):
         logger.warning(
             f"Could not force-advance lagging chat participant {participant.code}: {exc}"
         )
+        return
+
+    # Avanzare l'indice lato server non basta: il browser resta sulla Chat finché
+    # non riceve la notifica di auto-advance (come fa oTree in
+    # Session.advance_last_place_participants). Senza questa, il terzo resta fermo
+    # a video anche se il server l'ha già portato a Signals.
+    _notify_browser_auto_advance(participant)
+
+
+def _notify_browser_auto_advance(participant):
+    """Dice al browser del partecipante di navigare alla pagina server corrente."""
+    try:
+        import otree.channels.utils as channel_utils
+        channel_utils.sync_group_send(
+            group=channel_utils.auto_advance_group(participant.code),
+            data={'auto_advanced': True},
+        )
+    except Exception as exc:
+        logger.warning(
+            f"Could not notify auto-advance for participant {participant.code}: {exc}"
+        )
 
 
 def _mark_group_dropped(group: Group):
@@ -676,6 +697,7 @@ class Chat(Page):
             channel_right=channel_right,
             chat_timeout_seconds=get_page_timeout_seconds(player, Chat._CHAT_TIMEOUT),
             reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
+            reveal_third_party_chat=bool(treatment_flag(player, 'reveal_third_party_chat', False)),
             **_chat_status_payload(player),
             **colors,
         )
@@ -756,6 +778,10 @@ class Signals(Page):
             player.participant_left_ts = now
 
         _evaluate_dropout(player.group)
+        # Chi è già su Signals fa da traino: se il terzo è rimasto indietro sulla
+        # Chat mentre gli altri due l'hanno lasciata, lo accompagniamo avanti dal
+        # contesto di un ALTRO partecipante (pattern sicuro, come su DataMappingWaitPage).
+        _force_advance_lagging_chat_player(player.group)
         return {
             p.id_in_group: _chat_status_payload(p)
             for p in player.group.get_players()

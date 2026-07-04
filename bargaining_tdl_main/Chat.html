@@ -83,6 +83,9 @@
 <p>
     <li>When you finish to chat, click the button <em>Next</em> to proceed.</li>
 </p>
+{# === Promemoria visibilità messaggi: specifico del trattamento === #}
+{% if reveal_third_party_chat %}
+{# ---- Ramo PUBLIC ---- #}
 <p>
     <li><strong>Please remember that messages are
             public</strong>: the {{ left_partner_color }} Participant can read your exchanges with the {{
@@ -90,6 +93,16 @@
         Participant, and the {{ right_partner_color }} Participant can read your exchanges with the
         {{ left_partner_color }} Participant.</li>
 </p>
+{% else %}
+{# ---- Ramo PRIVATE ---- #}
+<p>
+    <li><strong>Please remember that messages are
+            private</strong>: the {{ left_partner_color }} Participant cannot read your exchanges with the {{
+        right_partner_color }}
+        Participant, and the {{ right_partner_color }} Participant cannot read your exchanges with the
+        {{ left_partner_color }} Participant.</li>
+</p>
+{% endif %}
 <p></p>
 <p>
 <h4> You are the {{ my_color }} Participant.</h4>
