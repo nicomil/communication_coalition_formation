@@ -111,7 +111,7 @@ class Group(BaseGroup):
     part1_payoff_eligible = models.BooleanField(initial=True)
 
 class Player(BasePlayer):
-    # Color assigned to this player (Red/Green/Blue), stored for CSV export clarity
+    # Color assigned to this player (Yellow/Orange/Purple), stored for CSV export clarity
     player_color = models.StringField(blank=True)
     # Trattamento sperimentale del partecipante (es. 'private'/'public'), per CSV export
     treatment = models.StringField(blank=True)

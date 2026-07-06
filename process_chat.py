@@ -24,7 +24,7 @@ def process_chat(input_file, output_file):
                 sender_id = None
                 receiver_id = None
                 
-                # Topologia fissa: 1(Red) -> Left=3(Blue), Right=2(Green)
+                # Topologia fissa: 1(Yellow) -> Left=3(Purple), Right=2(Orange)
                 # La channel usa sempre id in ordine crescente (min_max)
                 # Il Nickname nella chat è "LeftPartner" o "RightPartner" ed è sempre opposto alla label di chi manda.
                 if (idA, idB) == (1, 2):
@@ -39,7 +39,7 @@ def process_chat(input_file, output_file):
                     sender_id = 3 if nickname == "LeftPartner" else 1
                     receiver_id = 1 if nickname == "LeftPartner" else 3
                 
-                colors = {1: 'Red', 2: 'Green', 3: 'Blue'}
+                colors = {1: 'Yellow', 2: 'Orange', 3: 'Purple'}
                 
                 row['group_id'] = group_id
                 row['From'] = colors.get(sender_id, "Unknown")

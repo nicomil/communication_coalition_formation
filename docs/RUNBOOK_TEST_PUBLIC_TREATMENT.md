@@ -8,8 +8,8 @@ Guida per provare in locale le nuove modifiche del branch
 1. **Divisione equa 3,3,3** (globale): dividere il $12 "tra tutti e tre" ora paga
    **$3/$3/$3** invece di $4/$4/$4. Le altre divisioni restano 6/6/0 e 0/0/0.
 2. **Trattamento "public"**: nella scelta finale (pagina *Decision*) il partecipante
-   vede **anche la conversazione e i messaggi finali tra gli altri due** (es. il Green
-   legge la chat Red↔Blue). Nel trattamento "private" (baseline) questo non accade.
+   vede **anche la conversazione e i messaggi finali tra gli altri due** (es. il Orange
+   legge la chat Yellow↔Purple). Nel trattamento "private" (baseline) questo non accade.
 
 L'assegnazione al trattamento è automatica e bilanciata (a blocchi di 3 per ordine di
 arrivo). Per i test puoi usare le **session config isolate** così provi un solo
@@ -82,7 +82,7 @@ sbagliato, usa il binario del venv in modo esplicito: `.venv/bin/otree devserver
       *"Conversation between the … and … Participants"* con la chat tra gli altri due
       e i loro **due messaggi finali**, etichettati col colore corretto.
 - [ ] I messaggi della chat di terzi mostrano il **colore reale** di chi ha scritto
-      (Red/Green/Blue), non "you" o "LeftPartner".
+      (Yellow/Orange/Purple), non "you" o "LeftPartner".
 - [ ] Nel trattamento **private** (`bargaining_tdl_private`) quella terza sezione
       **non** compare (comportamento attuale invariato).
 

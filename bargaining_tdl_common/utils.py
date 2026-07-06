@@ -188,11 +188,11 @@ def get_participant_role_in_group(player):
 
 # ============================================================================
 # COLOR-BASED PLAYER IDENTIFICATION
-# Each player in a triad is identified by a color: Red, Green, Blue.
+# Each player in a triad is identified by a color: Yellow, Orange, Purple.
 # Always referenced as written text for colorblind accessibility.
 # ============================================================================
 
-COLOR_MAPPING = {1: 'Red', 2: 'Green', 3: 'Blue'}
+COLOR_MAPPING = {1: 'Yellow', 2: 'Orange', 3: 'Purple'}
 ROLE_TO_ID = {'A': 1, 'B': 2, 'C': 3}
 ID_TO_ROLE = {1: 'A', 2: 'B', 3: 'C'}
 
@@ -204,7 +204,7 @@ TOPOLOGY = {
 
 
 def get_player_color(id_in_group):
-    """Returns the color name for a given id_in_group (1=Red, 2=Green, 3=Blue)."""
+    """Returns the color name for a given id_in_group (1=Yellow, 2=Orange, 3=Purple)."""
     return COLOR_MAPPING.get(id_in_group, 'Unknown')
 
 

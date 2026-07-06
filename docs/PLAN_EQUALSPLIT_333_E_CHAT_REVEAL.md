@@ -16,7 +16,7 @@
    - **`private`** (attuale): nella scelta finale vedi solo le conversazioni di cui hai
      fatto parte.
    - **`public`** (novità): nella scelta finale vedi **anche** la chat tra gli altri due
-     partecipanti (es. Green legge la chat Red↔Blue).
+      partecipanti (es. Orange legge la chat Yellow↔Purple).
 3. **Meccanismo interno generico** per ospitare con semplicità **N esperimenti futuri**,
    non solo questi due.
 4. **Randomizzazione interna a oTree** su **un solo link Prolific**: assegnazione casuale

@@ -182,7 +182,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earnings be as Yellow Participant ?"
+        label="What would your earnings be as Green Participant ?"
     )
     example1_earnings_left = models.StringField(
         choices=[
@@ -191,7 +191,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the Purple Participant ?"
+        label="What would be the earnings for the Red Participant ?"
     )
     example1_earnings_right = models.StringField(
         choices=[
@@ -200,12 +200,12 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the Orange Participant?"
+        label="What would be the earnings for the Blue Participant?"
     )
     
     # Control Questions - Example 2
-    # Scenario: You (Green) share with both. Blue shares with Red only. Red shares with both.
-    # Result: Red=3, Green=3, Blue=3
+    # Scenario: You (Green) share with both. Purple shares with Yellow only. Yellow shares with both.
+    # Result: Yellow=3, Green=3, Purple=3
     example2_earnings_you = models.StringField(
         choices=[
             ['6', '$6'],
@@ -213,7 +213,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earnings be as Yellow Participant ?"
+        label="What would your earnings be as Green Participant ?"
     )
     example2_earnings_left = models.StringField(
         choices=[
@@ -222,7 +222,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the Purple Participant ?"
+        label="What would be the earnings for the Red Participant ?"
     )
     example2_earnings_right = models.StringField(
         choices=[
@@ -231,12 +231,12 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the Orange Participant ?"
+        label="What would be the earnings for the Blue Participant ?"
     )
     
     # Control Questions - Example 3
-    # Scenario: You (Green) share with both. Blue shares with you (Green) only. Red shares with Blue only.
-    # Result: Red=0, Green=0, Blue=0
+    # Scenario: You (Green) share with both. Purple shares with you (Green) only. Yellow shares with Purple only.
+    # Result: Yellow=0, Green=0, Purple=0
     example3_earnings_you = models.StringField(
         choices=[
             ['6', '$6'],
@@ -244,7 +244,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earnings be as Yellow Participant ?"
+        label="What would your earnings be as Green Participant ?"
     )
     example3_earnings_left = models.StringField(
         choices=[
@@ -253,7 +253,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the Purple Participant ?"
+        label="What would be the earnings for the Red Participant ?"
     )
     example3_earnings_right = models.StringField(
         choices=[
@@ -262,7 +262,7 @@ class Player(BasePlayer):
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the Orange Participant ?"
+        label="What would be the earnings for the Blue Participant ?"
     )
     
 
@@ -421,19 +421,19 @@ def create_control_questions_class(attempt_number):
             
             return {
                 'example1_scenario': (
-                    "Imagine that you are the Yellow Participant, and chose to 'Split equally the $12 only with the Orange Participant' ($6 to you, $6 to the Orange Participant, $0 to the Purple Participant);<br>"
-                    "- The Purple Participant chooses to 'Split equally the $12 with both the two Participants'($3 to you, $3 to the Orange Participant, $3 to the Purple Participant); <br>"
-                    "- The Orange Participant chooses to 'Split equally the $12 only with the Yellow Participant'($6 to you, $6 to the Orange Participant, $0 to the Purple Participant)."
+                    "Imagine that you are the Green Participant, and chose to 'Split equally the $12 only with the Blue Participant' ($6 to you, $6 to the Blue Participant, $0 to the Red Participant);<br>"
+                    "- The Red Participant chooses to 'Split equally the $12 with both the two Participants'($3 to you, $3 to the Blue Participant, $3 to the Red Participant); <br>"
+                    "- The Blue Participant chooses to 'Split equally the $12 only with the Green Participant'($6 to you, $6 to the Blue Participant, $0 to the Red Participant)."
                 ),
                 'example2_scenario': (
-                    "Imagine that you are the Yellow Participant, and chose to 'Split equally the $12 with both the two Participants' ($3 to you, $3 to the Orange Participant, $3 to the Purple Participant);<br>"
-                    "- The Purple Participant chooses to 'Split equally the $12 only with the Orange Participant' ($0 to you, $6 to the Orange Participant, $6 to the Purple Participant);<br>"
-                    "- The Orange Participant chooses to 'Split equally the $12 with both the two Participants' ($3 to you, $3 to the Orange Participant, $3 to the Purple Participant)."
+                    "Imagine that you are the Green Participant, and chose to 'Split equally the $12 with both the two Participants' ($3 to you, $3 to the Blue Participant, $3 to the Red Participant);<br>"
+                    "- The Red Participant chooses to 'Split equally the $12 only with the Blue Participant' ($0 to you, $6 to the Blue Participant, $6 to the Red Participant);<br>"
+                    "- The Blue Participant chooses to 'Split equally the $12 with both the two Participants' ($3 to you, $3 to the Blue Participant, $3 to the Red Participant)."
                 ),
                 'example3_scenario': (
-                    "Imagine that you are the Yellow Participant, and chose to 'Split equally the $12 with both the two Participants' ($3 to you, $3 to the Orange Participant, $3 to the Purple Participant);<br>"
-                    "- The Purple Participant chooses to 'Split equally the $12 only with the Yellow Participant' ($6 to you, $0 to the Orange Participant, $6 to the Purple Participant);<br>"
-                    "- The Orange Participant chooses to 'Split equally the $12 only with the Purple Participant' ($0 to you, $6 to the Orange Participant, $6 to the Purple Participant)."
+                    "Imagine that you are the Green Participant, and chose to 'Split equally the $12 with both the two Participants' ($3 to you, $3 to the Blue Participant, $3 to the Red Participant);<br>"
+                    "- The Red Participant chooses to 'Split equally the $12 only with the Green Participant' ($6 to you, $0 to the Blue Participant, $6 to the Red Participant);<br>"
+                    "- The Blue Participant chooses to 'Split equally the $12 only with the Red Participant' ($0 to you, $6 to the Blue Participant, $6 to the Red Participant)."
                 ),
                 'max_attempts': max_attempts,
                 'current_attempt': attempt_number,

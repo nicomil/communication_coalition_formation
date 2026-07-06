@@ -109,14 +109,14 @@ class TestColorMapping(unittest.TestCase):
     """Test color-based player identification utilities."""
 
     def test_get_player_color(self):
-        self.assertEqual(get_player_color(1), 'Red')
-        self.assertEqual(get_player_color(2), 'Green')
-        self.assertEqual(get_player_color(3), 'Blue')
+        self.assertEqual(get_player_color(1), 'Yellow')
+        self.assertEqual(get_player_color(2), 'Orange')
+        self.assertEqual(get_player_color(3), 'Purple')
         self.assertEqual(get_player_color(4), 'Unknown')
 
     def test_color_mapping_completeness(self):
         self.assertEqual(set(COLOR_MAPPING.keys()), {1, 2, 3})
-        self.assertEqual(set(COLOR_MAPPING.values()), {'Red', 'Green', 'Blue'})
+        self.assertEqual(set(COLOR_MAPPING.values()), {'Yellow', 'Orange', 'Purple'})
 
     def test_topology_consistency(self):
         from .utils import TOPOLOGY
