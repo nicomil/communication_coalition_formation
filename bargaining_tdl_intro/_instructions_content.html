@@ -11,157 +11,89 @@
 
 
         <p>
-            <li>Each participant has the same <strong>three options to choose how to split the $12</strong>.
-                Each participant will <strong>choose one of three options for splitting the $12</strong>. Each
-                participant will decide which option they prefer.
+            <li>Each participant will <strong>vote for one </strong> of four possible outcomes.
             </li>
         </p>
         <p>
             <li><strong>For Example:</strong> Imagine you are the Green Participant, and you are interacting with a
-                Red and a Blue Participant. Your options are:
+                Red and a Blue Participant. The options are the following:
         </p>
         <ul>
             <p>
-                <li>Equally split the $12 with both the two Participants (everyone gets $3);
-                    <!-- ($ 3 to each Participant in the group)-->
+                <li>Everyone gets $2;
+                    <!-- ($ 2 to each Participant in the group)-->
                 </li>
             </p>
             <p>
-                <li>Equally split the $12 only with the Red Participant (you get $6, Red gets $6, Blue gets $0);<!--  ($6 to you and $6 to the Red Participant, and
+                <li>You get $6, Red gets $6, Blue gets $0;<!--  ($6 to you and $6 to the Red Participant, and
                     $0 to
                     the Blue Participant)--></li>
             </p>
             <p>
-                <li>Equally split the $12 only with the Blue Participant (you get $6, Red gets $0, Blue gets $6); <!--- ($6 to you and $6 to the Blue Participant, and
+                <li>You get $6, Red gets $0, Blue gets $6; <!--- ($6 to you and $6 to the Blue Participant, and
+                    $0 to
+                    the Red Participant)--></li>
+            </p>
+            <p>
+                <li>You get $0, Red gets $6, Blue gets $6; <!--- ($0 to you and $6 to the Blue Participant, and
                     $0 to
                     the Red Participant)--></li>
             </p>
         </ul>
 
         <p>
-            <li><strong>If at least two participants in the group agree on the same option, you and the
-                    participants of your group will all be paid
-                    accordingly</strong>. Otherwise, <strong>if no agreenment is reached, you and your group will earn
-                    $0</strong>.
+            <li><strong>If at least two participants in the group vote for the same outcome, everyone will be paid
+                    accordingly.</strong>
             </li>
         </p>
         <p>
-            Now imagine you are the Green Participant, and in your group there are the Blue and Red Participants.
-            The
-            possible outcomes, are the folliwing:
+            <li><strong>If everyone votes for a different outcome, everyone will earn $0.</strong>
+            </li>
         </p>
-        <ul>
-            <li>
-                <strong>Dividing the $12 equally among all members:</strong>
-                <ul>
-                    <li> <strong>If you and another Participant both choose to split equally with both the two
-                            Participants, each
-                            participant of your group earns $3</strong>. <br>
-                        <em>(Example: You (Green) and the Blue participant both choose to split equally with both the
-                            two
-                            participants of the group;
-                            The Red participant chooses to split only with the Blue participant. In this case, all
-                            three participants earn $3.)</em>
-                    </li>
-                </ul>
-            </li>
-            <li>
-                <strong>Dividing the $12 equally with only one member:</strong>
-                <ul>
-                    <li> <strong>If you and another Participant both choose to split equally only with
-                            each other, you both
-                            earn $6, and the other Participant earns $0</strong>. <br>
-                        <em>(Example: You (Green) and the Blue participant choose to split equally only with each
-                            other; The
-                            Red participant chooses to split equally with both the two participants. You (Green) and
-                            the Blue participants earn $6, and the
-                            Red
-                            participant earns
-                            $0.)</em>
-                    </li>
-                </ul>
-            </li>
-            <li>
-                <strong>No Agreement:</strong>
-                <ul>
-                    <li> <strong>If no Participants choose the same option, everyone earns $0</strong>. <br>
-                        <em>(Example: You (Green) choose to split equally with both the two participants; The
-                            Blue
-                            participant chooses to split equally only with you (Green);
-                            The Red participant chooses to split equally only with the Blue participant. In this
-                            case, everyone earns $0.)</em>
-                    </li>
-                </ul>
-            </li>
-        </ul>
+
 
     </div>
     <div class="card-body px-5 py-4">
         <h4>Chat Instructions</h4>
 
         <p>
-            <li><strong>Before choosing your option to divide the $12, you have maximum 10 minutes to
+            <li><strong>Before choosing which outcome you will vote for, you have maximum 10 minutes to
                     communicate</strong> freely with
-                the
-                other participants.</li>
+                the other participants in two separate chats.</li>
+        </p>
+        <p>
+            <li>In these messages you can explain to each of them what division you intend to vote for, and what
+                division you think they should vote for, and why. You can write different messages to the different
+                participants.</li>
+        </p>
+        <p>
+            <li><strong>At the end of the chat period you will select pre-written messages</strong> to send to each of
+                the other two
+                participants saying which option you intend to vote for. You can select different messages for the
+                different participants.</li>
         </p>
         {# === Visibilità dei messaggi: testo specifico del trattamento ===
-           Modificare il ramo PUBLIC o PRIVATE in modo indipendente: editare uno
-           non tocca l'altro. #}
+        Modificare il ramo PUBLIC o PRIVATE in modo indipendente: editare uno
+        non tocca l'altro. #}
         {% if reveal_third_party_chat %}
         {# ---- Ramo PUBLIC (comunicazione pubblica) ---- #}
         <p>
-            <li> <strong>Messages are public</strong>, you will see the messages sent by you, received by the each of
-                the other participants, and the messages sent between the other participants. After the chat period,
-                before choosing your option on how to divide the $12,<strong>you will see the messages sent between the
-                    other two participants, and viceversa (each participant will see messages from conversations they
-                    are not directly involved in).</strong> In these messages
-                you can explain to each of them what division
-                you intend to choose, and what division you think
-                they should choose. You can write different messages to the different participants.</li>
+            <li> <strong>Messages will become public:</strong>Before choosing which option to vote for, you will see all
+                the messages sent between the other two participants and each of them will see the messages sent between
+                you and the other. This includes the final pre-written messages.</li>
         </p>
         {% else %}
         {# ---- Ramo PRIVATE (comunicazione privata, baseline) ---- #}
         <p>
-            <li> <strong>Messages are private</strong>, and you will only see the messages sent by you,
-                and received by the each of the other participants. <strong>You will not see the messages sent between
-                    the other two participants, and viceversa (each participant will only see messages from
-                    conversations they are directly involved in).</strong> In these messages
-                you can explain to each of them what division
-                you intend to choose, and what division you think
-                they should choose. You can write different messages to the different participants.</li>
+            <li> <strong>Messages will remain private:</strong> No participant will ever see the messages sent between
+                the other two participants. This includes the final pre-written messages.</li>
         </p>
         {% endif %}
 
 
         </p>
 
-        <p>
-            {# === Visibilità del final message: testo specifico del trattamento === #}
-            {% if reveal_third_party_chat %}
-            {# ---- Ramo PUBLIC ---- #}
-            <li>
-                After the chat period, before choosing your option on how to divide the $12, <strong>you will select
-                    pre-written messages </strong> to send to each of the other two participants. The messages <strong>
-                    will be visible to all the participants in your group</strong>. The pre-written
-                messages are the following:
-            </li>
-            {% else %}
-            {# ---- Ramo PRIVATE ---- #}
-            <li>
-                After the chat period, before choosing your option on how to divide the $12, <strong>you will select
-                    pre-written messages </strong> to send to each of the other two participants. The messages <strong>
-                    will only be visible to the specific participant they are addressed to</strong>. The pre-written
-                messages are the following:
-            </li>
-            {% endif %}
-        </p>
 
-        <ul>
-            <li> I wish to split the $12 equally with you only.</li>
-            <li> I wish to split the $12 equally with the other Participant only.</li>
-            <li> I wish to split the $12 equally with the two Participants.</li>
-        </ul>
 
 
 
@@ -182,19 +114,40 @@
         <p>
             In summary, Part 1 will proceed as follows:
         </p>
+        {# === Visibilità dei messaggi: testo specifico del trattamento ===
+        Modificare il ramo PUBLIC o PRIVATE in modo indipendente: editare uno
+        non tocca l'altro. #}
+        {% if reveal_third_party_chat %}
+        {# ---- Ramo PUBLIC (comunicazione pubblica) ---- #}
+
         <ol>
             <li>Chat with each of the other participants of the group. </li>
-            <li>Each participant of the group sends a final message to each of the other
-                participants
-                of the group.</li>
-            <li>Each participant of the group makes their final decision on how they
-                would
-                like to split the $12.</li>
+            <li>Each participant of the group selects a final, pre-written, message to send to each of the other
+                participants of the group.</li>
+            <li>All messages are shown to all participants.</li>
+            <li>Each participant of the group makes their final decision on which option to vote for.</li>
             <li>Payments are determined and will be communicated at the end of the experiment.
             </li>
             <li>Please note that if a participant drops out before sending their final message or making a final
                 decision, random decisions will be made for them.</li>
-            <li>Note that all chat will be with real people: no chatbots are used in this experiment.</li>
+            <li><em>Note that all chat will be with real people: no chatbots are used in this experiment.</em></li>
         </ol>
+
+
+        {% else %}
+        {# ---- Ramo PRIVATE (comunicazione privata, baseline) ---- #}
+
+        <ol>
+            <li>Chat with each of the other participants of the group. </li>
+            <li>Each participant of the group selects a final, pre-written, message to send to each of the other
+                participants of the group.</li>
+            <li>Each participant of the group makes their final decision on which option to vote for.</li>
+            <li>Payments are determined and will be communicated at the end of the experiment.
+            </li>
+            <li>Please note that if a participant drops out before sending their final message or making a final
+                decision, random decisions will be made for them.</li>
+            <li><em>Note that all chat will be with real people: no chatbots are used in this experiment.</em></li>
+        </ol>
+        {% endif %}
     </div>
 </div>

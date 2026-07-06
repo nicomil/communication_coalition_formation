@@ -421,19 +421,19 @@ def create_control_questions_class(attempt_number):
             
             return {
                 'example1_scenario': (
-                    "Imagine that you are the Green Participant, and chose to 'Split equally the $12 only with the Blue Participant' ($6 to you, $6 to the Blue Participant, $0 to the Red Participant);<br>"
-                    "- The Red Participant chooses to 'Split equally the $12 with both the two Participants'($3 to you, $3 to the Blue Participant, $3 to the Red Participant); <br>"
-                    "- The Blue Participant chooses to 'Split equally the $12 only with the Green Participant'($6 to you, $6 to the Blue Participant, $0 to the Red Participant)."
+                    "Imagine that you are the Green Participant, and vote for '$6 to you, $6 to the Blue Participant, $0 to the Red Participant';<br>"
+                    "- The Red Participant votes for 'everyone gets $2'; <br>"
+                    "- The Blue Participant votes for '$6 to you, $6 to the Blue Participant, $0 to the Red Participant'."
                 ),
                 'example2_scenario': (
-                    "Imagine that you are the Green Participant, and chose to 'Split equally the $12 with both the two Participants' ($3 to you, $3 to the Blue Participant, $3 to the Red Participant);<br>"
-                    "- The Red Participant chooses to 'Split equally the $12 only with the Blue Participant' ($0 to you, $6 to the Blue Participant, $6 to the Red Participant);<br>"
-                    "- The Blue Participant chooses to 'Split equally the $12 with both the two Participants' ($3 to you, $3 to the Blue Participant, $3 to the Red Participant)."
+                    "Imagine that you are the Green Participant, and vote for 'everyone gets $2';<br>"
+                    "- The Red Participant votes for '$0 to you, $6 to the Blue Participant, $6 to the Red Participant';<br>"
+                    "- The Blue Participant votes for 'everyone gets $2'."
                 ),
                 'example3_scenario': (
-                    "Imagine that you are the Green Participant, and chose to 'Split equally the $12 with both the two Participants' ($3 to you, $3 to the Blue Participant, $3 to the Red Participant);<br>"
-                    "- The Red Participant chooses to 'Split equally the $12 only with the Green Participant' ($6 to you, $0 to the Blue Participant, $6 to the Red Participant);<br>"
-                    "- The Blue Participant chooses to 'Split equally the $12 only with the Red Participant' ($0 to you, $6 to the Blue Participant, $6 to the Red Participant)."
+                    "Imagine that you are the Green Participant, and vote for 'everyone gets $2';<br>"
+                    "- The Red Participant vote for '$6 to you, $0 to the Blue Participant, $6 to the Red Participant';<br>"
+                    "- The Blue Participant votes for '$0 to you, $6 to the Blue Participant, $6 to the Red Participant'."
                 ),
                 'max_attempts': max_attempts,
                 'current_attempt': attempt_number,
