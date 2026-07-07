@@ -13,7 +13,7 @@ class PlayerBot(Bot):
     """
     
     cases = [
-        'all_both',        # Tutti scelgono Both -> payoff 4 per tutti
+        'all_both',        # Tutti scelgono Both -> payoff 2 per tutti
         'match_12',        # P1->Right, P2->Left -> P1 e P2 vincono (6), P3 perde (0)
         'match_23',        # P2->Right, P3->Left -> P2 e P3 vincono (6), P1 perde (0)
         'match_31',        # P3->Right, P1->Left -> P3 e P1 vincono (6), P2 perde (0)

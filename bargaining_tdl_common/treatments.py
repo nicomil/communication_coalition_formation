@@ -10,7 +10,7 @@ Decision finale di Part 1:
   - 'private': vedi solo le conversazioni di cui hai fatto parte (baseline attuale)
   - 'public' : vedi anche la conversazione tra gli altri due partecipanti
 
-NB: la divisione equa 3,3,3 è GLOBALE (non è una differenza tra trattamenti).
+NB: la divisione equa 2,2,2 è GLOBALE (non è una differenza tra trattamenti).
 """
 
 # Registry dei trattamenti disponibili.

@@ -64,6 +64,7 @@ class Player(BasePlayer):
         choices=[
             ['share_one', 'share_one'],
             ['share_both', 'share_both'],
+            ['share_zero', 'share_zero'],
         ],
         widget=widgets.RadioSelect,
         label="How would you like to divide $12?"
@@ -82,7 +83,7 @@ class Player(BasePlayer):
     example1_earnings_left = models.StringField(
         choices=[
             ['0', '$ 0'],
-            ['3', '$ 3'],
+            ['2', '$ 2'],
             ['6', '$ 6'],
         ],
         widget=widgets.RadioSelect,
@@ -91,7 +92,7 @@ class Player(BasePlayer):
     example1_earnings_right = models.StringField(
         choices=[
             ['0', '$0'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['6', '$6'],
         ],
         widget=widgets.RadioSelect,
@@ -102,7 +103,7 @@ class Player(BasePlayer):
     example2_earnings_you = models.StringField(
         choices=[
             ['0', '$0'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['6', '$6'],
         ],
         widget=widgets.RadioSelect,
@@ -111,7 +112,7 @@ class Player(BasePlayer):
     example2_earnings_left = models.StringField(
         choices=[
             ['0', '$0'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['6', '$6'],
         ],
         widget=widgets.RadioSelect,
@@ -120,7 +121,7 @@ class Player(BasePlayer):
     example2_earnings_right = models.StringField(
         choices=[
             ['0', '$0'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['6', '$6'],
         ],
         widget=widgets.RadioSelect,
@@ -163,12 +164,14 @@ def _part3_color_context(player):
 
 def _decision_display_text(decision_code, colors):
     """
-    Convert internal decision code (share_one/share_both) to participant-facing text.
+    Convert internal decision code (share_one/share_both/share_zero) to participant-facing text.
     """
-    if decision_code == 'share_one':
-        return "Equally split the $12 with only one of the two RECEIVERS."
     if decision_code == 'share_both':
-        return "Equally split the $12 between myself and the other two RECEIVERS."
+        return "I intend to vote for 'Everyone gets $2'."
+    if decision_code == 'share_one':
+        return "I intend to vote for 'I get $6, one Receiver gets $6, one Receiver gets $0'."
+    if decision_code == 'share_zero':
+        return "I intend to vote for 'I get $0, one Receiver gets $6, one Receiver gets $6'."
     return ""
 
 
@@ -192,8 +195,9 @@ class InstructionsPart3(Page):
         order_key = 'decision_part3_option_order'
         if order_key not in player.participant.vars:
             options = [
-                {'value': 'share_one',  'label': '<strong>Equally split the $12 with only one of the two RECEIVERS</strong> <em>($6 to you, $6 to one RECEIVER, and $0 to the other RECEIVER).</em>'},
-                {'value': 'share_both', 'label': '<strong>Equally split the $12 between myself and the other two RECEIVERS</strong> <em>($3 to you and $3 to each of the RECEIVERS).</em>'},
+                {'value': 'share_both', 'label': "I intend to vote for 'Everyone gets $2'."},
+                {'value': 'share_one',  'label': "I intend to vote for 'I get $6, one Receiver gets $6, one Receiver gets $0'."},
+                {'value': 'share_zero', 'label': "I intend to vote for 'I get $0, one Receiver gets $6, one Receiver gets $6'."},
             ]
             random.shuffle(options)
             player.participant.vars[order_key] = options
@@ -242,9 +246,9 @@ def create_control_questions_part3_class(attempt_number):
         _CONTROL_QUESTIONS_TIMEOUT = 180
         timeout_submission = timeout_submission_with_time(
             _CONTROL_QUESTIONS_TIMEOUT,
-            example1_earnings_you='3',
-            example1_earnings_left='3',
-            example1_earnings_right='3',
+            example1_earnings_you='2',
+            example1_earnings_left='2',
+            example1_earnings_right='2',
             example2_earnings_you='0',
             example2_earnings_left='0',
             example2_earnings_right='0',

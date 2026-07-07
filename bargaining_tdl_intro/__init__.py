@@ -178,7 +178,7 @@ class Player(BasePlayer):
     example1_earnings_you = models.StringField(
         choices=[
             ['6', '$6'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -187,7 +187,7 @@ class Player(BasePlayer):
     example1_earnings_left = models.StringField(
         choices=[
             ['6', '$6'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -196,7 +196,7 @@ class Player(BasePlayer):
     example1_earnings_right = models.StringField(
         choices=[
             ['6', '$6'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -205,11 +205,11 @@ class Player(BasePlayer):
     
     # Control Questions - Example 2
     # Scenario: You (Green) share with both. Purple shares with Yellow only. Yellow shares with both.
-    # Result: Yellow=3, Green=3, Purple=3
+    # Result: Yellow=2, Green=2, Purple=2
     example2_earnings_you = models.StringField(
         choices=[
             ['6', '$6'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -218,7 +218,7 @@ class Player(BasePlayer):
     example2_earnings_left = models.StringField(
         choices=[
             ['6', '$6'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -227,7 +227,7 @@ class Player(BasePlayer):
     example2_earnings_right = models.StringField(
         choices=[
             ['6', '$6'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -240,7 +240,7 @@ class Player(BasePlayer):
     example3_earnings_you = models.StringField(
         choices=[
             ['6', '$6'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -249,7 +249,7 @@ class Player(BasePlayer):
     example3_earnings_left = models.StringField(
         choices=[
             ['6', '$6'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -258,7 +258,7 @@ class Player(BasePlayer):
     example3_earnings_right = models.StringField(
         choices=[
             ['6', '$6'],
-            ['3', '$3'],
+            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -465,7 +465,7 @@ def create_control_questions_class(attempt_number):
             errors = []
             if not (player.example1_earnings_you == "6" and player.example1_earnings_left == "0" and player.example1_earnings_right == "6"):
                 errors.append("Example 1")
-            if not (player.example2_earnings_you == "3" and player.example2_earnings_left == "3" and player.example2_earnings_right == "3"):
+            if not (player.example2_earnings_you == "2" and player.example2_earnings_left == "2" and player.example2_earnings_right == "2"):
                 errors.append("Example 2")
             if not (player.example3_earnings_you == "0" and player.example3_earnings_left == "0" and player.example3_earnings_right == "0"):
                 errors.append("Example 3")

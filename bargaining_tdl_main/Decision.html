@@ -140,6 +140,17 @@
         excluded from the experiment.</strong>
 </p>
 <h4> You are the {{ my_color }} Participant.</h4>
+
+
+
+
+
+{# === Visibilità dei messaggi: testo specifico del trattamento ===
+Modificare il ramo PUBLIC o PRIVATE in modo indipendente: editare uno
+non tocca l'altro. #}
+{% if reveal_third_party_chat %}
+{# ---- Ramo PUBLIC (comunicazione pubblica) ---- #}
+
 <p>
     Here are the Chats between the other two participants, you and each of the other participants, and the final
     messages
@@ -147,6 +158,24 @@
     them, and those exchanged between the other two participants.
     Based on this information, please make your final decision.
 </p>
+
+
+
+{% else %}
+{# ---- Ramo PRIVATE (comunicazione privata, baseline) ---- #}
+<p>
+    Here are the Chats between you and each of the other participants, and the final
+    messages
+    received from each of
+    them.
+    Based on this information, please make your final decision.
+</p>
+
+
+{% endif %}
+
+
+
 
 <div class="row">
     <div class="col-md-6">
@@ -223,14 +252,14 @@
     </div>
     <div class="card-body px-5 py-4">
         <p>
-            Please choose how you would like to divide the $12, by choosing one of the following options:
+            Please choose which option you would like to vote for:
         </p>
         <p></p>
         <div class="form-group">
             {% for opt in decision_options %}
             <div class="form-check mb-3">
-                <input type="radio" name="decision_choice" value="{{ opt.value }}" id="{{ opt.id }}" class="form-check-input" required
-                    {% if player.field_maybe_none('decision_choice') == opt.value %}checked{% endif %}>
+                <input type="radio" name="decision_choice" value="{{ opt.value }}" id="{{ opt.id }}"
+                    class="form-check-input" required {% if opt.checked %}checked{% endif %}>
                 <label class="form-check-label" for="{{ opt.id }}">
                     <strong>{{ opt.label }}</strong> <em>{{ opt.details }}</em>.
                 </label>

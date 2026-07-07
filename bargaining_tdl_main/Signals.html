@@ -159,8 +159,21 @@
 <h4> You are the {{ my_color }} Participant.</h4> Please select the messages you wish to send to each of the two other
 Participants
 </p>
-<p>Remember that these messages are NOT your final decision, which you will make after you have read the final
-    messages of the other two Participants addressed to you.</p>
+{# === Visibilità dei messaggi: testo specifico del trattamento ===
+Modificare il ramo PUBLIC o PRIVATE in modo indipendente: editare uno
+non tocca l'altro. #}
+{% if reveal_third_party_chat %}
+{# ---- Ramo PUBLIC (comunicazione pubblica) ---- #}
+
+<p><strong>Remember that these messages are NOT your final decision, which you will make after you have read the final
+        messages of the other two Participants addressed to you, and the messages exchanged between the other two
+        Participants not addressed to you.</strong></p>
+
+{% else %}
+{# ---- Ramo PRIVATE (comunicazione privata, baseline) ---- #}
+<p><strong>Remember that these messages are NOT your final decision, which you will make after you have read the final
+        messages of the other two Participants addressed to you.</strong></p>
+{% endif %}
 
 <div class="container-columns">
     <div class="column">
@@ -172,30 +185,28 @@ Participants
                     <input type="radio" name="signal_left" value="split_you" id="signal_left_you"
                         class="form-check-input" required>
                     <label class="form-check-label" for="signal_left_you">
-                        I wish to split the $12 equally with you only, the {{ left_partner_color }} Participant( $6 to
-                        {{my_color}} Participant, $6 to the {{ left_partner_color }} Participant, $0 to the
-                        {{right_partner_color}}
-                        Participant).
+                        I intend to vote for 'I get $6, you get $6, and the other Participant gets $0'.
                     </label>
                 </div>
                 <div class="form-check">
                     <input type="radio" name="signal_left" value="split_other" id="signal_left_other"
                         class="form-check-input">
                     <label class="form-check-label" for="signal_left_other">
-                        I wish to split the $12 equally with the other Participant only, the {{ right_partner_color }}
-                        Participant($6 to {{my_color}} Participant, $6 to the {{right_partner_color}} Participant,$0 to
-                        the {{left_partner_color}}
-                        Participant).
+                        I intend to vote for 'I get $6, you get $0, and the other Participant gets $6'.
                     </label>
                 </div>
                 <div class="form-check">
                     <input type="radio" name="signal_left" value="split_both" id="signal_left_both"
                         class="form-check-input">
                     <label class="form-check-label" for="signal_left_both">
-                        I wish to split the $12 equally with both you and the {{ right_partner_color }} Participant. ($3
-                        to {{my_color}} Participant, $3 to the {{left_partner_color}} Participant, $3 to the
-                        {{right_partner_color}}
-                        Participant).
+                        I intend to vote for 'Everyone gets $2'.
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" name="signal_left" value="split_zero" id="signal_left_zero"
+                        class="form-check-input">
+                    <label class="form-check-label" for="signal_left_zero">
+                        I intend to vote for 'I get $0, you get $6, and the other Participant gets $6'.
                     </label>
                 </div>
             </div>
@@ -210,32 +221,28 @@ Participants
                     <input type="radio" name="signal_right" value="split_you" id="signal_right_you"
                         class="form-check-input" required>
                     <label class="form-check-label" for="signal_right_you">
-                        I wish to split the $12 equally with you only, the {{ right_partner_color }} Participant ($6 to
-                        {{my_color}} Participant, $6 to the {{right_partner_color}} Participant, $0 to the
-                        {{left_partner_color}}
-                        Participant).
+                        I intend to vote for 'I get $6, you get $6, and the other Participant gets $0'.
                     </label>
                 </div>
                 <div class="form-check">
                     <input type="radio" name="signal_right" value="split_other" id="signal_right_other"
                         class="form-check-input">
                     <label class="form-check-label" for="signal_right_other">
-                        I wish to split the $12 equally with the other Participant only, the {{ left_partner_color }}
-                        Participant ($6 to {{my_color}} Participant, $6 to the {{left_partner_color}} Participant,$0 to
-                        the
-                        {{right_partner_color}}
-                        Participant).
+                        I intend to vote for 'I get $6, you get $0, and the other Participant gets $6'.
                     </label>
                 </div>
                 <div class="form-check">
                     <input type="radio" name="signal_right" value="split_both" id="signal_right_both"
                         class="form-check-input">
                     <label class="form-check-label" for="signal_right_both">
-                        I wish to split the $12 equally with both you and the {{ left_partner_color }} Participant ( $3
-                        to
-                        {{my_color}} Participant, $3 to the {{right_partner_color}} Participant, $3 to the
-                        {{left_partner_color}}
-                        Participant).
+                        I intend to vote for 'Everyone gets $2'.
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" name="signal_right" value="split_zero" id="signal_right_zero"
+                        class="form-check-input">
+                    <label class="form-check-label" for="signal_right_zero">
+                        I intend to vote for 'I get $0, you get $6, and the other Participant gets $6'.
                     </label>
                 </div>
             </div>

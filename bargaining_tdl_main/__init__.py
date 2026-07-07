@@ -60,7 +60,7 @@ class C(BaseConstants):
     PLAYERS_PER_GROUP = 3
     NUM_ROUNDS = 1
     PAYOFF_MAX = cu(6)
-    PAYOFF_SPLIT = cu(3)
+    PAYOFF_SPLIT = cu(2)
     PAYOFF_DISAGREEMENT = cu(0)
     CHAT_RECONNECT_WINDOW_SECONDS = 90
     # Heartbeat tolerance tuned to avoid false disconnect flicker under network jitter.
@@ -129,6 +129,7 @@ class Player(BasePlayer):
             ['split_you', 'split_you'],
             ['split_other', 'split_other'],
             ['split_both', 'split_both'],
+            ['split_zero', 'split_zero'],
         ],
         widget=widgets.RadioSelect,
         label=""
@@ -138,6 +139,7 @@ class Player(BasePlayer):
             ['split_you', 'split_you'],
             ['split_other', 'split_other'],
             ['split_both', 'split_both'],
+            ['split_zero', 'split_zero'],
         ],
         widget=widgets.RadioSelect,
         label=""
@@ -158,6 +160,7 @@ class Player(BasePlayer):
             ('Left', 'Left'),
             ('Right', 'Right'),
             ('Both', 'Both'),
+            ('Zero', 'Zero'),
         ],
         widget=widgets.RadioSelect,
         label="Select your choice:"
@@ -207,15 +210,14 @@ def _color_context(player):
 
 def _signal_display_text(code, target_color, other_color, sender_inactive=False):
     """Human-readable text for a signal internal code."""
-    # We no longer show "did not send a message" for inactive participants
-    # as per user request to show the random choice instead.
     if code == 'split_you':
-        # "you" refers to the receiver, so do not append a color label.
-        return "I wish to split the $12 equally with you only."
+        return "I intend to vote for 'I get $6, you get $6, and the other Participant gets $0'."
     elif code == 'split_other':
-        return f"I wish to split the $12 equally with the other Participant only, the {other_color} Participant."
+        return "I intend to vote for 'I get $6, you get $0, and the other Participant gets $6'."
     elif code == 'split_both':
-        return f"I wish to split the $12 equally with both you and the {other_color} Participant."
+        return "I intend to vote for 'Everyone gets $2'."
+    elif code == 'split_zero':
+        return "I intend to vote for 'I get $0, you get $6, and the other Participant gets $6'."
     return code or ""
 
 
@@ -422,8 +424,8 @@ def _mark_group_dropped(group: Group):
             p.participant.vars['part1_payoff_eligible'] = False
             p.decision_inactive = 99  # Garantisce la scelta casuale
             p.signal_inactive = 99
-            p.signal_left = random.choice(['split_you', 'split_other', 'split_both'])
-            p.signal_right = random.choice(['split_you', 'split_other', 'split_both'])
+            p.signal_left = random.choice(['split_you', 'split_other', 'split_both', 'split_zero'])
+            p.signal_right = random.choice(['split_you', 'split_other', 'split_both', 'split_zero'])
             p.participant.vars['signal_left'] = p.signal_left
             p.participant.vars['signal_right'] = p.signal_right
             p.participant.vars['signal_inactive'] = 99
@@ -548,11 +550,13 @@ def _third_party_signal_display(code, receiver_color, other_color):
     di usare "you" (il viewer non è il destinatario).
     """
     if code == 'split_you':
-        return f"I wish to split the $12 equally with the {receiver_color} Participant only."
+        return f"I intend to vote for 'I get $6, the {receiver_color} Participant gets $6, and the {other_color} Participant gets $0'."
     elif code == 'split_other':
-        return f"I wish to split the $12 equally with the other Participant only, the {other_color} Participant."
+        return f"I intend to vote for 'I get $6, the {receiver_color} Participant gets $0, and the {other_color} Participant gets $6'."
     elif code == 'split_both':
-        return f"I wish to split the $12 equally with both the {receiver_color} and the {other_color} Participants."
+        return "I intend to vote for 'Everyone gets $2'."
+    elif code == 'split_zero':
+        return f"I intend to vote for 'I get $0, the {receiver_color} Participant gets $6, and the {other_color} Participant gets $6'."
     return code or ""
 
 
@@ -795,6 +799,7 @@ class Signals(Page):
             chat_timeout=(reason == 'timeout'),
             chat_partners_left=(reason in ('group_dropped', 'partners_left')),
             reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
+            reveal_third_party_chat=bool(treatment_flag(player, 'reveal_third_party_chat', False)),
             **_chat_status_payload(player),
             **colors,
         )
@@ -809,8 +814,8 @@ class Signals(Page):
             player.part1_payoff_eligible = False
             player.participant.vars['part1_payoff_eligible'] = False
             import random
-            player.signal_left = random.choice(['split_you', 'split_other', 'split_both'])
-            player.signal_right = random.choice(['split_you', 'split_other', 'split_both'])
+            player.signal_left = random.choice(['split_you', 'split_other', 'split_both', 'split_zero'])
+            player.signal_right = random.choice(['split_you', 'split_other', 'split_both', 'split_zero'])
         else:
             set_control_questions_failed(player, 'intro', failed=False)
         logger.debug(f"Signals - time_signals saved: {player.time_signals}, time_chat_and_signals: {player.time_chat_and_signals}")
@@ -955,26 +960,35 @@ class Decision(Page):
             )
         options = [
             {
-                'value': 'Left', 
-                'id': 'dc_left', 
-                'label': f'I would like to divide the $12 equally with the {colors["left_partner_color"]} Participant', 
-                'details': f'($6 to you, $6 to the {colors["left_partner_color"]} Participant, $0 to the {colors["right_partner_color"]} Participant)'
+                'value': 'Left',
+                'id': 'dc_left',
+                'label': f"I intend to vote for 'I get $6, the {colors['left_partner_color']} Participant gets $6, and the {colors['right_partner_color']} Participant gets $0'",
+                'details': ''
             },
             {
-                'value': 'Right', 
-                'id': 'dc_right', 
-                'label': f'I would like to divide the $12 equally with the {colors["right_partner_color"]} Participant', 
-                'details': f'($6 to you, $6 to the {colors["right_partner_color"]} Participant, $0 to the {colors["left_partner_color"]} Participant)'
+                'value': 'Right',
+                'id': 'dc_right',
+                'label': f"I intend to vote for 'I get $6, the {colors['right_partner_color']} Participant gets $6, and the {colors['left_partner_color']} Participant gets $0'",
+                'details': ''
             },
             {
-                'value': 'Both', 
-                'id': 'dc_both', 
-                'label': 'I would like to divide the $12 equally with the two other Participants',
-                'details': f'($3 to you, $3 to the {colors["left_partner_color"]} Participant, $3 to the {colors["right_partner_color"]} Participant)'
+                'value': 'Both',
+                'id': 'dc_both',
+                'label': "I intend to vote for 'Everyone gets $2'",
+                'details': ''
+            },
+            {
+                'value': 'Zero',
+                'id': 'dc_zero',
+                'label': f"I intend to vote for 'I get $0, the {colors['left_partner_color']} Participant gets $6, and the {colors['right_partner_color']} Participant gets $6'",
+                'details': ''
             },
         ]
         import random
         random.shuffle(options)
+        current_choice = player.field_maybe_none('decision_choice') or ''
+        for opt in options:
+            opt['checked'] = (opt['value'] == current_choice)
 
         return dict(
             channel_left=channel_left,
@@ -988,6 +1002,7 @@ class Decision(Page):
             signals_expired=bool(player.signal_inactive == 99),
             reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
             decision_options=options,
+            current_decision_choice=player.field_maybe_none('decision_choice') or '',
             **_chat_status_payload(player),
             **colors,
         )
@@ -1057,7 +1072,7 @@ class ResultsWaitPage(WaitPage):
         import random
         for p in [p1, p2, p3]:
             if p.decision_inactive == 99:
-                p.decision_choice = random.choice(['Left', 'Right', 'Both'])
+                p.decision_choice = random.choice(['Left', 'Right', 'Both', 'Zero'])
 
         # Choices
         c1 = p1.decision_choice
@@ -1072,7 +1087,7 @@ class ResultsWaitPage(WaitPage):
         # The logic below will use random choices for anyone with decision_inactive == 99.
 
         # Logic:
-        # 1. At least 2 choose Both -> All get 4
+        # 1. At least 2 choose Both -> All get 2
         both_count = sum([c1 == 'Both', c2 == 'Both', c3 == 'Both'])
         if both_count >= 2:
             for p in players:
@@ -1100,8 +1115,17 @@ class ResultsWaitPage(WaitPage):
                 p3.payoff = C.PAYOFF_MAX
                 p1.payoff = C.PAYOFF_MAX
                 p2.payoff = C.PAYOFF_DISAGREEMENT
-            
-            # Else remains 0 (Disagreement)
+
+            else:
+                # 3. Zero coalition: ≥ 2 vote 'Zero' → altruists get $0, non-Zero player gets $6
+                zero_count = sum([c1 == 'Zero', c2 == 'Zero', c3 == 'Zero'])
+                if zero_count >= 2:
+                    for p in players:
+                        if p.decision_choice == 'Zero':
+                            p.payoff = C.PAYOFF_DISAGREEMENT  # $0 (altruist's choice)
+                        else:
+                            p.payoff = C.PAYOFF_MAX           # $6 (non-Zero beneficiary)
+                # Else remains 0 (Disagreement)
         
         # Calculate group-level variables
         # grp_coordinate: 1 if at least one player has payoff different from disagreement (payoff > 0)
@@ -1152,11 +1176,13 @@ class Results(Page):
         colors = _color_context(player)
         choice = player.decision_choice
         if choice == 'Left':
-            choice_display = f"I would like to divide the $12 equally only with the {colors['left_partner_color']} Participant"
+            choice_display = f"I intend to vote for 'I get $6, the {colors['left_partner_color']} Participant gets $6, and the {colors['right_partner_color']} Participant gets $0'"
         elif choice == 'Right':
-            choice_display = f"I would like to divide the $12 equally only with the {colors['right_partner_color']} Participant"
+            choice_display = f"I intend to vote for 'I get $6, the {colors['right_partner_color']} Participant gets $6, and the {colors['left_partner_color']} Participant gets $0'"
+        elif choice == 'Zero':
+            choice_display = f"I intend to vote for 'I get $0, the {colors['left_partner_color']} Participant gets $6, and the {colors['right_partner_color']} Participant gets $6'"
         else:
-            choice_display = "I would like to divide the $12 equally with the two participants"
+            choice_display = "I intend to vote for 'Everyone gets $2'"
         return dict(choice_display=choice_display, **colors)
 
     @staticmethod
