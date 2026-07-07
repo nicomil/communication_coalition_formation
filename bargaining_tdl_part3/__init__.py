@@ -195,9 +195,9 @@ class InstructionsPart3(Page):
         order_key = 'decision_part3_option_order'
         if order_key not in player.participant.vars:
             options = [
-                {'value': 'share_both', 'label': "I intend to vote for 'Everyone gets $2'."},
-                {'value': 'share_one',  'label': "I intend to vote for 'I get $6, one Receiver gets $6, one Receiver gets $0'."},
-                {'value': 'share_zero', 'label': "I intend to vote for 'I get $0, one Receiver gets $6, one Receiver gets $6'."},
+                {'value': 'share_both', 'label': "I intend to vote for <span style='font-weight: bold;'>'Everyone gets $2'</span>."},
+                {'value': 'share_one',  'label': "I intend to vote for <span style='font-weight: bold;'>'I get $6, one Receiver gets $6, one Receiver gets $0'</span>."},
+                {'value': 'share_zero', 'label': "I intend to vote for <span style='font-weight: bold;'>'I get $0, one Receiver gets $6, one Receiver gets $6'</span>."},
             ]
             random.shuffle(options)
             player.participant.vars[order_key] = options
