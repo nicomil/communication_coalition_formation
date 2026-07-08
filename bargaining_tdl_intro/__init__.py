@@ -515,6 +515,12 @@ class Goodbye(Page):
         return has_failed_control_questions(player, 'intro')
     
     @staticmethod
+    def vars_for_template(player):
+        return dict(
+            is_inactive=_is_inactive_excluded(player)
+        )
+
+    @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_goodbye = save_time_value(player.time_on_page)
         logger.debug(f"Goodbye - time_goodbye saved: {player.time_goodbye}")

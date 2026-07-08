@@ -835,6 +835,12 @@ class ExperimentTerminated(Page):
         return has_failed_control_questions(player, 'intro') or _is_inactive_excluded(player)
 
     @staticmethod
+    def vars_for_template(player):
+        return dict(
+            is_inactive=_is_inactive_excluded(player)
+        )
+
+    @staticmethod
     def js_vars(player):
         return dict(
             completionlink=player.session.config.get('completionlink', '').strip(),
@@ -1040,6 +1046,12 @@ class InactivityGoodbyeMain(Page):
     def js_vars(player):
         return dict(
             completionlink=player.session.config.get('completionlink', '').strip(),
+        )
+
+    @staticmethod
+    def vars_for_template(player):
+        return dict(
+            is_inactive=True
         )
 
     @staticmethod

@@ -11,10 +11,15 @@
     <div class="card-body px-5 py-4">
         <p><strong>Thank you for your participation!</strong></p>
 
+        {{ if is_inactive }}
         <p>
-            Unfortunately, you did not answer all the control questions correctly.
-            As a result, the experiment has ended for you.
+            Your experiment session ended due to inactivity.
         </p>
+        {{ else }}
+        <p>
+            You did not answer all the control questions correctly. As a result, the experiment has ended for you
+        </p>
+        {{ endif }}
 
         <p>
             We appreciate your time and interest in participating in this study.
