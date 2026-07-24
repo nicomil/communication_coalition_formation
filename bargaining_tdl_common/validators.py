@@ -144,7 +144,10 @@ def check_control_questions_intro(player):
         not player.example2_earnings_right or
         not player.example3_earnings_you or 
         not player.example3_earnings_left or 
-        not player.example3_earnings_right):
+        not player.example3_earnings_right or
+        not player.example4_earnings_you or
+        not player.example4_earnings_left or
+        not player.example4_earnings_right):
         return False
     
     correct = (
@@ -156,7 +159,10 @@ def check_control_questions_intro(player):
         player.example2_earnings_right == "2" and
         player.example3_earnings_you == "0" and
         player.example3_earnings_left == "0" and
-        player.example3_earnings_right == "0"
+        player.example3_earnings_right == "0" and
+        player.example4_earnings_you == "0" and
+        player.example4_earnings_left == "6" and
+        player.example4_earnings_right == "6"
     )
     return correct
 
