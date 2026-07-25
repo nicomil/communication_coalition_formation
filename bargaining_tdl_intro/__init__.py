@@ -120,6 +120,10 @@ def _mark_inactive_exclusion(player, reason):
     player.participant.vars['inactive_excluded_reason'] = reason
 
 
+def _is_inactive_excluded(player):
+    return bool(player.participant.vars.get('inactive_excluded', False))
+
+
 class C(BaseConstants):
     NAME_IN_URL = 'bargaining_tdl_intro'
     PLAYERS_PER_GROUP = None  # No groups in this app; grouping happens in bargaining_tdl_main
