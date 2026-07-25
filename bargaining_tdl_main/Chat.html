@@ -87,7 +87,7 @@
 {% if reveal_third_party_chat %}
 {# ---- Ramo PUBLIC ---- #}
 <p>
-    <li><strong>Please remember that messages are
+    <li><strong>Please remember that messages will become
             public</strong>: the {{ left_partner_color }} Participant will be able to read your exchanges with the {{
         right_partner_color }}
         Participant, and the {{ right_partner_color }} Participant will be able to read your exchanges with the
@@ -248,11 +248,11 @@
         }
 
         applyStatus({
-            left_partner_active: {{ left_partner_active|json }},
-            right_partner_active: {{ right_partner_active|json }},
-            should_auto_advance: {{ should_auto_advance|json }},
-            waiting_on_reconnect: {{ waiting_on_reconnect|json }},
-            reconnect_seconds_left: {{ reconnect_seconds_left|json }}
+            left_partner_active: {{ left_partner_active| json }},
+    right_partner_active: { { right_partner_active | json } },
+    should_auto_advance: { { should_auto_advance | json } },
+    waiting_on_reconnect: { { waiting_on_reconnect | json } },
+    reconnect_seconds_left: { { reconnect_seconds_left | json } }
         });
 
     window.liveRecv = function (data) {
@@ -306,7 +306,7 @@
             // best effort only
         }
     });
-    })();
+    }) ();
 </script>
 
 {{ include_sibling '_chat_customization.html' }}

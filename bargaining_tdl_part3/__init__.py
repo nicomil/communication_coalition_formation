@@ -359,6 +359,12 @@ class ThankYouPart3(Page):
         return has_failed_control_questions(player, 'part3') or _is_inactive_excluded(player)
 
     @staticmethod
+    def vars_for_template(player):
+        return dict(
+            is_inactive=_is_inactive_excluded(player)
+        )
+
+    @staticmethod
     def js_vars(player):
         return dict(
             completionlink=player.session.config.get('completionlink', '').strip(),

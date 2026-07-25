@@ -264,9 +264,39 @@ class Player(BasePlayer):
         widget=widgets.RadioSelect,
         label="What would be the earnings for the Blue Participant ?"
     )
-    
 
-    
+    # Control Questions - Example 4
+    # Scenario: All three vote for the same outcome '$0 to Green, $6 to Red, $6 to Blue'.
+    # This is all three supporting coalition Red+Blue (votes_23 = 3 >= 2).
+    # Result: Green=0, Red=6, Blue=6
+    example4_earnings_you = models.StringField(
+        choices=[
+            ['6', '$6'],
+            ['2', '$2'],
+            ['0', '$0'],
+        ],
+        widget=widgets.RadioSelect,
+        label="What would your earnings be as Green Participant ?"
+    )
+    example4_earnings_left = models.StringField(
+        choices=[
+            ['6', '$6'],
+            ['2', '$2'],
+            ['0', '$0'],
+        ],
+        widget=widgets.RadioSelect,
+        label="What would be the earnings for the Red Participant ?"
+    )
+    example4_earnings_right = models.StringField(
+        choices=[
+            ['6', '$6'],
+            ['2', '$2'],
+            ['0', '$0'],
+        ],
+        widget=widgets.RadioSelect,
+        label="What would be the earnings for the Blue Participant ?"
+    )
+
     # Time tracking fields (in seconds)
     time_welcome = models.FloatField(initial=0)
     time_instructions_part1 = models.FloatField(initial=0)
@@ -375,6 +405,9 @@ def create_control_questions_class(attempt_number):
             example3_earnings_you='6',   # sbagliato (corretto: '0')
             example3_earnings_left='6',  # sbagliato (corretto: '0')
             example3_earnings_right='6', # sbagliato (corretto: '0')
+            example4_earnings_you='6',   # sbagliato (corretto: '0')
+            example4_earnings_left='0',  # sbagliato (corretto: '6')
+            example4_earnings_right='0', # sbagliato (corretto: '6')
         )
 
         @staticmethod
@@ -390,6 +423,9 @@ def create_control_questions_class(attempt_number):
             'example3_earnings_you',
             'example3_earnings_left',
             'example3_earnings_right',
+            'example4_earnings_you',
+            'example4_earnings_left',
+            'example4_earnings_right',
             'time_on_page'
         ]
 
@@ -433,6 +469,11 @@ def create_control_questions_class(attempt_number):
                 'example3_scenario': (
                     "Imagine that you are the Green Participant, and vote for 'everyone gets $2';<br>"
                     "- The Red Participant vote for '$6 to you, $0 to the Blue Participant, $6 to the Red Participant';<br>"
+                    "- The Blue Participant votes for '$0 to you, $6 to the Blue Participant, $6 to the Red Participant'."
+                ),
+                'example4_scenario': (
+                    "Imagine that you are the Green Participant, and vote for '$0 to you, $6 to the Blue Participant, $6 to the Red Participant';<br>"
+                    "- The Red Participant votes for '$0 to you, $6 to the Blue Participant, $6 to the Red Participant';<br>"
                     "- The Blue Participant votes for '$0 to you, $6 to the Blue Participant, $6 to the Red Participant'."
                 ),
                 'max_attempts': max_attempts,
@@ -514,6 +555,12 @@ class Goodbye(Page):
         """Mostra questa pagina solo se le risposte alle control questions erano sbagliate."""
         return has_failed_control_questions(player, 'intro')
     
+    @staticmethod
+    def vars_for_template(player):
+        return dict(
+            is_inactive=_is_inactive_excluded(player)
+        )
+
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_goodbye = save_time_value(player.time_on_page)

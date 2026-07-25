@@ -835,6 +835,12 @@ class ExperimentTerminated(Page):
         return has_failed_control_questions(player, 'intro') or _is_inactive_excluded(player)
 
     @staticmethod
+    def vars_for_template(player):
+        return dict(
+            is_inactive=_is_inactive_excluded(player)
+        )
+
+    @staticmethod
     def js_vars(player):
         return dict(
             completionlink=player.session.config.get('completionlink', '').strip(),
@@ -1043,6 +1049,12 @@ class InactivityGoodbyeMain(Page):
         )
 
     @staticmethod
+    def vars_for_template(player):
+        return dict(
+            is_inactive=True
+        )
+
+    @staticmethod
     def app_after_this_page(player, upcoming_apps):
         return []
 
@@ -1086,53 +1098,67 @@ class ResultsWaitPage(WaitPage):
         # We NO LONGER abort payoffs if group.group_dropped is True.
         # The logic below will use random choices for anyone with decision_inactive == 99.
 
-        # Logic:
-        # 1. At least 2 choose Both -> All get 2
-        both_count = sum([c1 == 'Both', c2 == 'Both', c3 == 'Both'])
-        if both_count >= 2:
+        # ============================================================
+        # PAYOFF LOGIC — Directional coalition voting
+        #
+        # Each of the 4 options maps to supporting a specific coalition.
+        # A coalition is activated if it receives ≥ 2 votes from any
+        # combination of players (each player in their own way).
+        #
+        # Topology: P1.left=P3, P1.right=P2
+        #           P2.left=P1, P2.right=P3
+        #           P3.left=P2, P3.right=P1
+        #
+        # Vote → Coalition supported:
+        #   Both  → Grand coalition (P1+P2+P3) → all get $2
+        #   Left  → Coalition with own left partner
+        #   Right → Coalition with own right partner
+        #   Zero  → Coalition of own two partners (self-excluded, gets $0)
+        #
+        # Mapping per coalition (who benefits / who is excluded):
+        #   Coalition P1+P2 (P3 excluded, $0):
+        #     supported by P1 choosing 'Right', P2 choosing 'Left', P3 choosing 'Zero'
+        #   Coalition P2+P3 (P1 excluded, $0):
+        #     supported by P1 choosing 'Zero',  P2 choosing 'Right', P3 choosing 'Left'
+        #   Coalition P3+P1 (P2 excluded, $0):
+        #     supported by P1 choosing 'Left',  P2 choosing 'Zero',  P3 choosing 'Right'
+        # ============================================================
+
+        # Grand coalition
+        votes_grand = sum([c1 == 'Both',  c2 == 'Both',  c3 == 'Both'])
+
+        # Minimal coalition P1+P2 (P3 gets $0)
+        votes_12 = sum([c1 == 'Right', c2 == 'Left',  c3 == 'Zero'])
+
+        # Minimal coalition P2+P3 (P1 gets $0)
+        votes_23 = sum([c1 == 'Zero',  c2 == 'Right', c3 == 'Left'])
+
+        # Minimal coalition P3+P1 (P2 gets $0)
+        votes_31 = sum([c1 == 'Left',  c2 == 'Zero',  c3 == 'Right'])
+
+        if votes_grand >= 2:
             for p in players:
-                p.payoff = C.PAYOFF_SPLIT
-        else:
-            # 2. Pairwise matches (Strict majority, implicit)
-            # P1-P2 match? (P1->Right, P2->Left)
-            match_12 = (c1 == 'Right' and c2 == 'Left')
-            
-            # P2-P3 match? (P2->Right, P3->Left)
-            match_23 = (c2 == 'Right' and c3 == 'Left')
-
-            # P3-P1 match? (P3->Right, P1->Left)
-            match_31 = (c3 == 'Right' and c1 == 'Left')
-
-            if match_12:
-                p1.payoff = C.PAYOFF_MAX
-                p2.payoff = C.PAYOFF_MAX
-                p3.payoff = C.PAYOFF_DISAGREEMENT
-            elif match_23:
-                p2.payoff = C.PAYOFF_MAX
-                p3.payoff = C.PAYOFF_MAX
-                p1.payoff = C.PAYOFF_DISAGREEMENT
-            elif match_31:
-                p3.payoff = C.PAYOFF_MAX
-                p1.payoff = C.PAYOFF_MAX
-                p2.payoff = C.PAYOFF_DISAGREEMENT
-
-            else:
-                # 3. Zero coalition: ≥ 2 vote 'Zero' → altruists get $0, non-Zero player gets $6
-                zero_count = sum([c1 == 'Zero', c2 == 'Zero', c3 == 'Zero'])
-                if zero_count >= 2:
-                    for p in players:
-                        if p.decision_choice == 'Zero':
-                            p.payoff = C.PAYOFF_DISAGREEMENT  # $0 (altruist's choice)
-                        else:
-                            p.payoff = C.PAYOFF_MAX           # $6 (non-Zero beneficiary)
-                # Else remains 0 (Disagreement)
+                p.payoff = C.PAYOFF_SPLIT          # $2 to all
+        elif votes_12 >= 2:
+            p1.payoff = C.PAYOFF_MAX               # $6
+            p2.payoff = C.PAYOFF_MAX               # $6
+            p3.payoff = C.PAYOFF_DISAGREEMENT      # $0
+        elif votes_23 >= 2:
+            p2.payoff = C.PAYOFF_MAX               # $6
+            p3.payoff = C.PAYOFF_MAX               # $6
+            p1.payoff = C.PAYOFF_DISAGREEMENT      # $0
+        elif votes_31 >= 2:
+            p3.payoff = C.PAYOFF_MAX               # $6
+            p1.payoff = C.PAYOFF_MAX               # $6
+            p2.payoff = C.PAYOFF_DISAGREEMENT      # $0
+        # else: no coalition reaches 2 votes → all remain at PAYOFF_DISAGREEMENT ($0)
         
         # Calculate group-level variables
         # grp_coordinate: 1 if at least one player has payoff different from disagreement (payoff > 0)
         group.grp_coordinate = 1 if any(p.payoff > C.PAYOFF_DISAGREEMENT for p in players) else 0
         
         # grp_triadicsplit: 1 if at least two players voted for "Both" (equally split among all members)
-        group.grp_triadicsplit = 1 if both_count >= 2 else 0
+        group.grp_triadicsplit = 1 if votes_grand >= 2 else 0
 
         # ======= SELEZIONE CASUALE PARTE 1 O PARTE 3 =======
         import random
