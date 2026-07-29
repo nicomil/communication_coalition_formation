@@ -1,0 +1,115 @@
+{{ extends "_templates/global/Page.html" }}
+{{ block title }}Please indicate how much you agree or disagree with each statement{{ endblock }}
+{{ block content }}
+
+{{ include_sibling '_survey_timer.html' }}
+{{ include_sibling '_button_style.html' }}
+
+<style>
+    .otree-body {
+        max-width: 1100px;
+    }
+
+    .survey-matrix-wrap {
+        overflow-x: auto;
+        margin-top: 1.25rem;
+    }
+
+    .survey-matrix {
+        width: 100%;
+        min-width: 820px;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .survey-matrix th,
+    .survey-matrix td {
+        border: 1px solid #d8d8d8;
+        padding: 10px 8px;
+        vertical-align: middle;
+    }
+
+    .survey-matrix thead th {
+        background: #f1f3f5;
+        text-align: center;
+        font-size: 0.85rem;
+    }
+
+    .survey-matrix .question-column {
+        width: 50%;
+        text-align: left;
+    }
+
+    .survey-matrix tbody th {
+        background: #fafafa;
+        font-weight: 500;
+    }
+
+    .survey-matrix .radio-cell {
+        width: 10%;
+        text-align: center;
+    }
+
+    .survey-matrix input[type="radio"] {
+        width: 19px;
+        height: 19px;
+        cursor: pointer;
+    }
+
+    .scale-number {
+        display: block;
+        margin-top: 4px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="card bg-white mt-4 mb-4 shadow-sm">
+    <div class="card-body px-4 py-4">
+        <p class="text-muted mb-0">
+            Select exactly one response for every statement.
+        </p>
+
+        <div class="survey-matrix-wrap">
+            <table class="survey-matrix">
+                <thead>
+                    <tr>
+                        <th scope="col" class="question-column">Statement</th>
+                        {% for value, label in agreement_scale %}
+                        <th scope="col">
+                            {{ label }}
+                            <span class="scale-number">{{ value }}</span>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in matrix_items %}
+                    <tr>
+                        <th scope="row" id="{{ item.field_name }}_statement">
+                            {{ item.number }}. {{ item.text }}
+                        </th>
+                        {% for value, label in agreement_scale %}
+                        <td class="radio-cell">
+                            <input
+                                type="radio"
+                                name="{{ item.field_name }}"
+                                id="{{ item.field_name }}_{{ value }}"
+                                value="{{ value }}"
+                                aria-labelledby="{{ item.field_name }}_statement"
+                                aria-label="{{ label }}"
+                                {% if item.current_value == value %}checked{% endif %}
+                                required>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{{ include '_templates/global/_time_tracking_field.html' }}
+{{ next_button }}
+
+{{ endblock }}

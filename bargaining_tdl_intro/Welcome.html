@@ -23,17 +23,15 @@
             In this experiment, you and the other participants will make a series of decisions that will directly affect
             your monetary rewards. Your earnings will depend on both your own choices and those made by the other
             participants. Similarly, your decisions will play a role in determining the earnings of others. All the data
-            are anonymous, and we only ask for your honest responses. The experiment consists of: two parts,
-            <strong>Part 1</strong> and <strong> Part 2</strong>, in either you can earn between $0 and $6 in a group
-            choice
-            task; a final survey; and an additional question in a group choice task.
+            are anonymous, and we only ask for your honest responses. The experiment consists of
+            <strong>Part 1</strong>, in which your group choices determine your earnings; a final survey; and an
+            additional question in a group choice task.
         </p>
 
         <p>
-            <strong>Please note:</strong> Your payment for this experiment will be the sum of: $3 as participation fee,
-            and completing the final survey;
-            plus your payoff for either Part 1 or Part 2 (<strong>only one will be randomly selected for the
-                payment</strong>); plus a maximum of $3.90 with an additional question in a group choice task.
+            <strong>Please note:</strong> Your payment for this experiment will be the sum of:
+            {{ participation_fee }} as participation fee and completing the final survey;
+            plus your payoff from Part 1; plus a maximum of $3.90 from an additional question in a group choice task.
             <strong>If
                 you do not make any decision within 5 minutes, the computer will remove you from the experiment, and you
                 will
@@ -56,7 +54,8 @@
         <div class="mb-3">
             <label for="prolific_pid_url" class="form-label fw-bold">Prolific ID</label>
             <input type="text" name="prolific_pid_url" id="prolific_pid_url" class="form-control" {{ if
-                require_prolific_id }}required{{ endif }} autocomplete="off" placeholder="Your Prolific participant ID">
+                require_prolific_id }}required{{ endif }} autocomplete="off" placeholder="Your Prolific participant ID"
+                value="{{ prolific_pid_initial }}">
         </div>
 
         <details class="mb-0">
@@ -85,17 +84,34 @@
 <script>
     (function () {
         const params = new URLSearchParams(window.location.search);
-        const pid = params.get('participant_label') || params.get('PROLIFIC_PID') || '';
-        const studyId = params.get('STUDY_ID') || '';
-        const sessionId = params.get('SESSION_ID') || '';
+        function savedValue(key) {
+            try {
+                return window.sessionStorage.getItem(key) || '';
+            } catch (error) {
+                return '';
+            }
+        }
+
+        const pid = params.get('participant_label') || params.get('PROLIFIC_PID') ||
+            savedValue('ccf_prolific_pid');
+        const studyId = params.get('STUDY_ID') || savedValue('ccf_prolific_study_id');
+        const sessionId = params.get('SESSION_ID') || savedValue('ccf_prolific_session_id');
 
         const pidEl = document.getElementById('prolific_pid_url');
         const studyEl = document.getElementById('prolific_study_id');
         const sessionEl = document.getElementById('prolific_session_id');
 
-        if (pidEl) pidEl.value = pid;
-        if (studyEl) studyEl.value = studyId;
-        if (sessionEl) sessionEl.value = sessionId;
+        if (pidEl && pid) pidEl.value = pid;
+        if (studyEl && studyId) studyEl.value = studyId;
+        if (sessionEl && sessionId) sessionEl.value = sessionId;
+
+        try {
+            window.sessionStorage.removeItem('ccf_prolific_pid');
+            window.sessionStorage.removeItem('ccf_prolific_study_id');
+            window.sessionStorage.removeItem('ccf_prolific_session_id');
+        } catch (error) {
+            // Storage can be disabled; participant.label still supplies PID.
+        }
     })();
 </script>
 

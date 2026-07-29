@@ -15,6 +15,50 @@ from bargaining_tdl_common import (  # type: ignore
 _SURVEY_PAGE_TIMEOUT = 180
 _SURVEY_PAGE10_TIMEOUT = 300
 
+AGREEMENT_SCALE = [
+    (1, 'Disagree strongly'),
+    (2, 'Disagree'),
+    (3, 'Neither agree nor disagree'),
+    (4, 'Agree'),
+    (5, 'Agree strongly'),
+]
+
+SD3_MACHIAVELLIANISM_ITEMS = [
+    ('sd3_mach_01', "It’s not wise to tell your secrets."),
+    ('sd3_mach_02', 'I like to use clever manipulation to get my way.'),
+    ('sd3_mach_03', 'Whatever it takes, you must get the important people on your side.'),
+    ('sd3_mach_04', 'Avoid direct conflict with others because they may be useful in the future.'),
+    ('sd3_mach_05', 'It’s wise to keep track of information that you can use against people later.'),
+    ('sd3_mach_06', 'You should wait for the right time to get back at people.'),
+    ('sd3_mach_07', 'There are things you should hide from other people to preserve your reputation.'),
+    ('sd3_mach_08', 'Make sure your plans benefit yourself, not others.'),
+    ('sd3_mach_09', 'Most people can be manipulated.'),
+]
+
+SD3_NARCISSISM_ITEMS = [
+    ('sd3_narc_01', 'People see me as a natural leader.'),
+    ('sd3_narc_02', 'I hate being the center of attention.'),
+    ('sd3_narc_03', 'Many group activities tend to be dull without me.'),
+    ('sd3_narc_04', 'I know that I am special because everyone keeps telling me so.'),
+    ('sd3_narc_05', 'I like to get acquainted with important people.'),
+    ('sd3_narc_06', 'I feel embarrassed if someone compliments me.'),
+    ('sd3_narc_07', 'I have been compared to famous people.'),
+    ('sd3_narc_08', 'I am an average person.'),
+    ('sd3_narc_09', 'I insist on getting the respect I deserve.'),
+]
+
+SD3_PSYCHOPATHY_ITEMS = [
+    ('sd3_psych_01', 'I like to get revenge on authorities.'),
+    ('sd3_psych_02', 'I avoid dangerous situations.'),
+    ('sd3_psych_03', 'Payback needs to be quick and nasty.'),
+    ('sd3_psych_04', 'People often say I’m out of control.'),
+    ('sd3_psych_05', 'It’s true that I can be mean to others.'),
+    ('sd3_psych_06', 'People who mess with me always regret it.'),
+    ('sd3_psych_07', 'I have never gotten into trouble with the law.'),
+    ('sd3_psych_08', 'I enjoy having sex with people I hardly know.'),
+    ('sd3_psych_09', 'I’ll say anything to get what I want.'),
+]
+
 
 class _SurveyTimedPage(Page):
     @staticmethod
@@ -98,6 +142,37 @@ class Player(BasePlayer):
         label="Please indicate your job status:",
     )
 
+    # Short Dark Triad: tre matrici da nove item, scala 1-5.
+    sd3_mach_01 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_MACHIAVELLIANISM_ITEMS[0][1])
+    sd3_mach_02 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_MACHIAVELLIANISM_ITEMS[1][1])
+    sd3_mach_03 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_MACHIAVELLIANISM_ITEMS[2][1])
+    sd3_mach_04 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_MACHIAVELLIANISM_ITEMS[3][1])
+    sd3_mach_05 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_MACHIAVELLIANISM_ITEMS[4][1])
+    sd3_mach_06 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_MACHIAVELLIANISM_ITEMS[5][1])
+    sd3_mach_07 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_MACHIAVELLIANISM_ITEMS[6][1])
+    sd3_mach_08 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_MACHIAVELLIANISM_ITEMS[7][1])
+    sd3_mach_09 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_MACHIAVELLIANISM_ITEMS[8][1])
+
+    sd3_narc_01 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_NARCISSISM_ITEMS[0][1])
+    sd3_narc_02 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_NARCISSISM_ITEMS[1][1])
+    sd3_narc_03 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_NARCISSISM_ITEMS[2][1])
+    sd3_narc_04 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_NARCISSISM_ITEMS[3][1])
+    sd3_narc_05 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_NARCISSISM_ITEMS[4][1])
+    sd3_narc_06 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_NARCISSISM_ITEMS[5][1])
+    sd3_narc_07 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_NARCISSISM_ITEMS[6][1])
+    sd3_narc_08 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_NARCISSISM_ITEMS[7][1])
+    sd3_narc_09 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_NARCISSISM_ITEMS[8][1])
+
+    sd3_psych_01 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_PSYCHOPATHY_ITEMS[0][1])
+    sd3_psych_02 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_PSYCHOPATHY_ITEMS[1][1])
+    sd3_psych_03 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_PSYCHOPATHY_ITEMS[2][1])
+    sd3_psych_04 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_PSYCHOPATHY_ITEMS[3][1])
+    sd3_psych_05 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_PSYCHOPATHY_ITEMS[4][1])
+    sd3_psych_06 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_PSYCHOPATHY_ITEMS[5][1])
+    sd3_psych_07 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_PSYCHOPATHY_ITEMS[6][1])
+    sd3_psych_08 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_PSYCHOPATHY_ITEMS[7][1])
+    sd3_psych_09 = models.IntegerField(choices=AGREEMENT_SCALE, label=SD3_PSYCHOPATHY_ITEMS[8][1])
+
     # ── Scale questions ──────────────────────────────────────────────────────
     # Willingness to delay gratification (0–10)
     willingness_future = models.IntegerField(
@@ -165,6 +240,9 @@ class Player(BasePlayer):
     time_on_page = models.FloatField(initial=0, blank=True)
     time_survey_intro = models.FloatField(initial=0)
     time_survey_questions = models.FloatField(initial=0)
+    time_survey_sd3_mach = models.FloatField(initial=0)
+    time_survey_sd3_narc = models.FloatField(initial=0)
+    time_survey_sd3_psych = models.FloatField(initial=0)
     time_survey_scale_intro = models.FloatField(initial=0)
     time_survey_page4 = models.FloatField(initial=0)
     time_survey_page5 = models.FloatField(initial=0)
@@ -185,6 +263,15 @@ class SurveyIntro(Page):
     """Introductory page with thank-you text and survey description."""
     form_model = 'player'
     form_fields = ['time_on_page']
+
+    @staticmethod
+    def vars_for_template(player):
+        from otree.api import Currency as cu
+        return {
+            'participation_fee': cu(
+                player.session.config.get('participation_fee', 3)
+            )
+        }
 
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -223,6 +310,93 @@ class SurveyQuestions(_SurveyTimedPage):
         player.time_survey_questions = player.time_on_page or 0
         if timeout_happened:
             _mark_inactive_exclusion(player, 'survey_questions_timeout')
+
+
+def _matrix_context(player, items):
+    return {
+        'matrix_items': [
+            {
+                'number': index,
+                'field_name': field_name,
+                'text': text,
+                'current_value': player.field_maybe_none(field_name),
+            }
+            for index, (field_name, text) in enumerate(items, start=1)
+        ],
+        'agreement_scale': AGREEMENT_SCALE,
+    }
+
+
+class SurveySD3Machiavellianism(_SurveyTimedPage):
+    template_name = 'bargaining_tdl_survey/SurveyMatrix.html'
+    form_model = 'player'
+    form_fields = [
+        *(field_name for field_name, _ in SD3_MACHIAVELLIANISM_ITEMS),
+        'time_on_page',
+    ]
+    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT)
+
+    @staticmethod
+    def vars_for_template(player):
+        return _matrix_context(player, SD3_MACHIAVELLIANISM_ITEMS)
+
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        player.time_survey_sd3_mach = player.time_on_page or 0
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'survey_sd3_mach_timeout')
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
+
+
+class SurveySD3Narcissism(_SurveyTimedPage):
+    template_name = 'bargaining_tdl_survey/SurveyMatrix.html'
+    form_model = 'player'
+    form_fields = [
+        *(field_name for field_name, _ in SD3_NARCISSISM_ITEMS),
+        'time_on_page',
+    ]
+    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT)
+
+    @staticmethod
+    def vars_for_template(player):
+        return _matrix_context(player, SD3_NARCISSISM_ITEMS)
+
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        player.time_survey_sd3_narc = player.time_on_page or 0
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'survey_sd3_narc_timeout')
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
+
+
+class SurveySD3Psychopathy(_SurveyTimedPage):
+    template_name = 'bargaining_tdl_survey/SurveyMatrix.html'
+    form_model = 'player'
+    form_fields = [
+        *(field_name for field_name, _ in SD3_PSYCHOPATHY_ITEMS),
+        'time_on_page',
+    ]
+    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT)
+
+    @staticmethod
+    def vars_for_template(player):
+        return _matrix_context(player, SD3_PSYCHOPATHY_ITEMS)
+
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        player.time_survey_sd3_psych = player.time_on_page or 0
+        if timeout_happened:
+            _mark_inactive_exclusion(player, 'survey_sd3_psych_timeout')
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
 
 
 class SurveyScaleIntro(Page):
@@ -455,21 +629,14 @@ class FinalResults(Page):
         from otree.api import Currency as cu
         
         part1_group_id = player.participant.vars.get('part1_group_id')
-        selected = player.participant.vars.get('selected_part_for_payment', 1)
         part1_payoff_eligible = bool(player.participant.vars.get('part1_payoff_eligible', True))
             
-        base_fee = cu(3)
+        base_fee = cu(player.session.config.get('participation_fee', 3))
         beauty_contest_bonus = cu(player.beauty_contest_guess or 0)
         part1_payoff_val = player.participant.vars.get('part1_payoff', cu(0))
         if not part1_payoff_eligible:
             part1_payoff_val = cu(0)
-        
-        if selected == 1 and part1_payoff_eligible:
-            subtotal = base_fee + part1_payoff_val + beauty_contest_bonus
-        else:
-            subtotal = base_fee + beauty_contest_bonus
-            if selected != 1:
-                part1_payoff_val = "TBD"
+        subtotal = base_fee + part1_payoff_val + beauty_contest_bonus
 
         from bargaining_tdl_common import get_main_group_player, TOPOLOGY, COLOR_MAPPING
         
@@ -482,6 +649,23 @@ class FinalResults(Page):
         right_inactive = False
         my_choice_display = ""
         my_color = ""
+
+        def format_choice(choice, actor_id):
+            actor_left_id = TOPOLOGY[actor_id]['left']
+            actor_right_id = TOPOLOGY[actor_id]['right']
+            if choice == 'Left':
+                return (
+                    "I intend to vote for 'I get $6, the "
+                    f"{COLOR_MAPPING[actor_left_id]} Participant gets $6, "
+                    "and the other Participant gets $0'"
+                )
+            if choice == 'Right':
+                return (
+                    "I intend to vote for 'I get $6, the "
+                    f"{COLOR_MAPPING[actor_right_id]} Participant gets $6, "
+                    "and the other Participant gets $0'"
+                )
+            return "I intend to vote for 'Support no one'"
         
         if main_player:
             my_id = main_player.id_in_group
@@ -499,54 +683,12 @@ class FinalResults(Page):
             left_inactive = (left_partner.decision_inactive == 99)
             right_inactive = (right_partner.decision_inactive == 99)
 
-            # Formatta la propria scelta
-            my_c = main_player.decision_choice
-            if my_c == 'Both':
-                my_choice_display = "I intend to vote for 'Everyone gets $2'"
-            elif my_c == 'Zero':
-                my_left_id = TOPOLOGY[my_id]['left']
-                my_right_id = TOPOLOGY[my_id]['right']
-                my_choice_display = f"I intend to vote for 'I get $0, the {COLOR_MAPPING[my_left_id]} Participant gets $6, and the {COLOR_MAPPING[my_right_id]} Participant gets $6'"
-            elif my_c == 'Left':
-                my_left_id = TOPOLOGY[my_id]['left']
-                my_choice_display = f"I intend to vote for 'I get $6, the {COLOR_MAPPING[my_left_id]} Participant gets $6, and the other Participant gets $0'"
-            else:
-                my_right_id = TOPOLOGY[my_id]['right']
-                my_choice_display = f"I intend to vote for 'I get $6, the {COLOR_MAPPING[my_right_id]} Participant gets $6, and the other Participant gets $0'"
-            
-            # Formatta la scelta del left partner
-            left_c = left_partner.decision_choice
-            if left_c == 'Both':
-                left_choice_display = "I intend to vote for 'Everyone gets $2'"
-            elif left_c == 'Zero':
-                left_partner_left_id = TOPOLOGY[left_id]['left']
-                left_partner_right_id = TOPOLOGY[left_id]['right']
-                left_choice_display = f"I intend to vote for 'I get $0, the {COLOR_MAPPING[left_partner_left_id]} Participant gets $6, and the {COLOR_MAPPING[left_partner_right_id]} Participant gets $6'"
-            elif left_c == 'Left':
-                left_partner_left_id = TOPOLOGY[left_id]['left']
-                left_choice_display = f"I intend to vote for 'I get $6, the {COLOR_MAPPING[left_partner_left_id]} Participant gets $6, and the other Participant gets $0'"
-            else:
-                left_partner_right_id = TOPOLOGY[left_id]['right']
-                left_choice_display = f"I intend to vote for 'I get $6, the {COLOR_MAPPING[left_partner_right_id]} Participant gets $6, and the other Participant gets $0'"
-
-            # Formatta la scelta del right partner
-            right_c = right_partner.decision_choice
-            if right_c == 'Both':
-                right_choice_display = "I intend to vote for 'Everyone gets $2'"
-            elif right_c == 'Zero':
-                right_partner_left_id = TOPOLOGY[right_id]['left']
-                right_partner_right_id = TOPOLOGY[right_id]['right']
-                right_choice_display = f"I intend to vote for 'I get $0, the {COLOR_MAPPING[right_partner_left_id]} Participant gets $6, and the {COLOR_MAPPING[right_partner_right_id]} Participant gets $6'"
-            elif right_c == 'Left':
-                right_partner_left_id = TOPOLOGY[right_id]['left']
-                right_choice_display = f"I intend to vote for 'I get $6, the {COLOR_MAPPING[right_partner_left_id]} Participant gets $6, and the other Participant gets $0'"
-            else:
-                right_partner_right_id = TOPOLOGY[right_id]['right']
-                right_choice_display = f"I intend to vote for 'I get $6, the {COLOR_MAPPING[right_partner_right_id]} Participant gets $6, and the other Participant gets $0'"
+            my_choice_display = format_choice(main_player.decision_choice, my_id)
+            left_choice_display = format_choice(left_partner.decision_choice, left_id)
+            right_choice_display = format_choice(right_partner.decision_choice, right_id)
 
         return {
             'part1_group_id': part1_group_id,
-            'selected': selected,
             'part1_payoff_eligible': part1_payoff_eligible,
             'part1_payoff': part1_payoff_val,
             'subtotal': subtotal,
@@ -576,6 +718,9 @@ class FinalResults(Page):
 page_sequence = [
     SurveyIntro,
     SurveyQuestions,
+    SurveySD3Machiavellianism,
+    SurveySD3Narcissism,
+    SurveySD3Psychopathy,
     SurveyScaleIntro,
     SurveyPage4,
     SurveyPage5,

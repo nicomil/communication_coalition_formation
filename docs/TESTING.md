@@ -1,46 +1,45 @@
-# Guida ai test - stato attuale
+# Guida ai test
 
-## Flusso testato
-
-Esperimento attivo:
-1. `bargaining_tdl_intro`
-2. `bargaining_tdl_main`
-3. `bargaining_tdl_part3`
-4. `bargaining_tdl_survey`
-
-## Comandi principali
+## Suite
 
 ```bash
-otree test bargaining_tdl 9
-otree test bargaining_tdl 12
-otree test bargaining_tdl 9 --export
+# Flusso completo: tre casi payoff su tutti i bracci
+otree test bargaining_tdl 18
+
+# Bracci isolati
+otree test bargaining_tdl_private 9
+otree test bargaining_tdl_public 9
+otree test bargaining_tdl_private_no_dwl 9
+
+# Allocatore RCT con database in memoria
+OTREE_IN_MEMORY=1 python -m unittest test_rct_allocator.py
+
+# Unità payoff, schedule, dropout ed export
+python -m unittest \
+  bargaining_tdl_intro.tests.RandomizedScheduleTests \
+  bargaining_tdl_main.tests.PayoffLogicTests \
+  bargaining_tdl_main.test_dropout_sync \
+  test_process_all_apps.py
 ```
 
-Numero partecipanti consigliato: multiplo di 3.
+Numero partecipanti: multiplo di 3; usare multipli di 9 per verificare blocchi
+RCT completi.
 
-## Test singola app
+## Casi end-to-end
 
-```bash
-otree test bargaining_tdl_intro 3
-otree test bargaining_tdl_main 3
-otree test bargaining_tdl_part3 3
-otree test bargaining_tdl_survey 3
-```
+- `mutual_12`: supporto reciproco, payoff 6/6/0.
+- `disagreement`: nessun accordo, payoff 0/0/0.
+- `no_dwl_star`: due supportano il terzo che sceglie `NoOne`; 12/0/0 solo
+  nel trattamento `private_no_dwl`.
 
-## Cosa verificare
+## Checklist pre-go-live
 
-- nessun errore bot
-- gruppi da 3 formati correttamente in main
-- payoff Part 1 coerenti con decisioni e fallback inattivita'
-- partecipanti inattivi con `part1_payoff_eligible=False` e payoff Part 1 a zero
-- survey completata fino a `FinalResults` per attivi
-- redirect completion Prolific funzionante
-
-## Checklist pre deploy
-
-- [ ] `otree test bargaining_tdl 9` passa
-- [ ] `otree test bargaining_tdl 12` passa
-- [ ] test export (`--export`) passa
-- [ ] verificata gestione dropout in main
-- [ ] verificata pagina feedback survey e salvataggio campi
-
+- [ ] suite sopra tutta verde;
+- [ ] tre trattamenti presenti 3:3:3 in ogni blocco completo;
+- [ ] CQ failure restituisce lo stesso slot al primo nuovo partecipante;
+- [ ] triadi omogenee per trattamento;
+- [ ] rating messaggi obbligatori e non mostrati ai partner;
+- [ ] 27 item SD3 obbligatori e collocati dopo le demografiche;
+- [ ] export `all_apps_wide`, `RCT Assignments`, `RCT Slots` scaricabili;
+- [ ] ingresso unico `/room/prolific` e redirect finale provati in anonimo;
+- [ ] wording No-DWL definitivo approvato prima del go-live.

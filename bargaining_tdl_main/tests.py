@@ -1,175 +1,146 @@
-from otree.api import Currency as c, currency_range, expect, Bot
-from . import *
-from bargaining_tdl_common import (
-    get_page_timeout_seconds,
-    set_control_questions_failed,
+import itertools
+import unittest
+
+from otree.api import Bot, Currency as cu, expect, Submission  # type: ignore
+
+from bargaining_tdl_common import TREATMENTS
+from . import (
+    C,
+    Chat,
+    Decision,
+    InactivityGoodbyeMain,
+    Results,
+    Signals,
+    VALID_DECISIONS,
+    calculate_payoff_vector,
 )
 
 
+BOT_CASES = ['mutual_12', 'disagreement', 'no_dwl_star', 'signals_timeout']
+
+
+def decisions_for_case(case, player_id):
+    profiles = {
+        'mutual_12': ('Right', 'Left', 'NoOne'),
+        'disagreement': ('Left', 'Left', 'Left'),
+        'no_dwl_star': ('NoOne', 'Left', 'Right'),
+        'signals_timeout': ('Right', 'Left', 'NoOne'),
+    }
+    return profiles[case][player_id - 1]
+
+
 class PlayerBot(Bot):
-    """
-    Bot realistico per testare la Part 1 Main (Decision).
-    I bot devono essere raggruppati in gruppi di 3 per testare correttamente.
-    """
-    
-    cases = [
-        'all_both',        # Tutti scelgono Both -> payoff 2 per tutti
-        'match_12',        # P1->Right, P2->Left -> P1 e P2 vincono (6), P3 perde (0)
-        'match_23',        # P2->Right, P3->Left -> P2 e P3 vincono (6), P1 perde (0)
-        'match_31',        # P3->Right, P1->Left -> P3 e P1 vincono (6), P2 perde (0)
-        'disagreement',    # Nessun match -> tutti 0
-        'mixed_strategy',  # Strategia mista per testare vari scenari
-        # Nota: 'experiment_terminated' non può essere testato insieme agli altri casi
-        # perché richiede che tutti i partecipanti falliscano le control questions
-    ]
-    
+    """Bot completo per chat, messaggi, decisione e payoff Part 1."""
+
+    cases = BOT_CASES
+
     def play_round(self):
-        """Simula il comportamento del partecipante nel gioco principale."""
-        
-        case = self.case
-        
-        # Test per ExperimentTerminated page (quando failed_control_questions=True)
-        if case == 'experiment_terminated':
-            # Imposta il flag per simulare il fallimento delle control questions
-            set_control_questions_failed(self.player, 'intro', failed=True)
-            
-            # ExperimentTerminated page - dovrebbe essere mostrata
-            yield ExperimentTerminated, dict(time_on_page=1.0)
-            
-            # Verifica che il time tracking sia stato salvato
-            expect(self.player.time_experiment_terminated, '>=', 0)
-            
-            # L'esperimento dovrebbe terminare qui (app_after_this_page ritorna [])
-            # Non ci dovrebbero essere altre pagine dopo questa
-            return
-        
-        # GroupingAfterControlQuestions is a WaitPage - handled automatically by oTree
-        # Chat - native chat is not simulated by bots
-        expect(Chat.get_timeout_seconds(self.player), 600)
-        yield Chat, dict(
-            time_on_page=1.0,
-        )
-        chat_status = Chat.live_method(self.player, {}).get(self.player.id_in_group, {})
-        expect('left_partner_active' in chat_status, True)
-        expect('right_partner_active' in chat_status, True)
-        expect('should_auto_advance' in chat_status, True)
-        # Signals - save intentions to participant.vars for DataMappingWaitPage mapping
-        id_in_group = self.player.id_in_group
-        if id_in_group == 1:
-            signal_left = "split_you"
-            signal_right = "split_other"
-        elif id_in_group == 2:
-            signal_left = "split_other"
-            signal_right = "split_both"
-        else:
-            signal_left = "split_both"
-            signal_right = "split_you"
-        yield Signals, dict(
-            signal_left=signal_left,
-            signal_right=signal_right,
-            time_on_page=1.0,
-        )
-        
-        # DataMappingWaitPage is a wait page - bots handle it automatically (no yield)
-        
-        # Decision - la scelta varia in base al case e alla posizione nel gruppo
-        if case == 'all_both':
-            decision = 'Both'
-        elif case == 'match_12':
-            # P1->Right, P2->Left, P3->Both (non partecipa al match)
-            if id_in_group == 1:
-                decision = 'Right'
-            elif id_in_group == 2:
-                decision = 'Left'
-            else:  # id_in_group == 3
-                decision = 'Both'
-        elif case == 'match_23':
-            # P2->Right, P3->Left, P1->Both
-            if id_in_group == 1:
-                decision = 'Both'
-            elif id_in_group == 2:
-                decision = 'Right'
-            else:  # id_in_group == 3
-                decision = 'Left'
-        elif case == 'match_31':
-            # P3->Right, P1->Left, P2->Both
-            if id_in_group == 1:
-                decision = 'Left'
-            elif id_in_group == 2:
-                decision = 'Both'
-            else:  # id_in_group == 3
-                decision = 'Right'
-        elif case == 'disagreement':
-            # Tutti scelgono Left (nessun match)
-            decision = 'Left'
-        else:  # mixed_strategy
-            # Strategia variabile per testare diversi scenari
-            if id_in_group == 1:
-                decision = 'Right'
-            elif id_in_group == 2:
-                decision = 'Left'
-            else:
-                decision = 'Both'
-        
-        yield Decision, dict(decision_choice=decision, time_on_page=1.5)
+        yield Chat, dict(time_on_page=1.0)
 
-        expect(
-            Results.get_timeout_seconds(self.player),
-            get_page_timeout_seconds(self.player, Results._RESULTS_TIMEOUT),
-        )
-
-        # ResultsWaitPage - oTree gestisce automaticamente l'attesa
-        # Il calcolo del payoff viene fatto in after_all_players_arrive
-
-        yield Results, dict(time_on_page=2.0)
-        
-        # Verifica che i time tracking fields siano stati salvati
-        expect(self.player.time_decision, '>=', 0)
-        expect(self.player.time_results, '>=', 0)
-        
-        # Verifica che i campi received_* siano stati popolati dopo il mapping
-        # (questi vengono popolati in after_all_players_arrive della DataMappingWaitPage)
-        expect(self.player.received_signal_left, '!=', None)
-        expect(self.player.received_signal_right, '!=', None)
-        expected_received = {
-            1: ("split_you", "split_other"),
-            2: ("split_other", "split_both"),
-            3: ("split_both", "split_you"),
+        player_id = self.player.id_in_group
+        signals = {
+            1: ('split_you', 'split_other'),
+            2: ('split_other', 'support_none'),
+            3: ('support_none', 'split_you'),
         }
-        exp_left, exp_right = expected_received[id_in_group]
-        expect(self.player.received_signal_left, exp_left)
-        expect(self.player.received_signal_right, exp_right)
-        
-        # Verifica che il payoff di Part 1 sia stato calcolato correttamente
-        expect(self.player.part1_calculated_payoff, '!=', None)
-        
-        # Verifica payoff specifici in base al case
-        if case == 'all_both':
-            expect(self.player.part1_calculated_payoff, C.PAYOFF_SPLIT)  # 3
-        elif case == 'match_12':
-            if id_in_group in [1, 2]:
-                expect(self.player.part1_calculated_payoff, C.PAYOFF_MAX)  # 6
-            else:
-                expect(self.player.part1_calculated_payoff, C.PAYOFF_DISAGREEMENT)  # 0
-        elif case == 'match_23':
-            if id_in_group in [2, 3]:
-                expect(self.player.part1_calculated_payoff, C.PAYOFF_MAX)  # 6
-            else:
-                expect(self.player.part1_calculated_payoff, C.PAYOFF_DISAGREEMENT)  # 0
-        elif case == 'match_31':
-            if id_in_group in [3, 1]:
-                expect(self.player.part1_calculated_payoff, C.PAYOFF_MAX)  # 6
-            else:
-                expect(self.player.part1_calculated_payoff, C.PAYOFF_DISAGREEMENT)  # 0
-        elif case == 'disagreement':
-            expect(self.player.part1_calculated_payoff, C.PAYOFF_DISAGREEMENT)  # 0
-        
-        # Verifica che il payoff sia stato salvato in participant.vars
-        expect(self.player.participant.vars.get('part1_payoff'), self.player.part1_calculated_payoff)
-        expect(self.group.chat_left_p1, True)
-        expect(self.group.chat_left_p2, True)
-        expect(self.group.chat_left_p3, True)
+        signal_left, signal_right = signals[player_id]
+        if self.case == 'signals_timeout':
+            yield Submission(Signals, {}, timeout_happened=True)
+            expect(
+                self.player.field_maybe_none('signal_left_convincingness'),
+                None,
+            )
+            expect(
+                self.player.field_maybe_none('signal_right_convincingness'),
+                None,
+            )
+        else:
+            yield Signals, dict(
+                signal_left=signal_left,
+                signal_right=signal_right,
+                signal_left_convincingness=3,
+                signal_right_convincingness=4,
+                first_intention_selected='left',
+                time_on_page=1.0,
+            )
+
+        decision = decisions_for_case(self.case, player_id)
+        yield Decision, dict(decision_choice=decision, time_on_page=1.5)
+        yield Results, dict(time_on_page=2.0)
+
+        no_dwl = self.player.treatment == 'private_no_dwl'
+        expected_vector, expected_outcome = calculate_payoff_vector(
+            tuple(decisions_for_case(self.case, pid) for pid in (1, 2, 3)),
+            no_deadweight_loss=no_dwl,
+        )
+        expect(
+            self.player.part1_calculated_payoff,
+            cu(expected_vector[player_id - 1]),
+        )
+        expect(self.group.group_outcome, expected_outcome)
+        if self.case == 'signals_timeout':
+            expect(self.player.payoff, cu(0))
+            yield Submission(
+                InactivityGoodbyeMain,
+                dict(time_on_page=1.0),
+                check_html=False,
+            )
+            return
+
+        expect(self.player.signal_left_convincingness, 3)
+        expect(self.player.signal_right_convincingness, 4)
+        expect(
+            self.player.participant.vars.get('part1_payoff'),
+            self.player.part1_calculated_payoff,
+        )
 
 
+class PayoffLogicTests(unittest.TestCase):
+    """Oracle indipendente per 27 profili × 3 trattamenti."""
 
+    @staticmethod
+    def expected(profile, no_dwl):
+        c1, c2, c3 = profile
+        if c1 == 'Right' and c2 == 'Left':
+            return (6, 6, 0)
+        if c2 == 'Right' and c3 == 'Left':
+            return (0, 6, 6)
+        if c3 == 'Right' and c1 == 'Left':
+            return (6, 0, 6)
+        if no_dwl:
+            if c1 == 'NoOne' and c2 == 'Left' and c3 == 'Right':
+                return (12, 0, 0)
+            if c2 == 'NoOne' and c1 == 'Right' and c3 == 'Left':
+                return (0, 12, 0)
+            if c3 == 'NoOne' and c1 == 'Left' and c2 == 'Right':
+                return (0, 0, 12)
+        return (0, 0, 0)
 
+    def test_all_profiles_in_all_treatments(self):
+        for treatment, config in TREATMENTS.items():
+            for profile in itertools.product(VALID_DECISIONS, repeat=3):
+                with self.subTest(treatment=treatment, profile=profile):
+                    actual, _ = calculate_payoff_vector(
+                        profile,
+                        no_deadweight_loss=config['no_deadweight_loss'],
+                    )
+                    self.assertEqual(
+                        actual,
+                        self.expected(profile, config['no_deadweight_loss']),
+                    )
+
+    def test_control_question_profiles(self):
+        # Example 1: Green/Blue support each other.
+        self.assertEqual(
+            calculate_payoff_vector(('Right', 'Left', 'NoOne'))[0],
+            (6, 6, 0),
+        )
+        # Example 2: both partners support Green, who supports no one.
+        profile = ('NoOne', 'Left', 'Right')
+        self.assertEqual(calculate_payoff_vector(profile, False)[0], (0, 0, 0))
+        self.assertEqual(calculate_payoff_vector(profile, True)[0], (12, 0, 0))
+        # Example 3: directed cycle.
+        self.assertEqual(
+            calculate_payoff_vector(('Right', 'Right', 'NoOne'))[0],
+            (0, 0, 0),
+        )

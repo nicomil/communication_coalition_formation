@@ -1,76 +1,60 @@
 """
-Framework dei trattamenti per l'esperimento bargaining_tdl.
+Registry dei trattamenti per l'esperimento bargaining_tdl.
 
-Registry generico dei trattamenti (varianti sperimentali). Ogni trattamento è un
-insieme di flag comportamentali letti dalle varie app. Aggiungere un esperimento
-futuro = aggiungere una voce qui + il comportamento che essa controlla.
+I trattamenti combinano due dimensioni indipendenti:
+- protocollo di comunicazione: private/public;
+- regola di payoff: total deadweight loss/no deadweight loss.
 
-Stato attuale: l'unica differenza comportamentale è la visibilità della chat nella
-Decision finale di Part 1:
-  - 'private': vedi solo le conversazioni di cui hai fatto parte (baseline attuale)
-  - 'public' : vedi anche la conversazione tra gli altri due partecipanti
-
-NB: la divisione equa 2,2,2 è GLOBALE (non è una differenza tra trattamenti).
+I codici storici ``private`` e ``public`` restano invariati per mantenere
+compatibili gli export già raccolti.
 """
 
-# Registry dei trattamenti disponibili.
 TREATMENTS = {
     'private': {
-        'label': 'Private communication (baseline)',
+        'label': 'Private communication — Total Deadweight Loss',
+        'communication_mode': 'private',
+        'payoff_rule': 'tdl',
         'reveal_third_party_chat': False,
+        'no_deadweight_loss': False,
     },
     'public': {
-        'label': 'Public communication',
+        'label': 'Public communication — Total Deadweight Loss',
+        'communication_mode': 'public',
+        'payoff_rule': 'tdl',
         'reveal_third_party_chat': True,
+        'no_deadweight_loss': False,
+    },
+    'private_no_dwl': {
+        'label': 'Private communication — No-Deadweight Loss',
+        'communication_mode': 'private',
+        'payoff_rule': 'no_dwl',
+        'reveal_third_party_chat': False,
+        'no_deadweight_loss': True,
     },
 }
 
 DEFAULT_TREATMENT = 'private'
-DEFAULT_ACTIVE_TREATMENTS = ['private', 'public']
+DEFAULT_ACTIVE_TREATMENTS = ['private', 'public', 'private_no_dwl']
 
 
 def get_active_treatments(session):
-    """
-    Trattamenti attivi per questa sessione (settings.py: `active_treatments`).
-
-    Permette di testare un singolo trattamento in isolamento: basta una session
-    config con `active_treatments=['public']`. Vengono mantenuti solo i
-    trattamenti registrati, preservando l'ordine dichiarato.
-    """
+    """Restituisce i trattamenti validi attivi nella sessione."""
     active = session.config.get('active_treatments', DEFAULT_ACTIVE_TREATMENTS)
-    valid = [t for t in active if t in TREATMENTS]
+    valid = [treatment for treatment in active if treatment in TREATMENTS]
     return valid or [DEFAULT_TREATMENT]
 
 
 def get_treatment(player):
-    """Trattamento assegnato al partecipante (fallback: baseline)."""
-    return player.participant.vars.get('treatment') or DEFAULT_TREATMENT
+    """Restituisce il trattamento assegnato, con fallback alla baseline."""
+    stored = player.participant.vars.get('treatment')
+    return stored if stored in TREATMENTS else DEFAULT_TREATMENT
+
+
+def get_treatment_config(player):
+    """Restituisce configurazione completa del trattamento del partecipante."""
+    return TREATMENTS[get_treatment(player)]
 
 
 def treatment_flag(player, key, default=None):
-    """Legge un flag comportamentale per il trattamento del partecipante."""
-    return TREATMENTS.get(get_treatment(player), {}).get(key, default)
-
-
-def assign_treatment(player, players_per_block=3):
-    """
-    Assegna il trattamento al PRIMO accesso, a BLOCCHI di `players_per_block`
-    per ORDINE DI ARRIVO: i primi N partecipanti che iniziano vanno al primo
-    trattamento attivo, i successivi N al secondo, e così via (rotazione di
-    blocchi). Con un solo trattamento attivo tutti ricevono quello (test isolato).
-
-    È idempotente: non riassegna se il trattamento è già impostato (es. refresh).
-    """
-    p = player.participant
-    existing = p.vars.get('treatment')
-    if existing in TREATMENTS:
-        return existing
-
-    active = get_active_treatments(player.session)
-    counter = player.session.vars.get('treatment_counter', 0)
-    block = counter // max(1, players_per_block)
-    treatment = active[block % len(active)]
-
-    player.session.vars['treatment_counter'] = counter + 1
-    p.vars['treatment'] = treatment
-    return treatment
+    """Legge un attributo comportamentale del trattamento."""
+    return get_treatment_config(player).get(key, default)

@@ -18,7 +18,7 @@ def _load_dotenv():
 _load_dotenv()
 
 _BARGAINING_APP_SEQUENCE = [
-    'bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_part3', 'bargaining_tdl_survey',
+    'bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_survey',
 ]
 _BARGAINING_COMPLETIONLINK = environ.get(
     'PROLIFIC_COMPLETION_URL',
@@ -26,32 +26,39 @@ _BARGAINING_COMPLETIONLINK = environ.get(
 )
 
 SESSION_CONFIGS = [
-    # Produzione A/B: entrambi i trattamenti, randomizzati internamente (blocchi di 3).
+    # Produzione RCT: tre trattamenti, randomizzati in blocchi permutati 3:3:3.
     dict(
         name='bargaining_tdl',
-        display_name="Bargaining Game (TDL + Async)",
+        display_name="Bargaining Game — 3-arm RCT",
         app_sequence=_BARGAINING_APP_SEQUENCE,
-        num_demo_participants=12,
+        num_demo_participants=18,
         completionlink=_BARGAINING_COMPLETIONLINK,
-        active_treatments=['private', 'public'],
+        active_treatments=['private', 'public', 'private_no_dwl'],
     ),
-    # Solo nuovo trattamento (comunicazione pubblica), per test ISOLATO.
+    # Trattamenti isolati per test e pilot.
     dict(
         name='bargaining_tdl_public',
-        display_name="Bargaining Game — Public communication only",
+        display_name="Bargaining Game — Public TDL only",
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=9,
         completionlink=_BARGAINING_COMPLETIONLINK,
         active_treatments=['public'],
     ),
-    # Solo baseline (comunicazione privata), per test ISOLATO.
     dict(
         name='bargaining_tdl_private',
-        display_name="Bargaining Game — Private communication only",
+        display_name="Bargaining Game — Private TDL only",
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=9,
         completionlink=_BARGAINING_COMPLETIONLINK,
         active_treatments=['private'],
+    ),
+    dict(
+        name='bargaining_tdl_private_no_dwl',
+        display_name="Bargaining Game — Private No-DWL only",
+        app_sequence=_BARGAINING_APP_SEQUENCE,
+        num_demo_participants=9,
+        completionlink=_BARGAINING_COMPLETIONLINK,
+        active_treatments=['private_no_dwl'],
     ),
 ]
 
@@ -61,7 +68,7 @@ SESSION_CONFIGS = [
 # e.g. self.session.config['participation_fee']
 
 SESSION_CONFIG_DEFAULTS = dict(
-    real_world_currency_per_point=1.00, participation_fee=0.00, doc="",
+    real_world_currency_per_point=1.00, participation_fee=3.00, doc="",
     control_questions_max_attempts=5,  # Numero massimo di tentativi per le control questions
     skip_intro_control_questions=False,  # Temporarily disable intro control questions
     use_test_timers=False,  # Set all page timers to 60s for testing
@@ -76,8 +83,21 @@ PARTICIPANT_FIELDS = [
     'inactive_excluded_reason',
     'group_dropped',
     'part1_payoff_eligible',
+    'treatment',
+    'allocation_slot',
+    'allocation_block',
+    'allocation_attempt',
+    'assignment_timestamp',
+    'assignment_status',
+    'is_replacement',
+    'allocation_failure_reason',
+    'group_outcome',
 ]
-SESSION_FIELDS = []
+SESSION_FIELDS = [
+    'randomization_seed',
+    'randomization_schedule',
+    'randomization_block_size',
+]
 
 # ISO-639 code
 # for example: de, fr, ja, ko, zh-hans
@@ -88,6 +108,11 @@ REAL_WORLD_CURRENCY_CODE = 'USD'
 USE_POINTS = False
 
 ROOMS = [
+    dict(
+        name='prolific',
+        display_name='Prolific participants',
+        welcome_page='_welcome_pages/ProlificRoomWelcome.html',
+    ),
     dict(
         name='econ101',
         display_name='Econ 101 class',

@@ -60,12 +60,51 @@ class C(BaseConstants):
     PLAYERS_PER_GROUP = 3
     NUM_ROUNDS = 1
     PAYOFF_MAX = cu(6)
-    PAYOFF_SPLIT = cu(2)
+    PAYOFF_NO_DWL = cu(12)
     PAYOFF_DISAGREEMENT = cu(0)
     CHAT_RECONNECT_WINDOW_SECONDS = 90
     # Heartbeat tolerance tuned to avoid false disconnect flicker under network jitter.
     CHAT_DISCONNECT_DETECTION_SECONDS = 8
     CHAT_DISCONNECT_CONFIRMATION_SECONDS = 12
+
+
+VALID_DECISIONS = ('Left', 'Right', 'NoOne')
+VALID_SIGNALS = ('split_you', 'split_other', 'support_none')
+
+
+def calculate_payoff_vector(decisions, no_deadweight_loss=False):
+    """
+    Calcola payoff per i 27 profili possibili.
+
+    Topologia:
+      P1.left=P3, P1.right=P2
+      P2.left=P1, P2.right=P3
+      P3.left=P2, P3.right=P1
+    """
+    if len(decisions) != 3 or any(choice not in VALID_DECISIONS for choice in decisions):
+        raise ValueError(f'Invalid decision profile: {decisions!r}')
+
+    c1, c2, c3 = decisions
+
+    # Minimum Winning Coalition: supporto strettamente reciproco.
+    if c1 == 'Right' and c2 == 'Left':
+        return (6, 6, 0), 'mutual_12'
+    if c2 == 'Right' and c3 == 'Left':
+        return (0, 6, 6), 'mutual_23'
+    if c3 == 'Right' and c1 == 'Left':
+        return (6, 0, 6), 'mutual_31'
+
+    if no_deadweight_loss:
+        # Due partecipanti supportano lo stesso terzo; il terzo supporta nessuno.
+        if c1 == 'NoOne' and c2 == 'Left' and c3 == 'Right':
+            return (12, 0, 0), 'no_dwl_star_1'
+        if c2 == 'NoOne' and c1 == 'Right' and c3 == 'Left':
+            return (0, 12, 0), 'no_dwl_star_2'
+        if c3 == 'NoOne' and c1 == 'Left' and c2 == 'Right':
+            return (0, 0, 12), 'no_dwl_star_3'
+
+    return (0, 0, 0), 'disagreement'
+
 
 class Subsession(BaseSubsession):
     pass
@@ -94,8 +133,7 @@ def group_by_arrival_time_method(subsession, waiting_players):
 class Group(BaseGroup):
     # Group-level variables for CSV export
     grp_coordinate = models.IntegerField(initial=0)  # 1 if group payoff is different from disagreement (at least one player has payoff > 0)
-    grp_triadicsplit = models.IntegerField(initial=0)  # 1 if at least two players vote for "equally split among all the members of the group" (Both)
-    selected_part_for_payment = models.IntegerField(initial=-1) # -1 = non ancora estratto, 0 = Part 3 paga, 1 = Part 1 paga
+    group_outcome = models.StringField(initial='pending')
     chat_left_p1 = models.BooleanField(initial=False)
     chat_left_p2 = models.BooleanField(initial=False)
     chat_left_p3 = models.BooleanField(initial=False)
@@ -113,13 +151,13 @@ class Group(BaseGroup):
 class Player(BasePlayer):
     # Color assigned to this player (Yellow/Orange/Purple), stored for CSV export clarity
     player_color = models.StringField(blank=True)
-    # Trattamento sperimentale del partecipante (es. 'private'/'public'), per CSV export
+    # Trattamento sperimentale, per CSV export.
     treatment = models.StringField(blank=True)
     
     # Campo per salvare il vero payoff calcolato per tracciabilità nel DB
     part1_calculated_payoff = models.CurrencyField(
         initial=0,
-        doc="Il vero payoff calcolato per Part 1, salvato per tracciabilità anche se Part 3 viene estratta per il pagamento."
+        doc="Payoff calcolato in Part 1 prima dell'eventuale esclusione per inattività."
     )
 
     # Chat/Signals — internal values are short codes; display labels are rendered
@@ -128,8 +166,7 @@ class Player(BasePlayer):
         choices=[
             ['split_you', 'split_you'],
             ['split_other', 'split_other'],
-            ['split_both', 'split_both'],
-            ['split_zero', 'split_zero'],
+            ['support_none', 'support_none'],
         ],
         widget=widgets.RadioSelect,
         label=""
@@ -138,8 +175,7 @@ class Player(BasePlayer):
         choices=[
             ['split_you', 'split_you'],
             ['split_other', 'split_other'],
-            ['split_both', 'split_both'],
-            ['split_zero', 'split_zero'],
+            ['support_none', 'support_none'],
         ],
         widget=widgets.RadioSelect,
         label=""
@@ -149,18 +185,19 @@ class Player(BasePlayer):
         blank=True,
         label="Which intention was selected first"
     )
+    signal_left_convincingness = models.IntegerField(min=1, max=5)
+    signal_right_convincingness = models.IntegerField(min=1, max=5)
     time_welcome = models.FloatField(initial=0)
     time_chat = models.FloatField(initial=0)
     time_signals = models.FloatField(initial=0)
     time_chat_and_signals = models.FloatField(initial=0)
 
-    # Decision — internal values Left/Right/Both; display labels rendered in template
+    # Decision — supporta partner left/right oppure nessuno.
     decision_choice = models.StringField(
         choices=[
             ('Left', 'Left'),
             ('Right', 'Right'),
-            ('Both', 'Both'),
-            ('Zero', 'Zero'),
+            ('NoOne', 'NoOne'),
         ],
         widget=widgets.RadioSelect,
         label="Select your choice:"
@@ -214,10 +251,8 @@ def _signal_display_text(code, target_color, other_color, sender_inactive=False)
         return "I intend to vote for 'I get $6, you get $6, and the other Participant gets $0'."
     elif code == 'split_other':
         return "I intend to vote for 'I get $6, you get $0, and the other Participant gets $6'."
-    elif code == 'split_both':
-        return "I intend to vote for 'Everyone gets $2'."
-    elif code == 'split_zero':
-        return "I intend to vote for 'I get $0, you get $6, and the other Participant gets $6'."
+    elif code == 'support_none':
+        return "I intend to vote for 'Support no one'."
     return code or ""
 
 
@@ -424,8 +459,8 @@ def _mark_group_dropped(group: Group):
             p.participant.vars['part1_payoff_eligible'] = False
             p.decision_inactive = 99  # Garantisce la scelta casuale
             p.signal_inactive = 99
-            p.signal_left = random.choice(['split_you', 'split_other', 'split_both', 'split_zero'])
-            p.signal_right = random.choice(['split_you', 'split_other', 'split_both', 'split_zero'])
+            p.signal_left = random.choice(VALID_SIGNALS)
+            p.signal_right = random.choice(VALID_SIGNALS)
             p.participant.vars['signal_left'] = p.signal_left
             p.participant.vars['signal_right'] = p.signal_right
             p.participant.vars['signal_inactive'] = 99
@@ -553,10 +588,8 @@ def _third_party_signal_display(code, receiver_color, other_color):
         return f"I intend to vote for 'I get $6, the {receiver_color} Participant gets $6, and the {other_color} Participant gets $0'."
     elif code == 'split_other':
         return f"I intend to vote for 'I get $6, the {receiver_color} Participant gets $0, and the {other_color} Participant gets $6'."
-    elif code == 'split_both':
-        return "I intend to vote for 'Everyone gets $2'."
-    elif code == 'split_zero':
-        return f"I intend to vote for 'I get $0, the {receiver_color} Participant gets $6, and the {other_color} Participant gets $6'."
+    elif code == 'support_none':
+        return "I intend to vote for 'Support no one'."
     return code or ""
 
 
@@ -752,7 +785,14 @@ class Chat(Page):
 
 class Signals(Page):
     form_model = 'player'
-    form_fields = ['signal_left', 'signal_right', 'first_intention_selected', 'time_on_page']
+    form_fields = [
+        'signal_left',
+        'signal_right',
+        'signal_left_convincingness',
+        'signal_right_convincingness',
+        'first_intention_selected',
+        'time_on_page',
+    ]
     _SIGNALS_TIMEOUT = 300
     timeout_submission = timeout_submission_with_time(
         _SIGNALS_TIMEOUT,
@@ -799,6 +839,7 @@ class Signals(Page):
             chat_timeout=(reason == 'timeout'),
             chat_partners_left=(reason in ('group_dropped', 'partners_left')),
             reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
+            convincingness_scale=range(1, 6),
             reveal_third_party_chat=bool(treatment_flag(player, 'reveal_third_party_chat', False)),
             **_chat_status_payload(player),
             **colors,
@@ -810,12 +851,16 @@ class Signals(Page):
         player.time_chat_and_signals = player.time_chat + player.time_signals
         if timeout_happened:
             player.signal_inactive = 99
+            # I rating non vengono imputati: 0 non appartiene alla scala e
+            # deve restare distinguibile da una risposta osservata.
+            player.signal_left_convincingness = None
+            player.signal_right_convincingness = None
             # Inattività rilevata: escludiamo dal pagamento come richiesto
             player.part1_payoff_eligible = False
             player.participant.vars['part1_payoff_eligible'] = False
             import random
-            player.signal_left = random.choice(['split_you', 'split_other', 'split_both', 'split_zero'])
-            player.signal_right = random.choice(['split_you', 'split_other', 'split_both', 'split_zero'])
+            player.signal_left = random.choice(VALID_SIGNALS)
+            player.signal_right = random.choice(VALID_SIGNALS)
         else:
             set_control_questions_failed(player, 'intro', failed=False)
         logger.debug(f"Signals - time_signals saved: {player.time_signals}, time_chat_and_signals: {player.time_chat_and_signals}")
@@ -978,15 +1023,9 @@ class Decision(Page):
                 'details': ''
             },
             {
-                'value': 'Both',
-                'id': 'dc_both',
-                'label': "I intend to vote for 'Everyone gets $2'",
-                'details': ''
-            },
-            {
-                'value': 'Zero',
-                'id': 'dc_zero',
-                'label': f"I intend to vote for 'I get $0, the {colors['left_partner_color']} Participant gets $6, and the {colors['right_partner_color']} Participant gets $6'",
+                'value': 'NoOne',
+                'id': 'dc_no_one',
+                'label': "I intend to vote for 'Support no one'",
                 'details': ''
             },
         ]
@@ -1084,86 +1123,24 @@ class ResultsWaitPage(WaitPage):
         import random
         for p in [p1, p2, p3]:
             if p.decision_inactive == 99:
-                p.decision_choice = random.choice(['Left', 'Right', 'Both', 'Zero'])
+                p.decision_choice = random.choice(VALID_DECISIONS)
 
         # Choices
         c1 = p1.decision_choice
         c2 = p2.decision_choice
         c3 = p3.decision_choice
 
-        # Initialize payoffs to Disagreement (0)
-        for p in players:
-            p.payoff = C.PAYOFF_DISAGREEMENT
+        payoff_values, outcome = calculate_payoff_vector(
+            (c1, c2, c3),
+            no_deadweight_loss=bool(
+                treatment_flag(p1, 'no_deadweight_loss', False)
+            ),
+        )
+        for p, payoff_value in zip(players, payoff_values):
+            p.payoff = cu(payoff_value)
 
-        # We NO LONGER abort payoffs if group.group_dropped is True.
-        # The logic below will use random choices for anyone with decision_inactive == 99.
-
-        # ============================================================
-        # PAYOFF LOGIC — Directional coalition voting
-        #
-        # Each of the 4 options maps to supporting a specific coalition.
-        # A coalition is activated if it receives ≥ 2 votes from any
-        # combination of players (each player in their own way).
-        #
-        # Topology: P1.left=P3, P1.right=P2
-        #           P2.left=P1, P2.right=P3
-        #           P3.left=P2, P3.right=P1
-        #
-        # Vote → Coalition supported:
-        #   Both  → Grand coalition (P1+P2+P3) → all get $2
-        #   Left  → Coalition with own left partner
-        #   Right → Coalition with own right partner
-        #   Zero  → Coalition of own two partners (self-excluded, gets $0)
-        #
-        # Mapping per coalition (who benefits / who is excluded):
-        #   Coalition P1+P2 (P3 excluded, $0):
-        #     supported by P1 choosing 'Right', P2 choosing 'Left', P3 choosing 'Zero'
-        #   Coalition P2+P3 (P1 excluded, $0):
-        #     supported by P1 choosing 'Zero',  P2 choosing 'Right', P3 choosing 'Left'
-        #   Coalition P3+P1 (P2 excluded, $0):
-        #     supported by P1 choosing 'Left',  P2 choosing 'Zero',  P3 choosing 'Right'
-        # ============================================================
-
-        # Grand coalition
-        votes_grand = sum([c1 == 'Both',  c2 == 'Both',  c3 == 'Both'])
-
-        # Minimal coalition P1+P2 (P3 gets $0)
-        votes_12 = sum([c1 == 'Right', c2 == 'Left',  c3 == 'Zero'])
-
-        # Minimal coalition P2+P3 (P1 gets $0)
-        votes_23 = sum([c1 == 'Zero',  c2 == 'Right', c3 == 'Left'])
-
-        # Minimal coalition P3+P1 (P2 gets $0)
-        votes_31 = sum([c1 == 'Left',  c2 == 'Zero',  c3 == 'Right'])
-
-        if votes_grand >= 2:
-            for p in players:
-                p.payoff = C.PAYOFF_SPLIT          # $2 to all
-        elif votes_12 >= 2:
-            p1.payoff = C.PAYOFF_MAX               # $6
-            p2.payoff = C.PAYOFF_MAX               # $6
-            p3.payoff = C.PAYOFF_DISAGREEMENT      # $0
-        elif votes_23 >= 2:
-            p2.payoff = C.PAYOFF_MAX               # $6
-            p3.payoff = C.PAYOFF_MAX               # $6
-            p1.payoff = C.PAYOFF_DISAGREEMENT      # $0
-        elif votes_31 >= 2:
-            p3.payoff = C.PAYOFF_MAX               # $6
-            p1.payoff = C.PAYOFF_MAX               # $6
-            p2.payoff = C.PAYOFF_DISAGREEMENT      # $0
-        # else: no coalition reaches 2 votes → all remain at PAYOFF_DISAGREEMENT ($0)
-        
-        # Calculate group-level variables
-        # grp_coordinate: 1 if at least one player has payoff different from disagreement (payoff > 0)
-        group.grp_coordinate = 1 if any(p.payoff > C.PAYOFF_DISAGREEMENT for p in players) else 0
-        
-        # grp_triadicsplit: 1 if at least two players voted for "Both" (equally split among all members)
-        group.grp_triadicsplit = 1 if votes_grand >= 2 else 0
-
-        # ======= SELEZIONE CASUALE PARTE 1 O PARTE 3 =======
-        import random
-        selected = random.randint(0, 1)
-        group.selected_part_for_payment = selected
+        group.group_outcome = outcome
+        group.grp_coordinate = int(any(value > 0 for value in payoff_values))
         
         for p in players:
             # Salva il vero payoff calcolato nel DB per tracciabilità
@@ -1175,12 +1152,8 @@ class ResultsWaitPage(WaitPage):
 
             # Salva i valori originali in participant.vars
             p.participant.vars['part1_payoff'] = p.payoff
-            p.participant.vars['selected_part_for_payment'] = selected
             p.participant.vars['part1_group_id'] = group.id
-            
-            # Se Part 3 è estratta, azzera il payoff UFFICIALE di Part 1 per non farlo sommare da oTree al totale
-            if selected == 0:
-                p.payoff = cu(0)
+            p.participant.vars['group_outcome'] = outcome
 
 class Results(Page):
     form_model = 'player'
@@ -1205,10 +1178,8 @@ class Results(Page):
             choice_display = f"I intend to vote for 'I get $6, the {colors['left_partner_color']} Participant gets $6, and the {colors['right_partner_color']} Participant gets $0'"
         elif choice == 'Right':
             choice_display = f"I intend to vote for 'I get $6, the {colors['right_partner_color']} Participant gets $6, and the {colors['left_partner_color']} Participant gets $0'"
-        elif choice == 'Zero':
-            choice_display = f"I intend to vote for 'I get $0, the {colors['left_partner_color']} Participant gets $6, and the {colors['right_partner_color']} Participant gets $6'"
         else:
-            choice_display = "I intend to vote for 'Everyone gets $2'"
+            choice_display = "I intend to vote for 'Support no one'"
         return dict(choice_display=choice_display, **colors)
 
     @staticmethod
@@ -1226,4 +1197,3 @@ page_sequence = [
     Results,
     InactivityGoodbyeMain
 ]
-

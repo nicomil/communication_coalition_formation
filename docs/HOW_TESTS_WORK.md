@@ -1,41 +1,20 @@
 # Come funzionano i test automatici
 
-## Flusso coperto
-
 I bot percorrono il flusso reale:
 
-`bargaining_tdl_intro` → `bargaining_tdl_main` → `bargaining_tdl_part3` → `bargaining_tdl_survey`
+`intro` → `main` → `survey`
 
-## Principi
+Tre casi coprono supporto reciproco, disaccordo e payoff No-DWL 12/0/0. I bot
+compilano anche i due rating di convincimento e tutti i 27 item SD3.
 
-- i bot non saltano pagine
-- i bot compilano i form come un partecipante reale
-- i test verificano invarianti di payoff e stato
+I test unitari enumerano tutte le 27 combinazioni di decisione per entrambi i
+regimi payoff. I test d'integrazione RCT usano un database oTree in memoria e
+verificano blocchi 3:3:3, audit, CQ failure e rimpiazzo nello stesso braccio.
 
-## Cosa viene verificato
+Comandi e checklist sono in `docs/TESTING.md`.
 
-### Main
+Limiti:
 
-- gruppi da 3 su `group_by_arrival_time`
-- mapping segnali tra partner
-- payoff coerenti con scelte
-- comportamento robusto con inattivita'/dropout
-
-### Survey
-
-- completamento sequenza fino a risultati finali
-- salvataggio campi survey e feedback finale
-
-## Comandi
-
-```bash
-otree test bargaining_tdl 9
-otree test bargaining_tdl 12
-otree test bargaining_tdl 9 --export
-```
-
-## Limiti
-
-- bot non simulano psicologia/strategie reali
-- bot non sono test UX visuale (per quello usare `browser_bots`)
-
+- i bot non simulano strategie umane;
+- la concorrenza reale dei row lock va provata su staging PostgreSQL;
+- UX e responsive richiedono smoke manuale/browser.

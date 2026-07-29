@@ -249,10 +249,10 @@
 
         applyStatus({
             left_partner_active: {{ left_partner_active| json }},
-    right_partner_active: { { right_partner_active | json } },
-    should_auto_advance: { { should_auto_advance | json } },
-    waiting_on_reconnect: { { waiting_on_reconnect | json } },
-    reconnect_seconds_left: { { reconnect_seconds_left | json } }
+            right_partner_active: {{ right_partner_active|json }},
+            should_auto_advance: {{ should_auto_advance|json }},
+            waiting_on_reconnect: {{ waiting_on_reconnect|json }},
+            reconnect_seconds_left: {{ reconnect_seconds_left|json }}
         });
 
     window.liveRecv = function (data) {
