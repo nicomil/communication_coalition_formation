@@ -1,3 +1,7 @@
+import random
+import secrets
+import time
+
 from otree.api import (  # type: ignore
     models,
     widgets,
@@ -6,6 +10,7 @@ from otree.api import (  # type: ignore
     BaseGroup,
     BasePlayer,
     Currency as cu,
+    ExtraModel,
     Page,
     WaitPage,
 )
@@ -91,7 +96,7 @@ from bargaining_tdl_common import (  # type: ignore
     has_passed_control_questions,
     set_control_questions_passed,
     get_logger,
-    assign_treatment,
+    get_active_treatments,
     get_treatment,
     treatment_flag,
 )
@@ -142,6 +147,16 @@ class Player(BasePlayer):
     prolific_study_id = models.StringField(blank=True)
     prolific_session_id = models.StringField(blank=True)
 
+    # Audit RCT. Copia persistente dell'assegnazione conservata anche per chi
+    # non supera le control questions.
+    assigned_treatment = models.StringField(blank=True)
+    allocation_slot = models.IntegerField(initial=0)
+    allocation_block = models.IntegerField(initial=0)
+    allocation_attempt = models.IntegerField(initial=0)
+    assignment_timestamp = models.FloatField(initial=0)
+    assignment_status = models.StringField(initial='unassigned')
+    is_replacement = models.BooleanField(initial=False)
+
     # Drafts (Simulated Chat) — not in active page_sequence but kept for consistency
     draft_history_left = models.LongStringField(blank=True)
     draft_history_right = models.LongStringField(blank=True)
@@ -151,7 +166,7 @@ class Player(BasePlayer):
         choices=[
             ['split_you', 'split_you'],
             ['split_other', 'split_other'],
-            ['split_both', 'split_both'],
+            ['support_none', 'support_none'],
         ],
         widget=widgets.RadioSelect,
         label=""
@@ -160,7 +175,7 @@ class Player(BasePlayer):
         choices=[
             ['split_you', 'split_you'],
             ['split_other', 'split_other'],
-            ['split_both', 'split_both'],
+            ['support_none', 'support_none'],
         ],
         widget=widgets.RadioSelect,
         label=""
@@ -176,13 +191,12 @@ class Player(BasePlayer):
         label="Which intention was selected first"
     )
     
-    # Control Questions - Example 1
-    # Scenario: You (green) share with red only. Blue shares with both. Red shares with you (green).
-    # Result: Green=6, Red=6, Blue=0
+    # Control Questions. La risposta di Example 2 dipende dal trattamento:
+    # TDL=(0,0,0), private No-DWL=(12,0,0).
     example1_earnings_you = models.StringField(
         choices=[
+            ['12', '$12'],
             ['6', '$6'],
-            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -190,8 +204,8 @@ class Player(BasePlayer):
     )
     example1_earnings_left = models.StringField(
         choices=[
+            ['12', '$12'],
             ['6', '$6'],
-            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -199,21 +213,18 @@ class Player(BasePlayer):
     )
     example1_earnings_right = models.StringField(
         choices=[
+            ['12', '$12'],
             ['6', '$6'],
-            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
         label="What would be the earnings for the Blue Participant?"
     )
     
-    # Control Questions - Example 2
-    # Scenario: You (Green) share with both. Purple shares with Yellow only. Yellow shares with both.
-    # Result: Yellow=2, Green=2, Purple=2
     example2_earnings_you = models.StringField(
         choices=[
+            ['12', '$12'],
             ['6', '$6'],
-            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -221,8 +232,8 @@ class Player(BasePlayer):
     )
     example2_earnings_left = models.StringField(
         choices=[
+            ['12', '$12'],
             ['6', '$6'],
-            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -230,21 +241,18 @@ class Player(BasePlayer):
     )
     example2_earnings_right = models.StringField(
         choices=[
+            ['12', '$12'],
             ['6', '$6'],
-            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
         label="What would be the earnings for the Blue Participant ?"
     )
     
-    # Control Questions - Example 3
-    # Scenario: You (Green) share with both. Purple shares with you (Green) only. Yellow shares with Purple only.
-    # Result: Yellow=0, Green=0, Purple=0
     example3_earnings_you = models.StringField(
         choices=[
+            ['12', '$12'],
             ['6', '$6'],
-            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -252,8 +260,8 @@ class Player(BasePlayer):
     )
     example3_earnings_left = models.StringField(
         choices=[
+            ['12', '$12'],
             ['6', '$6'],
-            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -261,40 +269,8 @@ class Player(BasePlayer):
     )
     example3_earnings_right = models.StringField(
         choices=[
+            ['12', '$12'],
             ['6', '$6'],
-            ['2', '$2'],
-            ['0', '$0'],
-        ],
-        widget=widgets.RadioSelect,
-        label="What would be the earnings for the Blue Participant ?"
-    )
-
-    # Control Questions - Example 4
-    # Scenario: All three vote for the same outcome '$0 to Green, $6 to Red, $6 to Blue'.
-    # This is all three supporting coalition Red+Blue (votes_23 = 3 >= 2).
-    # Result: Green=0, Red=6, Blue=6
-    example4_earnings_you = models.StringField(
-        choices=[
-            ['6', '$6'],
-            ['2', '$2'],
-            ['0', '$0'],
-        ],
-        widget=widgets.RadioSelect,
-        label="What would your earnings be as Green Participant ?"
-    )
-    example4_earnings_left = models.StringField(
-        choices=[
-            ['6', '$6'],
-            ['2', '$2'],
-            ['0', '$0'],
-        ],
-        widget=widgets.RadioSelect,
-        label="What would be the earnings for the Red Participant ?"
-    )
-    example4_earnings_right = models.StringField(
-        choices=[
-            ['6', '$6'],
-            ['2', '$2'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
@@ -311,6 +287,308 @@ class Player(BasePlayer):
     # Hidden field for JavaScript to populate
     time_on_page = models.FloatField(initial=0, blank=True)
 
+
+class TreatmentSlot(ExtraModel):
+    """Slot RCT che deve essere riempito da un partecipante CQ-eligible."""
+
+    subsession = models.Link(Subsession)
+    slot_number = models.IntegerField()
+    block_number = models.IntegerField()
+    position_in_block = models.IntegerField()
+    treatment = models.StringField()
+    status = models.StringField(initial='available')
+    assigned_participant_code = models.StringField(blank=True)
+    assigned_at = models.FloatField(initial=0)
+    returned_at = models.FloatField(initial=0)
+    filled_at = models.FloatField(initial=0)
+    replacement_count = models.IntegerField(initial=0)
+
+
+class TreatmentAssignment(ExtraModel):
+    """Storico immutabile dei tentativi di riempimento degli slot RCT."""
+
+    player = models.Link(Player)
+    slot_number = models.IntegerField()
+    block_number = models.IntegerField()
+    treatment = models.StringField()
+    attempt_number = models.IntegerField()
+    is_replacement = models.BooleanField(initial=False)
+    status = models.StringField(initial='assigned')
+    assigned_at = models.FloatField(initial=0)
+    resolved_at = models.FloatField(initial=0)
+    resolution_reason = models.StringField(blank=True)
+
+
+def build_randomized_schedule(active_treatments, total_slots, seed):
+    """
+    Costruisce blocchi permutati bilanciati.
+
+    Ogni blocco contiene 3 slot per trattamento: con tre arm produce blocchi
+    da 9 e una triade completa per ciascun arm.
+    """
+    treatments = list(active_treatments)
+    if not treatments:
+        treatments = ['private']
+
+    rng = random.Random(int(seed))
+    block_template = [
+        treatment
+        for treatment in treatments
+        for _ in range(3)
+    ]
+    schedule = []
+    while len(schedule) < total_slots:
+        block = list(block_template)
+        rng.shuffle(block)
+        schedule.extend(block)
+    return schedule[:total_slots]
+
+
+def creating_session(subsession):
+    """Pre-genera schedule RCT auditabile quando nasce la sessione."""
+    configured_seed = subsession.session.config.get('randomization_seed')
+    seed = int(configured_seed) if configured_seed is not None else secrets.randbits(63)
+    active_treatments = get_active_treatments(subsession.session)
+    total_slots = len(subsession.get_players())
+    schedule = build_randomized_schedule(active_treatments, total_slots, seed)
+
+    subsession.session.vars['randomization_seed'] = seed
+    subsession.session.vars['randomization_schedule'] = schedule
+    subsession.session.vars['randomization_block_size'] = 3 * len(active_treatments)
+
+    block_size = max(1, 3 * len(active_treatments))
+    for index, treatment in enumerate(schedule, start=1):
+        TreatmentSlot.create(
+            subsession=subsession,
+            slot_number=index,
+            block_number=((index - 1) // block_size) + 1,
+            position_in_block=((index - 1) % block_size) + 1,
+            treatment=treatment,
+        )
+
+
+def _locked_slot_query(player):
+    """
+    Query con row lock.
+
+    PostgreSQL serializza claim/release concorrenti tra processi web. SQLite
+    ignora FOR UPDATE, ma oTree serializza le richieste nel processo locale.
+    """
+    return TreatmentSlot.objects_filter(
+        subsession=player.subsession
+    ).with_for_update()
+
+
+def assign_treatment_slot(player):
+    """
+    Assegna slot dopo validazione Welcome/PID.
+
+    Priorità a slot restituiti da CQ failure; altrimenti usa prossimo slot
+    della schedule randomizzata. Operazione idempotente su refresh/re-submit.
+    """
+    assigned_treatment = player.field_maybe_none('assigned_treatment')
+    if assigned_treatment:
+        player.participant.vars['treatment'] = assigned_treatment
+        return assigned_treatment
+
+    query = _locked_slot_query(player).filter(
+        TreatmentSlot.status == 'available'
+    )
+    slot = query.filter(
+        TreatmentSlot.replacement_count > 0
+    ).order_by(
+        TreatmentSlot.returned_at,
+        TreatmentSlot.slot_number,
+    ).first()
+    if slot is None:
+        slot = query.order_by(TreatmentSlot.slot_number).first()
+    if slot is None:
+        raise RuntimeError(
+            'No RCT allocation slots are available. Create a larger session.'
+        )
+
+    now = time.time()
+    is_replacement = slot.replacement_count > 0
+    attempt_number = slot.replacement_count + 1
+    slot.status = 'assigned'
+    slot.assigned_participant_code = player.participant.code
+    slot.assigned_at = now
+
+    player.assigned_treatment = slot.treatment
+    player.allocation_slot = slot.slot_number
+    player.allocation_block = slot.block_number
+    player.allocation_attempt = attempt_number
+    player.assignment_timestamp = now
+    player.assignment_status = 'assigned'
+    player.is_replacement = is_replacement
+
+    player.participant.vars.update({
+        'treatment': slot.treatment,
+        'allocation_slot': slot.slot_number,
+        'allocation_block': slot.block_number,
+        'allocation_attempt': attempt_number,
+        'assignment_timestamp': now,
+        'assignment_status': 'assigned',
+        'is_replacement': is_replacement,
+    })
+
+    TreatmentAssignment.create(
+        player=player,
+        slot_number=slot.slot_number,
+        block_number=slot.block_number,
+        treatment=slot.treatment,
+        attempt_number=attempt_number,
+        is_replacement=is_replacement,
+        assigned_at=now,
+    )
+    return slot.treatment
+
+
+def _active_assignment_query(player):
+    return TreatmentAssignment.objects_filter(
+        player=player,
+        status='assigned',
+    ).with_for_update()
+
+
+def confirm_treatment_slot(player):
+    """Conferma definitivamente slot quando CQ viene superata."""
+    if player.assignment_status == 'passed':
+        return
+    if player.assignment_status != 'assigned':
+        return
+
+    slot = _locked_slot_query(player).filter(
+        TreatmentSlot.slot_number == player.allocation_slot
+    ).first()
+    if (
+        slot is None
+        or slot.status != 'assigned'
+        or slot.assigned_participant_code != player.participant.code
+    ):
+        raise RuntimeError('RCT slot ownership mismatch while confirming CQ pass.')
+
+    now = time.time()
+    slot.status = 'filled'
+    slot.filled_at = now
+    player.assignment_status = 'passed'
+    player.participant.vars['assignment_status'] = 'passed'
+
+    assignment = _active_assignment_query(player).first()
+    if assignment:
+        assignment.status = 'passed'
+        assignment.resolved_at = now
+        assignment.resolution_reason = 'control_questions_passed'
+
+
+def release_treatment_slot(player, reason):
+    """Restituisce slot alla testa logica della coda dopo CQ failure/timeout."""
+    if player.assignment_status == 'failed':
+        return
+    if player.assignment_status != 'assigned':
+        return
+
+    slot = _locked_slot_query(player).filter(
+        TreatmentSlot.slot_number == player.allocation_slot
+    ).first()
+    if (
+        slot is None
+        or slot.status != 'assigned'
+        or slot.assigned_participant_code != player.participant.code
+    ):
+        raise RuntimeError('RCT slot ownership mismatch while releasing CQ slot.')
+
+    now = time.time()
+    slot.status = 'available'
+    slot.assigned_participant_code = ''
+    slot.assigned_at = 0
+    slot.returned_at = now
+    slot.replacement_count += 1
+
+    player.assignment_status = 'failed'
+    player.participant.vars['assignment_status'] = 'failed'
+    player.participant.vars['allocation_failure_reason'] = reason
+
+    assignment = _active_assignment_query(player).first()
+    if assignment:
+        assignment.status = 'failed'
+        assignment.resolved_at = now
+        assignment.resolution_reason = reason
+
+
+def custom_export_rct_assignments(players):
+    """Audit completo: una riga per ogni assegnazione, incluse CQ failure."""
+    yield [
+        'session_code',
+        'participant_code',
+        'prolific_id',
+        'slot_number',
+        'block_number',
+        'treatment',
+        'attempt_number',
+        'is_replacement',
+        'status',
+        'assigned_at',
+        'resolved_at',
+        'resolution_reason',
+    ]
+    allowed_player_ids = {player.id for player in players}
+    for assignment in TreatmentAssignment.filter():
+        player = assignment.player
+        if player.id not in allowed_player_ids:
+            continue
+        yield [
+            player.session.code,
+            player.participant.code,
+            player.field_maybe_none('prolific_id') or '',
+            assignment.slot_number,
+            assignment.block_number,
+            assignment.treatment,
+            assignment.attempt_number,
+            assignment.is_replacement,
+            assignment.status,
+            assignment.assigned_at,
+            assignment.resolved_at,
+            assignment.resolution_reason,
+        ]
+
+
+def custom_export_rct_slots(players):
+    """Audit schedule: slot pianificati, riempiti e ancora disponibili."""
+    yield [
+        'session_code',
+        'randomization_seed',
+        'slot_number',
+        'block_number',
+        'position_in_block',
+        'treatment',
+        'status',
+        'assigned_participant_code',
+        'replacement_count',
+        'assigned_at',
+        'returned_at',
+        'filled_at',
+    ]
+    allowed_subsession_ids = {player.subsession.id for player in players}
+    for slot in TreatmentSlot.filter():
+        if slot.subsession.id not in allowed_subsession_ids:
+            continue
+        yield [
+            slot.subsession.session.code,
+            slot.subsession.session.vars.get('randomization_seed'),
+            slot.slot_number,
+            slot.block_number,
+            slot.position_in_block,
+            slot.treatment,
+            slot.status,
+            slot.assigned_participant_code,
+            slot.replacement_count,
+            slot.assigned_at,
+            slot.returned_at,
+            slot.filled_at,
+        ]
+
+
 # PAGES
 
 class Welcome(Page):
@@ -325,10 +603,14 @@ class Welcome(Page):
 
     @staticmethod
     def vars_for_template(player):
-        # Assegnazione del trattamento al primo accesso (ordine di arrivo, blocchi di 3).
-        # Idempotente: non riassegna su refresh.
-        assign_treatment(player)
-        return dict(require_prolific_id=_require_prolific_id(player))
+        return dict(
+            require_prolific_id=_require_prolific_id(player),
+            participation_fee=cu(player.session.config.get('participation_fee', 3)),
+            prolific_pid_initial=(
+                (player.participant.label or '').strip()
+                or (player.field_maybe_none('prolific_pid_url') or '').strip()
+            ),
+        )
 
     @staticmethod
     def prolific_pid_url_error_message(player, value):
@@ -353,6 +635,9 @@ class Welcome(Page):
         player.participant.vars['prolific_id'] = player.participant.prolific_id
         player.participant.vars['prolific_study_id'] = player.participant.prolific_study_id
         player.participant.vars['prolific_session_id'] = player.participant.prolific_session_id
+        # Assegna solo dopo form/PID valido: preview e semplice GET non
+        # consumano uno slot della randomizzazione.
+        assign_treatment_slot(player)
         logger.debug(f"Welcome - time_welcome saved: {player.time_welcome}")
 
 
@@ -366,6 +651,7 @@ class InstructionsPart1(Page):
         return dict(
             treatment=get_treatment(player),
             reveal_third_party_chat=bool(treatment_flag(player, 'reveal_third_party_chat', False)),
+            no_deadweight_loss=bool(treatment_flag(player, 'no_deadweight_loss', False)),
         )
 
     @staticmethod
@@ -376,6 +662,7 @@ class InstructionsPart1(Page):
             # Temporary fast-path for manual testing of chat flow.
             set_control_questions_passed(player, 'intro', passed=True)
             set_control_questions_failed(player, 'intro', failed=False)
+            confirm_treatment_slot(player)
 
 def create_control_questions_class(attempt_number):
     """
@@ -400,18 +687,15 @@ def create_control_questions_class(attempt_number):
         # before_next_page. Questo è un secondo livello di sicurezza.
         timeout_submission = timeout_submission_with_time(
             _CONTROL_QUESTIONS_TIMEOUT,
-            example1_earnings_you='3',   # sbagliato (corretto: '6')
-            example1_earnings_left='3',  # sbagliato (corretto: '0')
-            example1_earnings_right='3', # sbagliato (corretto: '6')
-            example2_earnings_you='6',   # sbagliato (corretto: '3')
-            example2_earnings_left='6',  # sbagliato (corretto: '3')
-            example2_earnings_right='6', # sbagliato (corretto: '3')
-            example3_earnings_you='6',   # sbagliato (corretto: '0')
-            example3_earnings_left='6',  # sbagliato (corretto: '0')
-            example3_earnings_right='6', # sbagliato (corretto: '0')
-            example4_earnings_you='6',   # sbagliato (corretto: '0')
-            example4_earnings_left='0',  # sbagliato (corretto: '6')
-            example4_earnings_right='0', # sbagliato (corretto: '6')
+            example1_earnings_you='0',
+            example1_earnings_left='6',
+            example1_earnings_right='0',
+            example2_earnings_you='6',
+            example2_earnings_left='6',
+            example2_earnings_right='6',
+            example3_earnings_you='6',
+            example3_earnings_left='6',
+            example3_earnings_right='6',
         )
 
         @staticmethod
@@ -427,9 +711,6 @@ def create_control_questions_class(attempt_number):
             'example3_earnings_you',
             'example3_earnings_left',
             'example3_earnings_right',
-            'example4_earnings_you',
-            'example4_earnings_left',
-            'example4_earnings_right',
             'time_on_page'
         ]
 
@@ -462,22 +743,17 @@ def create_control_questions_class(attempt_number):
             return {
                 'example1_scenario': (
                     "Imagine that you are the Green Participant, and vote for '$6 to you, $6 to the Blue Participant, $0 to the Red Participant';<br>"
-                    "- The Red Participant votes for 'everyone gets $2'; <br>"
+                    "- The Red Participant votes for 'Support no one';<br>"
                     "- The Blue Participant votes for '$6 to you, $6 to the Blue Participant, $0 to the Red Participant'."
                 ),
                 'example2_scenario': (
-                    "Imagine that you are the Green Participant, and vote for 'everyone gets $2';<br>"
-                    "- The Red Participant votes for '$0 to you, $6 to the Blue Participant, $6 to the Red Participant';<br>"
-                    "- The Blue Participant votes for 'everyone gets $2'."
+                    "Imagine that you are the Green Participant, and vote for 'Support no one';<br>"
+                    "- The Red Participant votes for '$6 to you, $0 to the Blue Participant, $6 to the Red Participant';<br>"
+                    "- The Blue Participant votes for '$6 to you, $6 to the Blue Participant, $0 to the Red Participant'."
                 ),
                 'example3_scenario': (
-                    "Imagine that you are the Green Participant, and vote for 'everyone gets $2';<br>"
-                    "- The Red Participant vote for '$6 to you, $0 to the Blue Participant, $6 to the Red Participant';<br>"
-                    "- The Blue Participant votes for '$0 to you, $6 to the Blue Participant, $6 to the Red Participant'."
-                ),
-                'example4_scenario': (
-                    "Imagine that you are the Green Participant, and vote for '$0 to you, $6 to the Blue Participant, $6 to the Red Participant';<br>"
-                    "- The Red Participant votes for '$0 to you, $6 to the Blue Participant, $6 to the Red Participant';<br>"
+                    "Imagine that you are the Green Participant, and vote for '$6 to you, $6 to the Blue Participant, $0 to the Red Participant';<br>"
+                    "- The Red Participant votes for 'Support no one';<br>"
                     "- The Blue Participant votes for '$0 to you, $6 to the Blue Participant, $6 to the Red Participant'."
                 ),
                 'max_attempts': max_attempts,
@@ -489,6 +765,7 @@ def create_control_questions_class(attempt_number):
                 # Serve al partial _instructions_content.html per mostrare il testo
                 # di visibilità messaggi corretto per il trattamento.
                 'reveal_third_party_chat': bool(treatment_flag(player, 'reveal_third_party_chat', False)),
+                'no_deadweight_loss': bool(treatment_flag(player, 'no_deadweight_loss', False)),
             }
 
         @staticmethod
@@ -500,6 +777,10 @@ def create_control_questions_class(attempt_number):
             if timeout_happened:
                 _mark_inactive_exclusion(player, f'intro_control_questions_attempt_{attempt_number}_timeout')
                 set_control_questions_failed(player, 'intro', failed=True)
+                release_treatment_slot(
+                    player,
+                    f'intro_control_questions_attempt_{attempt_number}_timeout',
+                )
                 logger.debug(f"ControlQuestions Attempt {attempt_number} - timeout, marking participant as inactive")
                 return
             
@@ -510,7 +791,14 @@ def create_control_questions_class(attempt_number):
             errors = []
             if not (player.example1_earnings_you == "6" and player.example1_earnings_left == "0" and player.example1_earnings_right == "6"):
                 errors.append("Example 1")
-            if not (player.example2_earnings_you == "2" and player.example2_earnings_left == "2" and player.example2_earnings_right == "2"):
+            expected_example2_you = (
+                "12" if treatment_flag(player, 'no_deadweight_loss', False) else "0"
+            )
+            if not (
+                player.example2_earnings_you == expected_example2_you
+                and player.example2_earnings_left == "0"
+                and player.example2_earnings_right == "0"
+            ):
                 errors.append("Example 2")
             if not (player.example3_earnings_you == "0" and player.example3_earnings_left == "0" and player.example3_earnings_right == "0"):
                 errors.append("Example 3")
@@ -524,6 +812,7 @@ def create_control_questions_class(attempt_number):
                 # Risposte corrette: imposta passed e resetta attempts
                 set_control_questions_passed(player, 'intro', passed=True)
                 set_control_questions_failed(player, 'intro', failed=False)
+                confirm_treatment_slot(player)
                 logger.debug(f"ControlQuestions Attempt {attempt_number} - All answers correct on attempt {current_attempts}")
             else:
                 # Risposte sbagliate
@@ -532,6 +821,10 @@ def create_control_questions_class(attempt_number):
                 if current_attempts >= max_attempts:
                     # Raggiunto il massimo numero di tentativi: imposta failed
                     set_control_questions_failed(player, 'intro', failed=True)
+                    release_treatment_slot(
+                        player,
+                        f'intro_control_questions_failed_after_{current_attempts}_attempts',
+                    )
                     logger.debug(f"ControlQuestions Attempt {attempt_number} - Max attempts reached, setting failed flag")
     
     # Imposta il nome della classe per il debug

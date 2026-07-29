@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <link href="{% static 'bootstrap5/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'otree/css/theme2.css' %}" rel="stylesheet">
+</head>
+<body>
+    <main class="container py-5" style="max-width: 760px;">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2>Welcome</h2>
+                <p>
+                    Click Start to enter the experiment. Keep this tab open while
+                    waiting for the other participants.
+                </p>
+                <form>
+                    <button type="submit" class="btn btn-primary">Start</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+
+            function save(name, storageKey) {
+                const value = params.get(name);
+                if (!value) return;
+                try {
+                    window.sessionStorage.setItem(storageKey, value);
+                } catch (error) {
+                    // PID is also persisted server-side as participant.label.
+                }
+            }
+
+            save('participant_label', 'ccf_prolific_pid');
+            save('PROLIFIC_PID', 'ccf_prolific_pid');
+            save('STUDY_ID', 'ccf_prolific_study_id');
+            save('SESSION_ID', 'ccf_prolific_session_id');
+
+            document.querySelector('form').addEventListener('submit', function (event) {
+                event.preventDefault();
+                params.set('welcome_page_ok', '1');
+                window.location.href = window.location.pathname + '?' + params.toString();
+            });
+        })();
+    </script>
+</body>
+</html>

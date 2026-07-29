@@ -1,64 +1,60 @@
-# Guida flusso esperimento (stato attuale)
+# Flusso app e pagine
 
-Questo documento descrive il flusso realmente attivo nel progetto.
+## Sequenza
 
-## Sequenza app
+`bargaining_tdl_intro` → `bargaining_tdl_main` → `bargaining_tdl_survey`
 
-`bargaining_tdl_intro` → `bargaining_tdl_main` → `bargaining_tdl_part3` → `bargaining_tdl_survey`
+## 1. Intro e assegnazione
 
-## 1) `bargaining_tdl_intro`
+- `Welcome`: raccoglie Prolific PID e assegna un trattamento.
+- `InstructionsPart1`: testo specifico private/public. Per
+  `private_no_dwl` usa temporaneamente la copia delle istruzioni Private TDL,
+  come richiesto dallo sperimentatore.
+- `ControlQuestionsAttempt1...5`: tre esempi; Example 2 vale 12/0/0 solo nel
+  braccio No-DWL e 0/0/0 nei bracci TDL.
+- `Goodbye`: solo CQ failure/timeout; lo slot RCT viene restituito.
 
-- `Welcome`
-- `InstructionsPart1`
-- `ControlQuestionsAttempt1...5`
-- `Goodbye` (solo se fail o timeout control questions; termina esperimento)
+Chi supera le CQ conferma lo slot ed entra nella waiting room del proprio
+trattamento.
 
-Chi passa va a `bargaining_tdl_main`.
+## 2. Gioco principale
 
-## 2) `bargaining_tdl_main`
-
-- `GroupingAfterControlQuestions` (gruppi da 3, by arrival)
+- `GroupingAfterControlQuestions`: triadi omogenee by-arrival.
 - `Chat`
-- `Signals`
-- `ExperimentTerminated` (solo esclusi)
+- `Signals`: un messaggio finale per partner e, subito sotto, rating
+  obbligatorio 1–5 (`Not very convincing` → `Highly convincing`).
+- `ExperimentTerminated`: solo esclusi.
 - `DataMappingWaitPage`
-- `Decision`
-- `ResultsWaitPage`
-- `Results` (solo attivi)
-- `InactivityGoodbyeMain` (solo inattivi/dropout)
+- `Decision`: `Support Left`, `Support Right`, `Support no one`.
+- `ResultsWaitPage`: calcola payoff secondo il trattamento.
+- `Results`: solo attivi.
+- `InactivityGoodbyeMain`: inattivi/dropout.
 
-Note operative:
-- Dropout gestito senza bloccare il gruppo.
-- Partecipante inattivo riceve payoff Part 1 a zero.
-- Sorteggio parte pagata (`Part1` vs `Part3`) resta attivo.
+I rating non vengono mostrati agli altri partecipanti e restano nulli sui
+timeout.
 
-## 3) `bargaining_tdl_part3`
-
-Stato attivo:
-- `InstructionsPart3`
-- `ThankYouPart3` (solo esclusi/inattivi)
-- `ResultsPart3`
-
-La vecchia logica estesa con decisione/control questions non e' nel `page_sequence` attuale.
-
-## 4) `bargaining_tdl_survey`
+## 3. Survey
 
 - `SurveyIntro`
-- `SurveyQuestions`
+- `SurveyQuestions`: age, gender, field of studies e altre demografiche.
+- `SurveySD3Machiavellianism`: 9 item.
+- `SurveySD3Narcissism`: 9 item.
+- `SurveySD3Psychopathy`: 9 item.
 - `SurveyScaleIntro`
 - `SurveyPage4...SurveyPage10`
-- `SurveyFeedback` (chiarezza istruzioni + commento generale)
-- `SurveyTerminated` (solo esclusi/inattivi)
+- `SurveyFeedback`
+- `SurveyTerminated`: solo esclusi/inattivi.
 - `FinalResults`
 
-## Regole di transizione chiave
+Ogni schermata SD3 usa la scala obbligatoria:
 
-- **Fail/timeout intro CQ**: `Goodbye` e uscita immediata.
-- **Timeout/inattivita' in main**: gruppo continua; inattivo marcato e payoff Part 1 azzerato.
-- **Timeout survey timed pages**: esclusione con `SurveyTerminated`.
+1. Disagree strongly
+2. Disagree
+3. Neither agree nor disagree
+4. Agree
+5. Agree strongly
 
-## Riferimenti
+## Pagamento
 
-- Config sessione: `settings.py`
-- Logica dropout/payoff: `bargaining_tdl_main/__init__.py`
-- Survey finale: `bargaining_tdl_survey/__init__.py`
+Part 1 è sempre pagata. Non esiste più il sorteggio Part 1/Dictator.
+Restano show-up fee configurabile, domanda 11–20 e premio differito `$2`.

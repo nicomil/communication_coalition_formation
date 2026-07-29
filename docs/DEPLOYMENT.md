@@ -87,28 +87,30 @@ heroku pg:backups:restore b001 DATABASE_URL --app <nome-app> --confirm <nome-app
 - Ruota periodicamente `OTREE_ADMIN_PASSWORD` e `SECRET_KEY`.
 - `OTREE_AUTH_LEVEL=STUDY` per raccolta dati reale su Prolific (`DEMO` solo per test pubblici).
 
-## Prolific (flusso con session link)
+## Prolific: un solo entry point RCT
 
-1. Crea sessione da admin oTree e copia start link usato nel vostro flusso.
-2. Aggiungi parametro Prolific al link:
+1. Da admin oTree crea una sessione `bargaining_tdl` associata alla room
+   `prolific`.
+2. Pubblica in Prolific una sola URL room-wide:
 
 ```text
-https://<app>.herokuapp.com/InitializeParticipant/<participant_code>?participant_label={{%PROLIFIC_PID%}}&STUDY_ID={{%STUDY_ID%}}&SESSION_ID={{%SESSION_ID%}}
+https://<app>.herokuapp.com/room/prolific?participant_label={{%PROLIFIC_PID%}}&STUDY_ID={{%STUDY_ID%}}&SESSION_ID={{%SESSION_ID%}}
 ```
 
-3. In Prolific usa "I'll use URL parameters" e passa:
+3. In Prolific passa:
    - `PROLIFIC_PID` (mappato su `participant_label`)
    - `STUDY_ID`
    - `SESSION_ID`
-4. Imposta `PROLIFIC_COMPLETION_URL` su Heroku con completion code dello studio Prolific.
-5. Verifica che pagina finale oTree faccia redirect automatico a Prolific completion URL.
+4. L'app assegna internamente uno dei tre trattamenti con blocchi permutati
+   3:3:3. Non creare URL o studi separati per trattamento.
+5. Imposta `PROLIFIC_COMPLETION_URL` e prova il redirect finale.
 
 ## Setup Prolific consigliato (pilota)
 
 - Tipo studio: `External study`
-- Routing trattamenti: `Task flow / multiple URLs`
-- Link: una URL sessione per trattamento (una riga per URL nel file Prolific)
-- Quote pilota: `15 + 15` (totale 30)
+- Routing trattamenti: interno a oTree; **una sola URL**
+- Link: `/room/prolific` con parametri Prolific
+- Quote pilota: multiplo di 9 consigliato
 - Review: `Manual review`
 - Device: `Desktop only` (mobile off, tablet off)
 - Lingua filtro: `Primary language = English`
@@ -116,9 +118,11 @@ https://<app>.herokuapp.com/InitializeParticipant/<participant_code>?participant
 
 ## Session sizing oTree (anti saturazione quote)
 
-- Non creare sessioni da N esatto quando quota Prolific è N.
-- Regola pratica pilota: quota 15 per trattamento -> session size almeno 30 per trattamento.
-- In produzione piena, mantenere margine extra per rimpiazzi Prolific/dropout.
+- Non creare sessioni da N esatto quando la quota Prolific è N.
+- Creare una sola sessione RCT con buffer (es. 2× quota) per CQ failure e
+  dropout; fermare il reclutamento quando la quota di CQ passate è raggiunta.
+- Gli slot CQ falliti vengono offerti prima dei nuovi slot e mantengono lo
+  stesso trattamento.
 
 ## Capacity e addon check pre-go-live
 
@@ -150,11 +154,12 @@ heroku config:get REDIS_URL --app <nome-app>
 - [ ] `SECRET_KEY` impostata
 - [ ] `DATABASE_URL` presente
 - [ ] `PROLIFIC_COMPLETION_URL` valorizzata con completion code reale
-- [ ] URL sessione Prolific include `participant_label`, `STUDY_ID`, `SESSION_ID`
-- [ ] Prolific configurato come `External study` + `Task flow / multiple URLs`
+- [ ] URL unico `/room/prolific` include `participant_label`, `STUDY_ID`, `SESSION_ID`
+- [ ] Prolific configurato come singolo `External study`
 - [ ] Prolific `Desktop only`, mobile/tablet disabilitati
 - [ ] Prolific in `Manual review`
-- [ ] Session size oTree sovradimensionata rispetto alla quota Prolific
+- [ ] Sessione RCT unica, associata alla room `prolific`, con buffer
+- [ ] Istruzioni No-DWL definitive approvate (la copia Private TDL è temporanea)
 - [ ] Smoke test completo: ingresso Prolific -> sessione oTree -> redirect completion
 - [ ] Backup DB eseguito (`heroku pg:backups:capture`)
 
@@ -196,4 +201,3 @@ Ultimo check: 2026-05-05 14:13 (UTC+2)
 - `OTREE_ADMIN_PASSWORD=********`
 - `SECRET_KEY=********`
 - `PROLIFIC_COMPLETION_URL` da impostare/verificare
-

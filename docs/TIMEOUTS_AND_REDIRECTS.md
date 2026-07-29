@@ -1,48 +1,34 @@
-# Timeouts and redirects (source of truth)
+# Timeout e redirect
 
-Questo documento descrive i timeout di pagina nello stato attuale del progetto e cosa succede allo scadere.
+Con `use_test_timers=True`, i timer applicabili diventano 60 secondi.
 
-## Regole globali
+## Intro
 
-- In test, se `use_test_timers=True`, i timeout pagina sono forzati a `60s`.
-- In produzione, valgono i timeout per app indicati sotto.
-- A timeout, oTree invia `timeout_submission` (se presente) e prosegue nel flusso.
-
-## `bargaining_tdl_intro`
-
-| Pagina | Timeout prod | A timeout |
+| Pagina | Produzione | Esito timeout |
 |---|---:|---|
-| `ControlQuestionsAttempt1...5` | 300s | esclusione inattivita', `Goodbye`, uscita esperimento |
+| `ControlQuestionsAttempt1...5` | 300s | esclusione, CQ failure, restituzione slot RCT |
 
-## `bargaining_tdl_main`
+## Main
 
-| Pagina | Timeout prod | A timeout |
+| Pagina | Produzione | Esito timeout |
 |---|---:|---|
-| `Chat` | 600s | submit pagina, passa a `Signals` |
-| `Signals` | 300s | segnali fallback automatici, player non idoneo a payoff Part 1 |
-| `Decision` | 300s | scelta fallback automatica, player non idoneo a payoff Part 1 |
-| `Results` | 180s | auto-advance pagina successiva, partecipante resta attivo |
+| `Chat` | 600s | passa ai messaggi finali |
+| `Signals` | 300s | segnali fallback; rating nulli; non idoneo Part 1 |
+| `Decision` | 300s | scelta fallback; non idoneo Part 1 |
+| `Results` | 180s | auto-advance, resta attivo |
 
-Note dropout:
-- disconnect con finestra reconnect (`90s`)
-- se reconnect fallisce, gruppo continua senza blocco
-- partecipante dropout riceve payoff Part 1 a zero
+La finestra di riconnessione chat è 90 secondi. Dopo un dropout il gruppo
+continua e il partecipante inattivo riceve payoff Part 1 pari a zero.
 
-## `bargaining_tdl_part3`
+## Survey
 
-| Pagina | Timeout prod | A timeout |
+| Pagina | Produzione | Esito timeout |
 |---|---:|---|
-| `InstructionsPart3` | 600s | esclusione inattivita', uscita su flow di terminazione |
+| `SurveyQuestions` | 180s | esclusione |
+| tre pagine `SurveySD3...` | 180s | esclusione |
+| `SurveyPage4...SurveyPage9` | 180s | esclusione |
+| `SurveyPage10` | 300s | esclusione |
+| `SurveyFeedback` | 180s | esclusione |
 
-## `bargaining_tdl_survey`
-
-| Pagina | Timeout prod | A timeout |
-|---|---:|---|
-| `SurveyQuestions` | 180s | esclusione inattivita' |
-| `SurveyPage4...SurveyPage9` | 180s | esclusione inattivita' |
-| `SurveyPage10` | 300s | esclusione inattivita' |
-| `SurveyFeedback` | 180s | esclusione inattivita' |
-
-Routing finale:
-- se escluso: `SurveyTerminated` -> fine
-- se attivo: `FinalResults` -> redirect completion URL (Prolific)
+Escluso: `SurveyTerminated`. Attivo: `FinalResults`, poi redirect al
+`completionlink` Prolific configurato.

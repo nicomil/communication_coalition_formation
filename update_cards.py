@@ -1,9 +1,8 @@
 import os
 
 directories = [
+    'bargaining_tdl_common',
     'bargaining_tdl_intro',
-    'bargaining_tdl_part2',
-    'bargaining_tdl_part3',
     'bargaining_tdl_survey',
     'bargaining_tdl_main'
 ]

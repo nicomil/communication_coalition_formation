@@ -11,7 +11,7 @@
 
 
         <p>
-            <li>Each participant will <strong>vote for one </strong> of four possible outcomes.
+            <li>Each participant will <strong>choose one</strong> of three possible actions.
             </li>
         </p>
         <p>
@@ -19,11 +19,6 @@
                 Red and a Blue Participant. The options are the following:
         </p>
         <ul>
-            <p>
-                <li>Everyone gets $2;
-                    <!-- ($ 2 to each Participant in the group)-->
-                </li>
-            </p>
             <p>
                 <li>You get $6, Red gets $6, Blue gets $0;<!--  ($6 to you and $6 to the Red Participant, and
                     $0 to
@@ -35,20 +30,26 @@
                     the Red Participant)--></li>
             </p>
             <p>
-                <li>You get $0, Red gets $6, Blue gets $6; <!--- ($0 to you and $6 to the Blue Participant, and
-                    $0 to
-                    the Red Participant)--></li>
+                <li>You support no one.</li>
             </p>
         </ul>
 
         <p>
-            <li><strong>If at least two participants in the group vote for the same outcome, everyone will be paid
-                    accordingly.</strong>
+            <li><strong>If two participants support each other, they will each receive $6 and the other participant
+                    will receive $0.</strong>
             </li>
         </p>
         <p>
-            <li><strong>If everyone votes for a different outcome, everyone will earn $0.</strong>
+            {% if no_deadweight_loss %}
+            {# TODO sperimentatore: sostituire SOLO questo ramo con il wording
+            approvato della regola $12. Per ora è la copia richiesta della
+            versione Private TDL. #}
+            <li><strong>If no two participants support each other, everyone will earn $0.</strong>
             </li>
+            {% else %}
+            <li><strong>If no two participants support each other, everyone will earn $0.</strong>
+            </li>
+            {% endif %}
         </p>
 
 

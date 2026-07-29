@@ -1,63 +1,70 @@
-# Architettura attiva - Bargaining TDL
+# Architettura attiva — Bargaining TDL
 
-## Overview
+## Flusso
 
-Esperimento oTree con 4 app attive in sequenza:
+Esperimento oTree in tre app:
 
-`bargaining_tdl_intro` → `bargaining_tdl_main` → `bargaining_tdl_part3` → `bargaining_tdl_survey`
+`bargaining_tdl_intro` → `bargaining_tdl_main` → `bargaining_tdl_survey`
 
-La vecchia app `bargaining_tdl_part2` e' stata rimossa dal flusso operativo.
+- `bargaining_tdl_common`: registro trattamenti, helper timeout, CQ e mapping.
+- `bargaining_tdl_intro`: PID, assegnazione RCT, istruzioni specifiche, CQ.
+- `bargaining_tdl_main`: triadi omogenee, comunicazione, messaggi finali,
+  decisione e payoff Part 1.
+- `bargaining_tdl_survey`: demografia, tre scale SD3, survey esistente,
+  domanda 11–20, feedback e risultati.
 
-## Moduli principali
+Il precedente modulo Dictator è stato rimosso. Part 1 è sempre pagata.
 
-- `bargaining_tdl_common`: helper timeout, validator CQ, mapping ruoli/colori, logging.
-- `bargaining_tdl_intro`: onboarding + control questions iniziali.
-- `bargaining_tdl_main`: triadi, chat/signals, decisione Part 1, dropout handling, payoff Part 1.
-- `bargaining_tdl_part3`: modulo individuale post-main.
-- `bargaining_tdl_survey`: survey finale, feedback sperimentale, risultati finali + redirect Prolific.
+## Trattamenti
 
-## Flusso dati
+| Codice | Comunicazione | Payoff |
+|---|---|---|
+| `private` | privata | Total Deadweight Loss |
+| `public` | pubblica | Total Deadweight Loss |
+| `private_no_dwl` | privata | No-Deadweight Loss |
 
-### `participant.vars` chiave
+Un solo studio e un solo link Prolific alimentano tutti i bracci.
 
-- `part1_payoff`
-- `part1_payoff_eligible`
-- `selected_part_for_payment`
-- `inactive_excluded`
-- `inactive_excluded_reason`
-- `group_dropped`
-- `prolific_id`
-- `prolific_study_id`
-- `prolific_session_id`
+## Randomizzazione RCT
 
-### Invarianti runtime
+Alla nascita della sessione viene creata una schedule in blocchi permutati di
+9: tre slot per trattamento, con ordine casuale crittograficamente seminato.
+Il seed è salvato in `session.randomization_seed`.
 
-- Gruppo non si blocca su dropout in main.
-- Partecipante inattivo/dropout riceve payoff Part 1 = 0.
-- Gli altri membri proseguono con fallback automatici.
+L'assegnazione avviene solo dopo un Welcome valido. Lo slot è provvisorio fino
+al superamento delle CQ:
 
-## Timeout e UX timer
+1. CQ superata → slot `filled`;
+2. CQ fallita o timeout → slot restituito;
+3. il primo nuovo partecipante riceve prima lo slot restituito, nello stesso
+   trattamento;
+4. ogni tentativo resta nell'export audit RCT.
 
-- Timeout per pagina definiti nei moduli app.
-- Override test timer centralizzato in `bargaining_tdl_common/helpers.py`.
-- UI timer gestita in template globali/survey timer partial.
+PostgreSQL usa row lock per serializzare claim concorrenti. Per avere
+rimpiazzi disponibili, creare la sessione oTree con buffer e fermare il
+reclutamento sulla quota di partecipanti che hanno superato le CQ.
 
-## Survey e risultati
+## Invarianti del gioco
 
-- Survey include pagina feedback istruzioni (`1-5`) + commento aperto.
-- `FinalResults` mostra payoff e gestisce redirect Prolific.
+- Gruppi da tre, omogenei per trattamento, formati by-arrival dopo le CQ.
+- Scelte finali ammesse: `Left`, `Right`, `NoOne`.
+- Supporto reciproco: payoff `(6, 6, 0)`.
+- Nessun supporto reciproco nei bracci TDL: `(0, 0, 0)`.
+- Nel braccio No-DWL, due giocatori che supportano il terzo mentre il terzo
+  sceglie `NoOne`: il terzo riceve 12, gli altri 0.
+- Timeout/dropout in main: gruppo continua; partecipante inattivo non è
+  idoneo al payoff Part 1.
 
-## Export dati
+## Pagamento
 
-- Export oTree completo (`all_apps_wide`) usato come sorgente audit.
-- Pipeline `process_all_apps.py` produce:
-  - dataset `core` (analisi)
-  - dataset `full` (audit)
-- Data dictionary in `docs/EXPORT_DATA_DICTIONARY.md`.
+Totale mostrato: show-up fee configurabile (default `$3`) + payoff Part 1
+sempre + premio della domanda 11–20. Il premio differito `$2` resta invariato.
 
-## Testing
+## Export
 
-- Test bot per `bargaining_tdl_survey`.
-- Test unit/integration principali in `bargaining_tdl_main`.
-- Comando smoke consigliato: `otree test bargaining_tdl 9 --export`.
+- `all_apps_wide`: record completo oTree.
+- `RCT Assignments`: ogni assegnazione, incluse CQ failure e rimpiazzi.
+- `RCT Slots`: schedule, seed e stato finale degli slot.
+- `process_all_apps.py`: dataset `core`, copia `full`, dizionario automatico.
 
+Vedi `docs/EXPORT_DATA_DICTIONARY.md`.

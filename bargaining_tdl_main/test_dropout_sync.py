@@ -153,8 +153,8 @@ class TestDropoutSyncHelpers(unittest.TestCase):
 
         self.assertTrue(group.group_dropped)
         self.assertEqual(p2.signal_inactive, 99)
-        self.assertIn(p2.signal_left, ['split_you', 'split_other', 'split_both'])
-        self.assertIn(p2.signal_right, ['split_you', 'split_other', 'split_both'])
+        self.assertIn(p2.signal_left, ['split_you', 'split_other', 'support_none'])
+        self.assertIn(p2.signal_right, ['split_you', 'split_other', 'support_none'])
         self.assertFalse(p2.part1_payoff_eligible)
         self.assertEqual(p2.participant.vars.get('signal_inactive'), 99)
         self.assertEqual(p2.participant.vars.get('group_dropped'), True)

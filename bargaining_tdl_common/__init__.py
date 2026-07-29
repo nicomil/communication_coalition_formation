@@ -4,7 +4,6 @@ Common utilities and helpers for bargaining_tdl experiment modules.
 This module provides shared functionality across:
 - bargaining_tdl_intro
 - bargaining_tdl_main
-- bargaining_tdl_part3
 - bargaining_tdl_survey
 """
 
@@ -19,7 +18,6 @@ from .validators import (
     set_control_questions_failed,
     has_failed_control_questions,
     check_control_questions_intro,
-    check_control_questions_part3,
     get_max_attempts,
     get_control_questions_attempts,
     increment_control_questions_attempts,
@@ -48,8 +46,8 @@ from .treatments import (
     DEFAULT_ACTIVE_TREATMENTS,
     get_active_treatments,
     get_treatment,
+    get_treatment_config,
     treatment_flag,
-    assign_treatment,
 )
 from .mixins import TimeTrackedPage
 from .logger import get_logger, logger, info, warning, error, debug
@@ -63,7 +61,6 @@ __all__ = [
     'set_control_questions_failed',
     'has_failed_control_questions',
     'check_control_questions_intro',
-    'check_control_questions_part3',
     'get_max_attempts',
     'get_control_questions_attempts',
     'increment_control_questions_attempts',
@@ -88,8 +85,8 @@ __all__ = [
     'DEFAULT_ACTIVE_TREATMENTS',
     'get_active_treatments',
     'get_treatment',
+    'get_treatment_config',
     'treatment_flag',
-    'assign_treatment',
     'TimeTrackedPage',
     'get_logger',
     'logger',
@@ -98,4 +95,3 @@ __all__ = [
     'error',
     'debug',
 ]
-
