@@ -59,8 +59,8 @@ class C(BaseConstants):
     NAME_IN_URL = 'bargaining_tdl_main'
     PLAYERS_PER_GROUP = 3
     NUM_ROUNDS = 1
-    PAYOFF_MAX = cu(6)
-    PAYOFF_NO_DWL = cu(12)
+    PAYOFF_MAX = cu(3)
+    PAYOFF_NO_DWL = cu(6)
     PAYOFF_DISAGREEMENT = cu(0)
     CHAT_RECONNECT_WINDOW_SECONDS = 90
     # Heartbeat tolerance tuned to avoid false disconnect flicker under network jitter.
@@ -88,20 +88,20 @@ def calculate_payoff_vector(decisions, no_deadweight_loss=False):
 
     # Minimum Winning Coalition: supporto strettamente reciproco.
     if c1 == 'Right' and c2 == 'Left':
-        return (6, 6, 0), 'mutual_12'
+        return (3, 3, 0), 'mutual_12'
     if c2 == 'Right' and c3 == 'Left':
-        return (0, 6, 6), 'mutual_23'
+        return (0, 3, 3), 'mutual_23'
     if c3 == 'Right' and c1 == 'Left':
-        return (6, 0, 6), 'mutual_31'
+        return (3, 0, 3), 'mutual_31'
 
     if no_deadweight_loss:
         # Due partecipanti supportano lo stesso terzo; il terzo supporta nessuno.
         if c1 == 'NoOne' and c2 == 'Left' and c3 == 'Right':
-            return (12, 0, 0), 'no_dwl_star_1'
+            return (6, 0, 0), 'no_dwl_star_1'
         if c2 == 'NoOne' and c1 == 'Right' and c3 == 'Left':
-            return (0, 12, 0), 'no_dwl_star_2'
+            return (0, 6, 0), 'no_dwl_star_2'
         if c3 == 'NoOne' and c1 == 'Left' and c2 == 'Right':
-            return (0, 0, 12), 'no_dwl_star_3'
+            return (0, 0, 6), 'no_dwl_star_3'
 
     return (0, 0, 0), 'disagreement'
 
@@ -215,6 +215,7 @@ class Player(BasePlayer):
     # Time tracking fields (in seconds)
     time_experiment_terminated = models.FloatField(initial=0)
     time_decision = models.FloatField(initial=0)
+    time_post_decision_confidence = models.FloatField(initial=0)
     time_results = models.FloatField(initial=0)
     
     # Hidden field for JavaScript to populate
@@ -246,13 +247,16 @@ def _color_context(player):
 
 
 def _signal_display_text(code, target_color, other_color, sender_inactive=False):
-    """Human-readable text for a signal internal code."""
+    """Human-readable text for a signal received by the current player.
+    target_color: colore del mittente (mantenuto per retro-compatibilità firma).
+    other_color: colore del TERZO partecipante (non il viewer, non il mittente).
+    """
     if code == 'split_you':
-        return "I intend to vote for 'I get $6, you get $6, and the other Participant gets $0'."
+        return "I intend to support you."
     elif code == 'split_other':
-        return "I intend to vote for 'I get $6, you get $0, and the other Participant gets $6'."
+        return f"I intend to support {other_color} Participant."
     elif code == 'support_none':
-        return "I intend to vote for 'Support no one'."
+        return "I intend to support no one."
     return code or ""
 
 
@@ -580,17 +584,18 @@ def _third_party_chat_rows(player: Player, channel: str):
 
 def _third_party_signal_display(code, receiver_color, other_color):
     """
-    Testo del 'Final Message' inviato da un partner all'altro, visto da un terzo.
-    A differenza di _signal_display_text, nomina il colore del destinatario invece
-    di usare "you" (il viewer non è il destinatario).
+    Testo del 'Final Message' inviato da un partner all'altro, visto da un terzo (viewer).
+    receiver_color: colore del DESTINATARIO del messaggio (non il viewer).
+    other_color: colore del VIEWER (my_color), referenziato da 'split_other'.
+    Restituisce il testo con chiarimento parentetico dove necessario.
     """
     if code == 'split_you':
-        return f"I intend to vote for 'I get $6, the {receiver_color} Participant gets $6, and the {other_color} Participant gets $0'."
+        return f"'I intend to support you.' (i.e. {receiver_color})"
     elif code == 'split_other':
-        return f"I intend to vote for 'I get $6, the {receiver_color} Participant gets $0, and the {other_color} Participant gets $6'."
+        return f"'I intend to support {other_color}.' (i.e. you)"
     elif code == 'support_none':
-        return "I intend to vote for 'Support no one'."
-    return code or ""
+        return "'I intend to support no one.'"
+    return f"'{code}'" if code else ""
 
 
 def _directed_signal_code(sender: Player, target_id: int):
@@ -788,8 +793,6 @@ class Signals(Page):
     form_fields = [
         'signal_left',
         'signal_right',
-        'signal_left_convincingness',
-        'signal_right_convincingness',
         'first_intention_selected',
         'time_on_page',
     ]
@@ -839,7 +842,6 @@ class Signals(Page):
             chat_timeout=(reason == 'timeout'),
             chat_partners_left=(reason in ('group_dropped', 'partners_left')),
             reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
-            convincingness_scale=range(1, 6),
             reveal_third_party_chat=bool(treatment_flag(player, 'reveal_third_party_chat', False)),
             **_chat_status_payload(player),
             **colors,
@@ -851,10 +853,6 @@ class Signals(Page):
         player.time_chat_and_signals = player.time_chat + player.time_signals
         if timeout_happened:
             player.signal_inactive = 99
-            # I rating non vengono imputati: 0 non appartiene alla scala e
-            # deve restare distinguibile da una risposta osservata.
-            player.signal_left_convincingness = None
-            player.signal_right_convincingness = None
             # Inattività rilevata: escludiamo dal pagamento come richiesto
             player.part1_payoff_eligible = False
             player.participant.vars['part1_payoff_eligible'] = False
@@ -1013,19 +1011,19 @@ class Decision(Page):
             {
                 'value': 'Left',
                 'id': 'dc_left',
-                'label': f"I intend to vote for 'I get $6, the {colors['left_partner_color']} Participant gets $6, and the {colors['right_partner_color']} Participant gets $0'",
+                'label': f"I will support {colors['left_partner_color']}",
                 'details': ''
             },
             {
                 'value': 'Right',
                 'id': 'dc_right',
-                'label': f"I intend to vote for 'I get $6, the {colors['right_partner_color']} Participant gets $6, and the {colors['left_partner_color']} Participant gets $0'",
+                'label': f"I will support {colors['right_partner_color']}",
                 'details': ''
             },
             {
                 'value': 'NoOne',
                 'id': 'dc_no_one',
-                'label': "I intend to vote for 'Support no one'",
+                'label': "I will support no one",
                 'details': ''
             },
         ]
@@ -1069,6 +1067,110 @@ class Decision(Page):
             # Inattività rilevata: escludiamo dal pagamento
             player.part1_payoff_eligible = False
             player.participant.vars['part1_payoff_eligible'] = False
+
+
+class PostDecisionConfidence(Page):
+    """
+    Nuova pagina post-Decision: mostra le chat in sola lettura e raccoglie
+    la scala di confidenza (1-5) sulla capacità persuasiva della conversazione.
+    Visibile solo ai partecipanti attivi (decision_inactive != 99).
+    """
+    form_model = 'player'
+    form_fields = ['signal_left_convincingness', 'signal_right_convincingness', 'time_on_page']
+    _PDC_TIMEOUT = 300
+    timeout_submission = timeout_submission_with_time(_PDC_TIMEOUT)
+
+    @staticmethod
+    def get_timeout_seconds(player):
+        return get_page_timeout_seconds(player, PostDecisionConfidence._PDC_TIMEOUT)
+
+    @staticmethod
+    def is_displayed(player):
+        """Stessa condizione di Results: solo partecipanti attivi che hanno deciso."""
+        return (
+            not has_failed_control_questions(player, 'intro')
+            and not _is_inactive_excluded(player)
+            and player.decision_inactive != 99
+        )
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        my_id = player.id_in_group
+        partners = TOPOLOGY[my_id]
+        left_id = partners['left']
+        right_id = partners['right']
+
+        group_id = player.group.id
+        channel_left = f"{group_id}_{min(my_id, left_id)}_{max(my_id, left_id)}"
+        channel_right = f"{group_id}_{min(my_id, right_id)}_{max(my_id, right_id)}"
+
+        colors = _color_context(player)
+
+        left_inactive = bool(player.received_signal_left_inactive == 99)
+        right_inactive = bool(player.received_signal_right_inactive == 99)
+        received_left_display = _signal_display_text(
+            player.received_signal_left,
+            colors['left_partner_color'],
+            colors['right_partner_color'],
+            sender_inactive=left_inactive,
+        )
+        received_right_display = _signal_display_text(
+            player.received_signal_right,
+            colors['right_partner_color'],
+            colors['left_partner_color'],
+            sender_inactive=right_inactive,
+        )
+
+        reveal_third_party = bool(treatment_flag(player, 'reveal_third_party_chat', False))
+        third_chat_rows = []
+        third_signal_from_left = ""
+        third_signal_from_right = ""
+        if reveal_third_party:
+            third_a, third_b = sorted((left_id, right_id))
+            channel_third = f"{group_id}_{third_a}_{third_b}"
+            prefixed_channel_third = f"{player.session.id}-{C.NAME_IN_URL}-{channel_third}"
+            third_chat_rows = _third_party_chat_rows(player, prefixed_channel_third)
+
+            left_partner = player.group.get_player_by_id(left_id)
+            right_partner = player.group.get_player_by_id(right_id)
+            third_signal_from_left = _third_party_signal_display(
+                _directed_signal_code(left_partner, right_id),
+                colors['right_partner_color'],
+                colors['my_color'],
+            )
+            third_signal_from_right = _third_party_signal_display(
+                _directed_signal_code(right_partner, left_id),
+                colors['left_partner_color'],
+                colors['my_color'],
+            )
+
+        return dict(
+            channel_left=channel_left,
+            channel_right=channel_right,
+            received_signal_left_display=received_left_display,
+            received_signal_right_display=received_right_display,
+            reveal_third_party_chat=reveal_third_party,
+            third_chat_rows=third_chat_rows,
+            third_signal_from_left=third_signal_from_left,
+            third_signal_from_right=third_signal_from_right,
+            convincingness_scale=range(1, 6),
+            reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
+            **_chat_status_payload(player),
+            **colors,
+        )
+
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        player.time_post_decision_confidence = save_time_value(player.time_on_page)
+        if timeout_happened:
+            # None preserva la distinguibilità da un dato osservato (scala 1-5,
+            # zero non è un valore valido). Identico al comportamento già usato
+            # per i convincingness in caso di inattività su Signals.
+            player.signal_left_convincingness = None
+            player.signal_right_convincingness = None
+        logger.debug(
+            f"PostDecisionConfidence - time saved: {player.time_post_decision_confidence}"
+        )
 
 
 class InactivityGoodbyeMain(Page):
@@ -1175,11 +1277,11 @@ class Results(Page):
         colors = _color_context(player)
         choice = player.decision_choice
         if choice == 'Left':
-            choice_display = f"I intend to vote for 'I get $6, the {colors['left_partner_color']} Participant gets $6, and the {colors['right_partner_color']} Participant gets $0'"
+            choice_display = f"I will support {colors['left_partner_color']}"
         elif choice == 'Right':
-            choice_display = f"I intend to vote for 'I get $6, the {colors['right_partner_color']} Participant gets $6, and the {colors['left_partner_color']} Participant gets $0'"
+            choice_display = f"I will support {colors['right_partner_color']}"
         else:
-            choice_display = "I intend to vote for 'Support no one'"
+            choice_display = "I will support no one"
         return dict(choice_display=choice_display, **colors)
 
     @staticmethod
@@ -1193,6 +1295,7 @@ page_sequence = [
     ExperimentTerminated,
     DataMappingWaitPage,
     Decision,
+    PostDecisionConfidence,
     ResultsWaitPage,
     Results,
     InactivityGoodbyeMain

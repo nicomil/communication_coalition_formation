@@ -269,7 +269,7 @@ class SurveyIntro(Page):
         from otree.api import Currency as cu
         return {
             'participation_fee': cu(
-                player.session.config.get('participation_fee', 3)
+                player.session.config.get('participation_fee', 1.50)
             )
         }
 
@@ -327,7 +327,7 @@ def _matrix_context(player, items):
     }
 
 
-class SurveySD3Machiavellianism(_SurveyTimedPage):
+class SurveyPage1(_SurveyTimedPage):
     template_name = 'bargaining_tdl_survey/SurveyMatrix.html'
     form_model = 'player'
     form_fields = [
@@ -351,7 +351,7 @@ class SurveySD3Machiavellianism(_SurveyTimedPage):
         return not _is_inactive_excluded(player)
 
 
-class SurveySD3Narcissism(_SurveyTimedPage):
+class SurveyPage2(_SurveyTimedPage):
     template_name = 'bargaining_tdl_survey/SurveyMatrix.html'
     form_model = 'player'
     form_fields = [
@@ -375,7 +375,7 @@ class SurveySD3Narcissism(_SurveyTimedPage):
         return not _is_inactive_excluded(player)
 
 
-class SurveySD3Psychopathy(_SurveyTimedPage):
+class SurveyPage3(_SurveyTimedPage):
     template_name = 'bargaining_tdl_survey/SurveyMatrix.html'
     form_model = 'player'
     form_fields = [
@@ -631,7 +631,7 @@ class FinalResults(Page):
         part1_group_id = player.participant.vars.get('part1_group_id')
         part1_payoff_eligible = bool(player.participant.vars.get('part1_payoff_eligible', True))
             
-        base_fee = cu(player.session.config.get('participation_fee', 3))
+        base_fee = cu(player.session.config.get('participation_fee', 1.50))
         beauty_contest_bonus = cu(player.beauty_contest_guess or 0)
         part1_payoff_val = player.participant.vars.get('part1_payoff', cu(0))
         if not part1_payoff_eligible:
@@ -654,18 +654,10 @@ class FinalResults(Page):
             actor_left_id = TOPOLOGY[actor_id]['left']
             actor_right_id = TOPOLOGY[actor_id]['right']
             if choice == 'Left':
-                return (
-                    "I intend to vote for 'I get $6, the "
-                    f"{COLOR_MAPPING[actor_left_id]} Participant gets $6, "
-                    "and the other Participant gets $0'"
-                )
+                return f"I will support {COLOR_MAPPING[actor_left_id]}"
             if choice == 'Right':
-                return (
-                    "I intend to vote for 'I get $6, the "
-                    f"{COLOR_MAPPING[actor_right_id]} Participant gets $6, "
-                    "and the other Participant gets $0'"
-                )
-            return "I intend to vote for 'Support no one'"
+                return f"I will support {COLOR_MAPPING[actor_right_id]}"
+            return "I will support no one"
         
         if main_player:
             my_id = main_player.id_in_group
@@ -718,9 +710,9 @@ class FinalResults(Page):
 page_sequence = [
     SurveyIntro,
     SurveyQuestions,
-    SurveySD3Machiavellianism,
-    SurveySD3Narcissism,
-    SurveySD3Psychopathy,
+    SurveyPage1,
+    SurveyPage2,
+    SurveyPage3,
     SurveyScaleIntro,
     SurveyPage4,
     SurveyPage5,

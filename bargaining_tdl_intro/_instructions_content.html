@@ -11,46 +11,47 @@
 
 
         <p>
-            <li>Each participant will <strong>choose one</strong> of three possible actions.
+            <li>Each participant will decide whether to support one of the other two participants or
+                support no one.
+            </li>
+        </p>
+        <p>
+            <li><strong>If two participants support each other, they will earn $3 each, and the third participant will
+                    earn $0</strong>
+            </li>
+        </p>
+        <p>
+            <li><strong>Otherwise, everyone will earn $0</strong>
             </li>
         </p>
         <p>
             <li><strong>For Example:</strong> Imagine you are the Green Participant, and you are interacting with a
-                Red and a Blue Participant. The options are the following:
+                Red and a Blue Participant:
         </p>
         <ul>
             <p>
-                <li>You get $6, Red gets $6, Blue gets $0;<!--  ($6 to you and $6 to the Red Participant, and
-                    $0 to
-                    the Blue Participant)--></li>
+                <li>If you support Red, Red supports you, and Blue supports Red: You earn $3, Red earns $3, Blue earns
+                    $0;</li>
             </p>
             <p>
-                <li>You get $6, Red gets $0, Blue gets $6; <!--- ($6 to you and $6 to the Blue Participant, and
-                    $0 to
-                    the Red Participant)--></li>
+                <li>If you support Red, Red supports Blue, and Blue supports you: everybody earns $0;</li>
             </p>
             <p>
-                <li>You support no one.</li>
+                {% if no_deadweight_loss %}
+                {# TODO sperimentatore: sostituire SOLO questo ramo con il wording
+                approvato della regola $12. Per ora è la copia richiesta della
+                versione Private TDL. #}
+                <li>If you support Blue, Red supports Blue; and Blue supports no one: You earn $0, Red earns $0, Blue
+                    earns $6.</li>
+                {% else %}
+                <li>If you support Blue, Red supports Blue; and Blue supports no one: everybody earns $0.</li>
+                {% endif %}
             </p>
+
         </ul>
 
-        <p>
-            <li><strong>If two participants support each other, they will each receive $6 and the other participant
-                    will receive $0.</strong>
-            </li>
-        </p>
-        <p>
-            {% if no_deadweight_loss %}
-            {# TODO sperimentatore: sostituire SOLO questo ramo con il wording
-            approvato della regola $12. Per ora è la copia richiesta della
-            versione Private TDL. #}
-            <li><strong>If no two participants support each other, everyone will earn $0.</strong>
-            </li>
-            {% else %}
-            <li><strong>If no two participants support each other, everyone will earn $0.</strong>
-            </li>
-            {% endif %}
-        </p>
+
+
 
 
     </div>
@@ -58,19 +59,19 @@
         <h4>Chat Instructions</h4>
 
         <p>
-            <li><strong>Before choosing which outcome you will vote for, you have maximum 10 minutes to
+            <li><strong>Before choosing who you will support, you have maximum 10 minutes to
                     communicate</strong> freely with
                 the other participants in two separate chats.</li>
         </p>
         <p>
-            <li>In these messages you can explain to each of them what division you intend to vote for, and what
-                division you think they should vote for, and why. You can write different messages to the different
+            <li>In these messages you can explain to each of them who you intend to support, who you think they should
+                support, and why. You can write different messages to the different
                 participants.</li>
         </p>
         <p>
             <li><strong>At the end of the chat period you will select pre-written messages</strong> to send to each of
                 the other two
-                participants saying which option you intend to vote for. You can select different messages for the
+                participants saying who you intend to support. You can select different messages for the
                 different participants.</li>
         </p>
         {# === Visibilità dei messaggi: testo specifico del trattamento ===
@@ -79,7 +80,7 @@
         {% if reveal_third_party_chat %}
         {# ---- Ramo PUBLIC (comunicazione pubblica) ---- #}
         <p>
-            <li> <strong>Messages will become public: </strong>Before choosing which option to vote for, you will see
+            <li> <strong>Messages will become public: </strong>Before choosing who to support, you will see
                 all
                 the messages sent between the other two participants and each of them will see the messages sent between
                 you and the other. This includes the final pre-written messages.</li>
@@ -127,7 +128,7 @@
             <li>Each participant of the group selects a final, pre-written, message to send to each of the other
                 participants of the group.</li>
             <li>All messages are shown to all participants.</li>
-            <li>Each participant of the group makes their final decision on which option to vote for.</li>
+            <li>Each participant of the group makes their final decision on who to support.</li>
             <li>Payments are determined and will be communicated at the end of the experiment.
             </li>
             <li>Please note that if a participant drops out before sending their final message or making a final
@@ -143,7 +144,7 @@
             <li>Chat with each of the other participants of the group. </li>
             <li>Each participant of the group selects a final, pre-written, message to send to each of the other
                 participants of the group.</li>
-            <li>Each participant of the group makes their final decision on which option to vote for.</li>
+            <li>Each participant of the group makes their final decision on who to support.</li>
             <li>Payments are determined and will be communicated at the end of the experiment.
             </li>
             <li>Please note that if a participant drops out before sending their final message or making a final

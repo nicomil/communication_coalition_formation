@@ -1,5 +1,5 @@
 {{ extends "_templates/global/Page.html" }}
-{{ block title }}Your Final Decision{{ endblock }}
+{{ block title }}Confidence question{{ endblock }}
 {{ block content }}
 
 <style>
@@ -7,15 +7,6 @@
         max-width: 1000px;
     }
 </style>
-
-{{ include_sibling '_button_style.html' }}
-
-{% if signals_expired %}
-<div class="alert alert-warning mt-3" role="alert">
-    <strong>Note:</strong> Your time for sending the final message has expired. Your final message has not been sent to
-    the other participants.
-</div>
-{% endif %}
 
 <style>
     .message-box {
@@ -55,6 +46,31 @@
     .read-only-chat .otree-chat__btn-send,
     .read-only-chat .otree-chat>div:last-child {
         display: none !important;
+    }
+
+    .convincingness-scale {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+        margin-top: 8px;
+        text-align: center;
+    }
+
+    .convincingness-scale label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+    }
+
+    .convincingness-anchors {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 6px;
+        color: #555;
+        font-size: 0.85rem;
     }
 </style>
 
@@ -136,47 +152,29 @@
         });
     })();
 </script>
+
+{{ include_sibling '_button_style.html' }}
 <p><strong>Please make your final decision. Note that if you have not made your decision within 5 minutes, you will be
         excluded from the experiment.</strong>
 </p>
-<h4> You are the {{ my_color }} Participant.</h4>
+<h4>You are the {{ my_color }} Participant.</h4>
 
-
-
-
-
-{# === Visibilità dei messaggi: testo specifico del trattamento ===
-Modificare il ramo PUBLIC o PRIVATE in modo indipendente: editare uno
-non tocca l'altro. #}
+{# === Intro text: trattamento-specifico ===
+Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
 {% if reveal_third_party_chat %}
-{# ---- Ramo PUBLIC (comunicazione pubblica) ---- #}
-
+{# ---- Ramo PUBLIC ---- #}
 <p>
-    Here are the Chats between the other two participants, you and each of the other participants, and the final
-    messages
-    received from each of
-    them, and those exchanged between the other two participants.
-    Based on this information, please make your final decision.
+    Please read the conversations below — including the one between the other two participants — and
+    rate how confident you are that your conversations were convincing.
 </p>
-
-
-
 {% else %}
-{# ---- Ramo PRIVATE (comunicazione privata, baseline) ---- #}
+{# ---- Ramo PRIVATE ---- #}
 <p>
-    Here are the Chats between you and each of the other participants, and the final
-    messages
-    received from each of
-    them.
-    Based on this information, please make your final decision.
+    Please review the conversations below and rate how confident you are that your conversations were convincing.
 </p>
-
-
 {% endif %}
 
-
-
-
+{# === Chat box: Left and Right partner (read-only, identical to Decision) === #}
 <div class="row">
     <div class="col-md-6">
         <div class="card">
@@ -212,6 +210,7 @@ non tocca l'altro. #}
     </div>
 </div>
 
+{# === Trattamento PUBLIC: terza chat tra gli altri due === #}
 {% if reveal_third_party_chat %}
 <div class="row mt-3">
     <div class="col-md-12">
@@ -222,10 +221,12 @@ non tocca l'altro. #}
             </div>
             <div class="card-body px-5 py-4">
                 <div class="signal-box">
-                    Final Message from {{ left_partner_color }} to {{ right_partner_color }}: {{ third_signal_from_left }}
+                    Final Message from {{ left_partner_color }} to {{ right_partner_color }}: {{ third_signal_from_left
+                    }}
                 </div>
                 <div class="signal-box">
-                    Final Message from {{ right_partner_color }} to {{ left_partner_color }}: {{ third_signal_from_right }}
+                    Final Message from {{ right_partner_color }} to {{ left_partner_color }}: {{ third_signal_from_right
+                    }}
                 </div>
                 <h6>Chat Log (Read-Only):</h6>
                 <div class="message-box read-only-chat">
@@ -246,28 +247,53 @@ non tocca l'altro. #}
 
 <hr>
 
-<div class="card border-secondary">
+{# === Scala convincingness: una per partner === #}
+<div class="card border-secondary mt-3">
     <div class="card-header bg-secondary text-white">
-        <h4>Select your option:</h4>
+        <h4>How confident are you that your conversations were convincing?</h4>
     </div>
     <div class="card-body px-5 py-4">
-        <p>
-            Please make a final decision to determine earnings:
-        </p>
-        <p></p>
-        <div class="form-group">
-            {% for opt in decision_options %}
-            <div class="form-check mb-3">
-                <input type="radio" name="decision_choice" value="{{ opt.value }}" id="{{ opt.id }}"
-                    class="form-check-input" required {% if opt.checked %}checked{% endif %}>
-                <label class="form-check-label" for="{{ opt.id }}">
-                    <strong>{{ opt.label }}</strong> <em>{{ opt.details }}</em>.
+        <p>Please rate your confidence for each conversation on a scale from 1 (Not very confident) to 5 (Highly
+            confident).</p>
+
+        <div class="mb-4">
+            <strong>Conversation with the {{ left_partner_color }} Participant</strong>
+            <div class="convincingness-scale" role="radiogroup"
+                aria-label="Convincingness of conversation with {{ left_partner_color }} Participant">
+                {% for value in convincingness_scale %}
+                <label for="pdc_left_convincingness_{{ value }}">
+                    <span>{{ value }}</span>
+                    <input type="radio" name="signal_left_convincingness" value="{{ value }}"
+                        id="pdc_left_convincingness_{{ value }}" required>
                 </label>
+                {% endfor %}
             </div>
-            {% endfor %}
+            <div class="convincingness-anchors">
+                <span>Not very confident</span>
+                <span>Highly confident</span>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <strong>Conversation with the {{ right_partner_color }} Participant</strong>
+            <div class="convincingness-scale" role="radiogroup"
+                aria-label="Convincingness of conversation with {{ right_partner_color }} Participant">
+                {% for value in convincingness_scale %}
+                <label for="pdc_right_convincingness_{{ value }}">
+                    <span>{{ value }}</span>
+                    <input type="radio" name="signal_right_convincingness" value="{{ value }}"
+                        id="pdc_right_convincingness_{{ value }}" required>
+                </label>
+                {% endfor %}
+            </div>
+            <div class="convincingness-anchors">
+                <span>Not very confident</span>
+                <span>Highly confident</span>
+            </div>
         </div>
     </div>
 </div>
+
 <br>
 
 {{ include '_templates/global/_time_tracking_field.html' }}

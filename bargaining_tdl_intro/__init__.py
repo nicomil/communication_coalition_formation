@@ -195,86 +195,86 @@ class Player(BasePlayer):
     # TDL=(0,0,0), private No-DWL=(12,0,0).
     example1_earnings_you = models.StringField(
         choices=[
-            ['12', '$12'],
             ['6', '$6'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earnings be as Green Participant ?"
+        label="How much would you earn?"
     )
     example1_earnings_left = models.StringField(
         choices=[
-            ['12', '$12'],
             ['6', '$6'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the Red Participant ?"
+        label="How much would Red earn?"
     )
     example1_earnings_right = models.StringField(
         choices=[
-            ['12', '$12'],
             ['6', '$6'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the Blue Participant?"
+        label="How much would Blue earn?"
     )
     
     example2_earnings_you = models.StringField(
         choices=[
-            ['12', '$12'],
             ['6', '$6'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earnings be as Green Participant ?"
+        label="How much would you earn?"
     )
     example2_earnings_left = models.StringField(
         choices=[
-            ['12', '$12'],
             ['6', '$6'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the Red Participant ?"
+        label="How much would Red earn?"
     )
     example2_earnings_right = models.StringField(
         choices=[
-            ['12', '$12'],
             ['6', '$6'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the Blue Participant ?"
+        label="How much would Blue earn?"
     )
     
     example3_earnings_you = models.StringField(
         choices=[
-            ['12', '$12'],
             ['6', '$6'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would your earnings be as Green Participant ?"
+        label="How much would you earn?"
     )
     example3_earnings_left = models.StringField(
         choices=[
-            ['12', '$12'],
             ['6', '$6'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the Red Participant ?"
+        label="How much would Red earn?"
     )
     example3_earnings_right = models.StringField(
         choices=[
-            ['12', '$12'],
             ['6', '$6'],
+            ['3', '$3'],
             ['0', '$0'],
         ],
         widget=widgets.RadioSelect,
-        label="What would be the earnings for the Blue Participant ?"
+        label="How much would Blue earn?"
     )
 
     # Time tracking fields (in seconds)
@@ -605,7 +605,7 @@ class Welcome(Page):
     def vars_for_template(player):
         return dict(
             require_prolific_id=_require_prolific_id(player),
-            participation_fee=cu(player.session.config.get('participation_fee', 3)),
+            participation_fee=cu(player.session.config.get('participation_fee', 1.50)),
             prolific_pid_initial=(
                 (player.participant.label or '').strip()
                 or (player.field_maybe_none('prolific_pid_url') or '').strip()
@@ -687,15 +687,17 @@ def create_control_questions_class(attempt_number):
         # before_next_page. Questo è un secondo livello di sicurezza.
         timeout_submission = timeout_submission_with_time(
             _CONTROL_QUESTIONS_TIMEOUT,
-            example1_earnings_you='0',
-            example1_earnings_left='6',
-            example1_earnings_right='0',
-            example2_earnings_you='6',
-            example2_earnings_left='6',
-            example2_earnings_right='6',
-            example3_earnings_you='6',
-            example3_earnings_left='6',
-            example3_earnings_right='6',
+            # Valori intenzionalmente errati per ogni trattamento:
+            # Ex1 corretta=(0,0,0); Ex2 corretta=(0 o 6, 0, 0); Ex3 corretta=(0,3,3)
+            example1_earnings_you='6',   # corretta: '0'
+            example1_earnings_left='6',  # corretta: '0'
+            example1_earnings_right='6', # corretta: '0'
+            example2_earnings_you='3',   # corretta: '0' (TDL/Public) o '6' (no-DWL) → '3' sempre errata
+            example2_earnings_left='6',  # corretta: '0'
+            example2_earnings_right='6', # corretta: '0'
+            example3_earnings_you='6',   # corretta: '0'
+            example3_earnings_left='6',  # corretta: '3'
+            example3_earnings_right='6', # corretta: '3'
         )
 
         @staticmethod
@@ -742,19 +744,13 @@ def create_control_questions_class(attempt_number):
             
             return {
                 'example1_scenario': (
-                    "Imagine that you are the Green Participant, and vote for '$6 to you, $6 to the Blue Participant, $0 to the Red Participant';<br>"
-                    "- The Red Participant votes for 'Support no one';<br>"
-                    "- The Blue Participant votes for '$6 to you, $6 to the Blue Participant, $0 to the Red Participant'."
+                    "Imagine that you are Green: you support no one, Red supports Blue, and Blue supports no one."
                 ),
                 'example2_scenario': (
-                    "Imagine that you are the Green Participant, and vote for 'Support no one';<br>"
-                    "- The Red Participant votes for '$6 to you, $0 to the Blue Participant, $6 to the Red Participant';<br>"
-                    "- The Blue Participant votes for '$6 to you, $6 to the Blue Participant, $0 to the Red Participant'."
+                    "Imagine that you are Green: you support no one, Red supports you, and Blue supports you."
                 ),
                 'example3_scenario': (
-                    "Imagine that you are the Green Participant, and vote for '$6 to you, $6 to the Blue Participant, $0 to the Red Participant';<br>"
-                    "- The Red Participant votes for 'Support no one';<br>"
-                    "- The Blue Participant votes for '$0 to you, $6 to the Blue Participant, $6 to the Red Participant'."
+                    "Imagine that you are Green: you support Red, Red supports Blue, and Blue supports Red."
                 ),
                 'max_attempts': max_attempts,
                 'current_attempt': attempt_number,
@@ -789,10 +785,12 @@ def create_control_questions_class(attempt_number):
             
             # Identify which examples are wrong
             errors = []
-            if not (player.example1_earnings_you == "6" and player.example1_earnings_left == "0" and player.example1_earnings_right == "6"):
+            # Example 1: tutti i trattamenti → (0, 0, 0)
+            if not (player.example1_earnings_you == "0" and player.example1_earnings_left == "0" and player.example1_earnings_right == "0"):
                 errors.append("Example 1")
+            # Example 2: no-DWL → you=$6; TDL/Public → you=$0; Red=$0; Blue=$0
             expected_example2_you = (
-                "12" if treatment_flag(player, 'no_deadweight_loss', False) else "0"
+                "6" if treatment_flag(player, 'no_deadweight_loss', False) else "0"
             )
             if not (
                 player.example2_earnings_you == expected_example2_you
@@ -800,7 +798,8 @@ def create_control_questions_class(attempt_number):
                 and player.example2_earnings_right == "0"
             ):
                 errors.append("Example 2")
-            if not (player.example3_earnings_you == "0" and player.example3_earnings_left == "0" and player.example3_earnings_right == "0"):
+            # Example 3: tutti i trattamenti → you=$0, Red=$3, Blue=$3
+            if not (player.example3_earnings_you == "0" and player.example3_earnings_left == "3" and player.example3_earnings_right == "3"):
                 errors.append("Example 3")
                 
             player.participant.vars['intro_cq_errors'] = errors

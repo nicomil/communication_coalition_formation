@@ -145,19 +145,22 @@ def check_control_questions_intro(player):
         not player.example3_earnings_right):
         return False
 
-    example2_you = '12' if treatment_flag(
+    example2_you = '6' if treatment_flag(
         player, 'no_deadweight_loss', False
     ) else '0'
 
+    # Example 1: tutti i trattamenti → (0, 0, 0)
+    # Example 2: no-DWL → you=$6; TDL/Public → you=$0; Red=$0; Blue=$0
+    # Example 3: tutti i trattamenti → you=$0, Red=$3, Blue=$3
     correct = (
-        player.example1_earnings_you == "6" and
+        player.example1_earnings_you == "0" and
         player.example1_earnings_left == "0" and
-        player.example1_earnings_right == "6" and
+        player.example1_earnings_right == "0" and
         player.example2_earnings_you == example2_you and
         player.example2_earnings_left == "0" and
         player.example2_earnings_right == "0" and
         player.example3_earnings_you == "0" and
-        player.example3_earnings_left == "0" and
-        player.example3_earnings_right == "0"
+        player.example3_earnings_left == "3" and
+        player.example3_earnings_right == "3"
     )
     return correct
