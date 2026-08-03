@@ -17,72 +17,50 @@
 
         <h5 class="mb-4">Please answer the following questions:</h5>
 
-        <!-- Gender -->
+        <!-- Q1: Gender -->
         <div class="mb-4">
             {{ formfield 'gender' }}
         </div>
 
         <hr>
 
-        <!-- Age -->
+        <!-- Q2: Birth year -->
         <div class="mb-4">
-            {{ formfield 'age' }}
+            {{ formfield 'birth_year' }}
             <div class="form-text text-muted">
-                (Range: 18 - 99)
+                (Enter year: YYYY)
             </div>
         </div>
 
         <hr>
 
-        <!-- Field of study -->
+        <!-- Q3: Field of study (ISCED categories) -->
         <div class="mb-4">
             {{ formfield 'field_of_study' }}
-            <div id="field_of_study_hint" class="form-text text-danger" style="display:none;">
-                Please enter a valid field of study (text only, no numbers).
-            </div>
         </div>
-
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                var input = document.getElementById('id_field_of_study');
-                var hint = document.getElementById('field_of_study_hint');
-                if (input) {
-                    // Block digit characters on keypress
-                    input.addEventListener('keypress', function (e) {
-                        if (/[0-9]/.test(e.key)) {
-                            e.preventDefault();
-                            hint.style.display = 'block';
-                        }
-                    });
-                    // Strip any digits that might be pasted in
-                    input.addEventListener('input', function () {
-                        var clean = this.value.replace(/[0-9]/g, '');
-                        if (clean !== this.value) {
-                            this.value = clean;
-                            hint.style.display = 'block';
-                        } else {
-                            hint.style.display = 'none';
-                        }
-                    });
-                }
-            });
-        </script>
 
         <hr>
 
-        <!-- University years -->
+        <!-- Q4: University years -->
         <div class="mb-4">
             {{ formfield 'university_years' }}
             <div class="form-text text-muted">
-                (Range: 1 - 20)
+                (Range: 0 - 20)
             </div>
         </div>
 
         <hr>
 
-        <!-- Job status -->
+        <!-- Q5: Main situation -->
         <div class="mb-4">
-            {{ formfield 'job_status' }}
+            {{ formfield 'main_situation' }}
+        </div>
+
+        <hr>
+
+        <!-- Q6: Job type (always shown; includes "Not employed" for non-workers) -->
+        <div class="mb-4">
+            {{ formfield 'job_type' }}
         </div>
 
     </div>

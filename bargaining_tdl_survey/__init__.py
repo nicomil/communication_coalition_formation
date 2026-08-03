@@ -109,37 +109,62 @@ class Player(BasePlayer):
         label="Please indicate your gender:",
     )
 
-    # Age: numeric 18–99
-    age = models.IntegerField(
-        min=18,
-        max=99,
-        label="Please indicate your age:",
+    # Birth year: YYYY (Q2)
+    birth_year = models.IntegerField(
+        min=1924,
+        max=2008,
+        label="In what year were you born?",
     )
 
-    # Field of study: free text
-    field_of_study = models.StringField(
-        label="Please indicate your field of study:",
-        blank=False,
-    )
-
-    # University years: free numeric input
-    university_years = models.IntegerField(
-        min=1,
-        max=20,
-        label="Please indicate how many years you studied at university?",
-    )
-
-    # Job status
-    job_status = models.StringField(
+    # Field of study: ISCED 2013 categories (Q3)
+    field_of_study = models.IntegerField(
         choices=[
-            ['employee', 'Employee'],
-            ['employer', 'Employer'],
-            ['self_employed', 'Self-employed'],
-            ['not_in_labour_force', 'Not in the labour force'],
-            
+            [1, 'Education'],
+            [2, 'Arts and humanities'],
+            [3, 'Social sciences, journalism and information'],
+            [4, 'Business, administration and law'],
+            [5, 'Natural sciences, mathematics and statistics'],
+            [6, 'Information and Communication Technologies (ICTs)'],
+            [7, 'Engineering, manufacturing and construction'],
+            [8, 'Agriculture, forestry, fisheries and veterinary'],
+            [9, 'Health and welfare'],
+            [10, 'Services'],
         ],
         widget=widgets.RadioSelect,
-        label="Please indicate your job status:",
+        label="What is or was the main field of study of your highest educational qualification?",
+    )
+
+    # University years: 0–20 full-time equivalents (Q4)
+    university_years = models.IntegerField(
+        min=0,
+        max=20,
+        label="About how many years of university (or tertiary) education have you completed in total (full-time equivalents)?",
+    )
+
+    # Q5: Main situation (Select one)
+    main_situation = models.StringField(
+        choices=[
+            ['paid_work', 'In paid work (employee, employer, self-employed)'],
+            ['education', 'In education / Student'],
+            ['unemployed', 'Unemployed'],
+            ['sick_disabled', 'Permanently sick or disabled'],
+            ['retired', 'Retired'],
+            ['housework', 'Doing housework, looking after children or other persons'],
+        ],
+        widget=widgets.RadioSelect,
+        label="Which of these descriptions best describes your main situation? (Select one)",
+    )
+
+    # Q6: Job type (always shown; 'not_employed' for those not in paid work)
+    job_type = models.StringField(
+        choices=[
+            ['employee', 'An employee'],
+            ['self_employed', 'Self-employed (without employees)'],
+            ['employer', 'An employer (self-employed with employees)'],
+            ['not_employed', 'Not employed'],
+        ],
+        widget=widgets.RadioSelect,
+        label="In your main job, are you...",
     )
 
     # Short Dark Triad: tre matrici da nove item, scala 1-5.
@@ -283,27 +308,23 @@ class SurveyQuestions(_SurveyTimedPage):
     form_model = 'player'
     form_fields = [
         'gender',
-        'age',
+        'birth_year',
         'field_of_study',
         'university_years',
-        'job_status',
+        'main_situation',
+        'job_type',
         'time_on_page',
     ]
 
     timeout_submission = timeout_submission_with_time(
         _SURVEY_PAGE_TIMEOUT,
         gender=0,
-        age=18,
-        field_of_study='N/A',
-        university_years=1,
-        job_status='employee',
+        birth_year=1990,
+        field_of_study=1,
+        university_years=0,
+        main_situation='paid_work',
+        job_type='not_employed',
     )
-
-    @staticmethod
-    def field_of_study_error_message(player, value):
-        """Reject values that contain no alphabetic characters (e.g. pure numbers)."""
-        if value and not any(c.isalpha() for c in value):
-            return 'Please enter a valid field of study (text only, no numbers).'
 
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -636,7 +657,9 @@ class FinalResults(Page):
         part1_payoff_val = player.participant.vars.get('part1_payoff', cu(0))
         if not part1_payoff_eligible:
             part1_payoff_val = cu(0)
-        subtotal = base_fee + part1_payoff_val + beauty_contest_bonus
+        guess_bonus_cents = player.participant.vars.get('guess_bonus_cents', 0)
+        guess_bonus = cu(guess_bonus_cents / 100)
+        subtotal = base_fee + part1_payoff_val + beauty_contest_bonus + guess_bonus
 
         from bargaining_tdl_common import get_main_group_player, TOPOLOGY, COLOR_MAPPING
         
@@ -686,6 +709,8 @@ class FinalResults(Page):
             'subtotal': subtotal,
             'base_fee': base_fee,
             'beauty_contest_bonus': beauty_contest_bonus,
+            'guess_bonus': guess_bonus,
+            'guess_bonus_cents': guess_bonus_cents,
             'left_color': left_color,
             'right_color': right_color,
             'left_choice_display': left_choice_display,

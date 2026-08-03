@@ -230,6 +230,23 @@ class Player(BasePlayer):
     received_signal_left_inactive = models.IntegerField(initial=0)
     received_signal_right_inactive = models.IntegerField(initial=0)
 
+    # Belief elicitation: guess delle scelte dei partner (stesso encoding di decision_choice)
+    # Il valore è la scelta dal POV del partner interrogato: 'NoOne' | 'Left' | 'Right'
+    guess_left_choice = models.StringField(
+        choices=[('NoOne', 'No one'), ('Left', 'Left'), ('Right', 'Right')],
+        blank=True,
+        initial='',
+        doc="Player's guess of left partner's decision_choice (NoOne/Left/Right from left partner's POV)"
+    )
+    guess_right_choice = models.StringField(
+        choices=[('NoOne', 'No one'), ('Left', 'Left'), ('Right', 'Right')],
+        blank=True,
+        initial='',
+        doc="Player's guess of right partner's decision_choice (NoOne/Left/Right from right partner's POV)"
+    )
+    # Bonus per guess corrette (in centesimi, 10 per ogni risposta corretta, max 20)
+    guess_bonus_cents = models.IntegerField(initial=0)
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
@@ -1076,9 +1093,19 @@ class PostDecisionConfidence(Page):
     Visibile solo ai partecipanti attivi (decision_inactive != 99).
     """
     form_model = 'player'
-    form_fields = ['signal_left_convincingness', 'signal_right_convincingness', 'time_on_page']
+    form_fields = [
+        'signal_left_convincingness',
+        'signal_right_convincingness',
+        'guess_left_choice',
+        'guess_right_choice',
+        'time_on_page',
+    ]
     _PDC_TIMEOUT = 300
-    timeout_submission = timeout_submission_with_time(_PDC_TIMEOUT)
+    timeout_submission = timeout_submission_with_time(
+        _PDC_TIMEOUT,
+        guess_left_choice='NoOne',
+        guess_right_choice='NoOne',
+    )
 
     @staticmethod
     def get_timeout_seconds(player):
@@ -1144,6 +1171,20 @@ class PostDecisionConfidence(Page):
                 colors['my_color'],
             )
 
+        # ── Belief elicitation: opzioni radio dinamiche ──────────────────────
+        # LEFT partner: dal suo POV, 'Right' = ha supportato il viewer, 'Left' = ha supportato right_partner
+        guess_left_options = [
+            {'value': 'NoOne', 'label': 'No one',                           'id': 'guess_left_NoOne'},
+            {'value': 'Right', 'label': 'You',                              'id': 'guess_left_You'},
+            {'value': 'Left',  'label': colors['right_partner_color'],      'id': 'guess_left_Other'},
+        ]
+        # RIGHT partner: dal suo POV, 'Left' = ha supportato il viewer, 'Right' = ha supportato left_partner
+        guess_right_options = [
+            {'value': 'NoOne', 'label': 'No one',                           'id': 'guess_right_NoOne'},
+            {'value': 'Left',  'label': 'You',                              'id': 'guess_right_You'},
+            {'value': 'Right', 'label': colors['left_partner_color'],       'id': 'guess_right_Other'},
+        ]
+
         return dict(
             channel_left=channel_left,
             channel_right=channel_right,
@@ -1154,6 +1195,8 @@ class PostDecisionConfidence(Page):
             third_signal_from_left=third_signal_from_left,
             third_signal_from_right=third_signal_from_right,
             convincingness_scale=range(1, 6),
+            guess_left_options=guess_left_options,
+            guess_right_options=guess_right_options,
             reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
             **_chat_status_payload(player),
             **colors,
@@ -1168,8 +1211,27 @@ class PostDecisionConfidence(Page):
             # per i convincingness in caso di inattività su Signals.
             player.signal_left_convincingness = None
             player.signal_right_convincingness = None
+
+        # ── Scoring belief elicitation: 10¢ per ogni guess corretta ──────────
+        my_id = player.id_in_group
+        left_id = get_left_partner_id(my_id)
+        right_id = get_right_partner_id(my_id)
+        left_partner = player.group.get_player_by_id(left_id)
+        right_partner = player.group.get_player_by_id(right_id)
+        bonus = 0
+        gl = player.field_maybe_none('guess_left_choice') or ''
+        gr = player.field_maybe_none('guess_right_choice') or ''
+        ldc = left_partner.field_maybe_none('decision_choice') or ''
+        rdc = right_partner.field_maybe_none('decision_choice') or ''
+        if gl and ldc and gl == ldc:
+            bonus += 10
+        if gr and rdc and gr == rdc:
+            bonus += 10
+        player.guess_bonus_cents = bonus
+        player.participant.vars['guess_bonus_cents'] = bonus
         logger.debug(
-            f"PostDecisionConfidence - time saved: {player.time_post_decision_confidence}"
+            f"PostDecisionConfidence - time saved: {player.time_post_decision_confidence}, "
+            f"guess_bonus_cents: {bonus}"
         )
 
 
