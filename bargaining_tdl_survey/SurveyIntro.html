@@ -2,6 +2,8 @@
 {{ block title }}Survey{{ endblock }}
 {{ block content }}
 
+{{ include_sibling '_survey_timer.html' }}
+
 <style>
     .otree-body {
         max-width: 1000px;
@@ -13,18 +15,27 @@
 <div class="card bg-white mt-4 mb-4 shadow-sm">
     <div class="card-body px-5 py-4">
 
-        <h2 class="mb-4">Thank you for taking part in this experiment!</h2>
 
-            <p class="mt-3">
-                In this part of the experiment, we will ask you to answer
-                <strong>some questions related to yourself</strong>.
-                All information will be recorded anonymously and cannot be linked to your identity.
-                Completing the survey awards you the {{ participation_fee }} participation fee.
-                <strong>Note that if you have not made your
-                    decision
-                    within 3 minutes,
-                    you will be excluded from the experiment.</strong>
-            </p>
+
+        <div class="mt-3">
+
+            <ul>
+                <li>In this part of the experiment, we will ask you to answer
+                    <strong>some questions related to yourself</strong>.
+                </li>
+                <li>All information will be recorded anonymously and cannot be linked to your identity.</li>
+                <li>Completing the survey awards you the {{ participation_fee }} participation fee.</li>
+                <li>In the next questions, please indicate how much you agree with the statements we will show you.
+                    Please
+                    indicate your answer on a scale from <strong>1</strong> to <strong>5</strong>, where
+                    <strong>1 means you Disagree strongly;</strong> and
+                    <strong>5 means you Agree strongly;</strong>.
+                </li>
+                <li><strong>Note that if you have not made your decision
+                        within 3 minutes,
+                        you will be excluded from the experiment.</strong></li>
+            </ul>
+        </div>
 
     </div>
 </div>

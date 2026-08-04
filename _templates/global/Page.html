@@ -395,5 +395,46 @@
         setTimeout(initField, 1000);
     })(); // Execute immediately
 
+    // Auto-save and restore radio button selections to preserve state across page reloads (e.g. form validation errors)
+    (function() {
+        document.addEventListener("DOMContentLoaded", function() {
+            const pageKey = window.location.pathname; // Unique key per oTree page
+            const storageKey = "radio_state_" + pageKey;
+            
+            // 1. Restore state if available
+            const savedData = sessionStorage.getItem(storageKey);
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    for (const name in data) {
+                        const value = data[name];
+                        const radio = document.querySelector(`input[type="radio"][name="${name}"][value="${value}"]`);
+                        if (radio && !radio.checked) {
+                            radio.checked = true;
+                            radio.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    }
+                } catch(e) {
+                    console.error("Error restoring radio state:", e);
+                }
+            }
+            
+            // 2. Save state on change
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    try {
+                        let data = {};
+                        const existingData = sessionStorage.getItem(storageKey);
+                        if (existingData) {
+                            data = JSON.parse(existingData);
+                        }
+                        data[this.name] = this.value;
+                        sessionStorage.setItem(storageKey, JSON.stringify(data));
+                    } catch (e) {}
+                });
+            });
+        });
+    })();
+
 </script>
 {{ endblock }}

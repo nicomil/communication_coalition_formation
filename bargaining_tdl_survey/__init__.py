@@ -121,7 +121,8 @@ class Player(BasePlayer):
         choices=[
             [1, 'Education'],
             [2, 'Arts and humanities'],
-            [3, 'Social sciences, journalism and information'],
+            [3, 'Social sciences (i.e. economics, sociology, political science)'],
+            [11, 'Journalism and information'],
             [4, 'Business, administration and law'],
             [5, 'Natural sciences, mathematics and statistics'],
             [6, 'Information and Communication Technologies (ICTs)'],
@@ -284,10 +285,11 @@ class Player(BasePlayer):
 # PAGES
 # ──────────────────────────────────────────────
 
-class SurveyIntro(Page):
+class SurveyIntro(_SurveyTimedPage):
     """Introductory page with thank-you text and survey description."""
     form_model = 'player'
     form_fields = ['time_on_page']
+    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT)
 
     @staticmethod
     def vars_for_template(player):
@@ -420,10 +422,11 @@ class SurveyPage3(_SurveyTimedPage):
         return not _is_inactive_excluded(player)
 
 
-class SurveyScaleIntro(Page):
+class SurveyScaleIntro(_SurveyTimedPage):
     """Instructions page explaining the 0–10 willingness and self-assessment scales."""
     form_model = 'player'
     form_fields = ['time_on_page']
+    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT)
 
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -719,6 +722,7 @@ class FinalResults(Page):
             'my_color': my_color,
             'left_inactive': left_inactive,
             'right_inactive': right_inactive,
+            'beauty_contest_can_win_bonus': (player.beauty_contest_guess or 0) < 2.0,
         }
 
     @staticmethod
@@ -734,7 +738,6 @@ class FinalResults(Page):
 
 page_sequence = [
     SurveyIntro,
-    SurveyQuestions,
     SurveyPage1,
     SurveyPage2,
     SurveyPage3,
@@ -746,6 +749,7 @@ page_sequence = [
     SurveyPage8,
     SurveyPage9,
     SurveyPage10,
+    SurveyQuestions,
     SurveyFeedback,
     SurveyTerminated,
     FinalResults,

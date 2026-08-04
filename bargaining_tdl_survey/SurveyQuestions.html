@@ -58,8 +58,8 @@
 
         <hr>
 
-        <!-- Q6: Job type (always shown; includes "Not employed" for non-workers) -->
-        <div class="mb-4">
+        <!-- Q6: Job type -->
+        <div class="mb-4" id="job-type-wrapper" style="display: none;">
             {{ formfield 'job_type' }}
         </div>
 
@@ -69,4 +69,52 @@
 {{ include '_templates/global/_time_tracking_field.html' }}
 
 {{ next_button }}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const jobTypeWrapper = document.getElementById("job-type-wrapper");
+        const mainSituationRadios = document.querySelectorAll('input[name="main_situation"]');
+        let manuallySelected = false; // Prevent overwriting user choice if they re-select paid_work
+
+        function updateJobTypeVisibility() {
+            let selectedMain = null;
+            mainSituationRadios.forEach(r => {
+                if (r.checked) selectedMain = r.value;
+            });
+
+            if (selectedMain === "paid_work") {
+                jobTypeWrapper.style.display = "block";
+                const notEmployedRadio = document.querySelector('input[name="job_type"][value="not_employed"]');
+                if (notEmployedRadio && notEmployedRadio.checked && !manuallySelected) {
+                    notEmployedRadio.checked = false;
+                }
+            } else {
+                jobTypeWrapper.style.display = "none";
+                const notEmployedRadio = document.querySelector('input[name="job_type"][value="not_employed"]');
+                if (notEmployedRadio) {
+                    // Remember if the user had selected something else manually before we auto-set it
+                    const currentlyChecked = document.querySelector('input[name="job_type"]:checked');
+                    if (currentlyChecked && currentlyChecked.value !== 'not_employed') {
+                        manuallySelected = false; 
+                    }
+                    notEmployedRadio.checked = true;
+                }
+            }
+        }
+
+        // Listen for changes on job type to mark if user manually chose an option
+        document.querySelectorAll('input[name="job_type"]').forEach(r => {
+            r.addEventListener('change', function() {
+                if (this.value !== 'not_employed') {
+                    manuallySelected = true;
+                }
+            });
+        });
+
+        mainSituationRadios.forEach(r => r.addEventListener('change', updateJobTypeVisibility));
+        
+        // Run on load
+        updateJobTypeVisibility();
+    });
+</script>
 {{ endblock }}

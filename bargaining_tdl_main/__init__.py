@@ -767,9 +767,7 @@ class Chat(Page):
         player.time_chat = save_time_value(player.time_on_page)
         logger.debug(f"Chat - time_chat saved: {player.time_chat}")
         # Record why the player left the Chat page (used by Signals page for context messages)
-        if timeout_happened:
-            player.participant.vars['chat_advanced_reason'] = 'timeout'
-        elif player.group.group_dropped:
+        if player.group.group_dropped:
             player.participant.vars['chat_advanced_reason'] = 'group_dropped'
         else:
             my_id = player.id_in_group
@@ -778,6 +776,8 @@ class Chat(Page):
             statuses = _chat_left_state(player.group)
             if statuses.get(left_id) and statuses.get(right_id):
                 player.participant.vars['chat_advanced_reason'] = 'partners_left'
+            elif timeout_happened:
+                player.participant.vars['chat_advanced_reason'] = 'timeout'
             else:
                 player.participant.vars['chat_advanced_reason'] = 'normal'
 

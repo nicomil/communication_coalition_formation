@@ -1,5 +1,5 @@
 {{ extends "_templates/global/Page.html" }}
-{{ block title }}Confidence question{{ endblock }}
+{{ block title }}Bonus Questions{{ endblock }}
 {{ block content }}
 
 <style>
@@ -156,20 +156,69 @@
 {{ include_sibling '_button_style.html' }}
 
 </p>
+<p><strong>Note that if you have not made your decision within 5 minutes, you will be
+        excluded from the experiment.</strong>
+</p>
 <h4>You are the {{ my_color }} Participant.</h4>
 
+{# === Belief Elicitation: Guess partners' choices === #}
+<div class="card border-secondary mt-3 mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h4 class="mb-0">Guess your partners' choices</h4>
+    </div>
+    <div class="card-body px-5 py-4">
+        <p>In this part of the experiment you can earn a bonus by guessing the choices of the
+            participants you were matched with. You will earn an additional <strong>10 cents</strong>
+            for each guess you get correct.</p>
+
+        <!-- Q1: guess LEFT partner -->
+        <div class="mb-4">
+            <strong>Who do you think the {{ left_partner_color }} Participant supported?</strong>
+            <div class="mt-2" role="radiogroup" aria-label="Guess for {{ left_partner_color }} Participant">
+                {% for opt in guess_left_options %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="guess_left_choice" value="{{ opt.value }}"
+                        id="{{ opt.id }}" required>
+                    <label class="form-check-label" for="{{ opt.id }}">
+                        {{ opt.label }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Q2: guess RIGHT partner -->
+        <div class="mb-4 mb-0">
+            <strong>Who do you think the {{ right_partner_color }} Participant supported?</strong>
+            <div class="mt-2" role="radiogroup" aria-label="Guess for {{ right_partner_color }} Participant">
+                {% for opt in guess_right_options %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="guess_right_choice" value="{{ opt.value }}"
+                        id="{{ opt.id }}" required>
+                    <label class="form-check-label" for="{{ opt.id }}">
+                        {{ opt.label }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
 {# === Intro text: trattamento-specifico ===
 Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
 {% if reveal_third_party_chat %}
 {# ---- Ramo PUBLIC ---- #}
 <p>
-    Please read the conversations below — including the one between the other two participants — and
-    rate how confident you are that your conversations were convincing.
+    <strong> Please read the conversations below — including the one between the other two participants — and
+        rate how confident you are that your conversations were convincing.</strong>
 </p>
 {% else %}
 {# ---- Ramo PRIVATE ---- #}
 <p>
-    Please review the conversations below and rate how confident you are that your conversations were convincing.
+    <strong> Please review the conversations below and rate how confident you are that your conversations were
+        convincing.</strong>
 </p>
 {% endif %}
 
@@ -244,53 +293,7 @@ Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
 </div>
 {% endif %}
 
-{# === Belief Elicitation: Guess partners' choices === #}
-<div class="card border-primary mt-3">
-    <div class="card-header bg-primary text-white">
-        <h4 class="mb-0">Guess your partners' choices</h4>
-    </div>
-    <div class="card-body px-5 py-4">
-        <p>In this part of the experiment you can earn a bonus by guessing the choices of the
-            participants you were matched with. You will earn an additional <strong>10 cents</strong>
-            for each guess you get correct.</p>
 
-        <!-- Q1: guess LEFT partner -->
-        <div class="mb-4">
-            <strong>Who do you think the {{ left_partner_color }} Participant supported?</strong>
-            <div class="mt-2" role="radiogroup"
-                aria-label="Guess for {{ left_partner_color }} Participant">
-                {% for opt in guess_left_options %}
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="guess_left_choice"
-                        value="{{ opt.value }}" id="{{ opt.id }}" required>
-                    <label class="form-check-label" for="{{ opt.id }}">
-                        {{ opt.label }}
-                    </label>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <hr>
-
-        <!-- Q2: guess RIGHT partner -->
-        <div class="mb-4 mb-0">
-            <strong>Who do you think the {{ right_partner_color }} Participant supported?</strong>
-            <div class="mt-2" role="radiogroup"
-                aria-label="Guess for {{ right_partner_color }} Participant">
-                {% for opt in guess_right_options %}
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="guess_right_choice"
-                        value="{{ opt.value }}" id="{{ opt.id }}" required>
-                    <label class="form-check-label" for="{{ opt.id }}">
-                        {{ opt.label }}
-                    </label>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-</div>
 
 <hr>
 
