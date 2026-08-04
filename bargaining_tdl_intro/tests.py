@@ -35,18 +35,18 @@ class PlayerBot(Bot):
         yield InstructionsPart1, dict(time_on_page=1.0)
 
         example2_you = (
-            '12' if self.player.assigned_treatment == 'private_no_dwl' else '0'
+            '6' if self.player.assigned_treatment == 'private_no_dwl' else '0'
         )
         yield ControlQuestionsAttempt1, dict(
-            example1_earnings_you='6',
+            example1_earnings_you='0',
             example1_earnings_left='0',
-            example1_earnings_right='6',
+            example1_earnings_right='0',
             example2_earnings_you=example2_you,
             example2_earnings_left='0',
             example2_earnings_right='0',
             example3_earnings_you='0',
-            example3_earnings_left='0',
-            example3_earnings_right='0',
+            example3_earnings_left='3',
+            example3_earnings_right='3',
             time_on_page=1.0,
         )
 

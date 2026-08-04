@@ -9,6 +9,7 @@ from . import (
     Chat,
     Decision,
     InactivityGoodbyeMain,
+    PostDecisionConfidence,
     Results,
     Signals,
     VALID_DECISIONS,
@@ -58,14 +59,26 @@ class PlayerBot(Bot):
             yield Signals, dict(
                 signal_left=signal_left,
                 signal_right=signal_right,
-                signal_left_convincingness=3,
-                signal_right_convincingness=4,
                 first_intention_selected='left',
                 time_on_page=1.0,
             )
 
         decision = decisions_for_case(self.case, player_id)
         yield Decision, dict(decision_choice=decision, time_on_page=1.5)
+        # Le scale di convincingness e le guess sui partner sono state
+        # spostate su PostDecisionConfidence (dopo Decision).
+        if PostDecisionConfidence.is_displayed(self.player):
+            yield Submission(
+                PostDecisionConfidence,
+                dict(
+                    signal_left_convincingness=3,
+                    signal_right_convincingness=4,
+                    guess_left_choice='Left',
+                    guess_right_choice='NoOne',
+                    time_on_page=1.0,
+                ),
+                check_html=False,
+            )
         yield Results, dict(time_on_page=2.0)
 
         no_dwl = self.player.treatment == 'private_no_dwl'
