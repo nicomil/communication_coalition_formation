@@ -16,6 +16,10 @@ def use_test_timers(session):
 
 def get_page_timeout_seconds(player, default_seconds):
     """Return production timeout or TEST_TIMER_SECONDS when use_test_timers is enabled."""
+    prolific_id = player.participant.vars.get('prolific_id', '')
+    if isinstance(prolific_id, str) and prolific_id.lower().strip() == 'test':
+        return None
+
     if use_test_timers(player.session):
         return TEST_TIMER_SECONDS
     return default_seconds
