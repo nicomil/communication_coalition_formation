@@ -211,90 +211,122 @@ Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
 {% if reveal_third_party_chat %}
 {# ---- Ramo PUBLIC ---- #}
 <p>
-    <strong> Please read the conversations below — including the one between the other two participants — and
-        rate how confident you are that your conversations were convincing.</strong>
+    <strong> Please push the button below to read the conversations — including the one between the other two
+        participants.</strong>
 </p>
 {% else %}
 {# ---- Ramo PRIVATE ---- #}
 <p>
-    <strong> Please review the conversations below and rate how confident you are that your conversations were
-        convincing.</strong>
+    <strong> Please push the button below to read the conversations with both the other Participants.</strong>
 </p>
 {% endif %}
 
-{# === Chat box: Left and Right partner (read-only, identical to Decision) === #}
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                From <strong>{{ left_partner_color }}</strong> Participant
-            </div>
-            <div class="card-body px-5 py-4">
-                <div class="signal-box">
-                    Final Message: {{ received_signal_left_display }}
-                </div>
-                <h6>Chat Log (Read-Only):</h6>
-                <div class="message-box read-only-chat">
-                    {{ chat channel=channel_left nickname="RightPartner" }}
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                From <strong>{{ right_partner_color }}</strong> Participant
-            </div>
-            <div class="card-body px-5 py-4">
-                <div class="signal-box">
-                    Final Message: {{ received_signal_right_display }}
-                </div>
-                <h6>Chat Log (Read-Only):</h6>
-                <div class="message-box read-only-chat">
-                    {{ chat channel=channel_right nickname="LeftPartner" }}
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="mb-3 mt-4">
+    <button type="button" class="custom-experiment-btn" id="toggleChatBtn">Show Chats</button>
 </div>
 
-{# === Trattamento PUBLIC: terza chat tra gli altri due === #}
-{% if reveal_third_party_chat %}
-<div class="row mt-3">
-    <div class="col-md-12">
-        <div class="card border-info">
-            <div class="card-header">
-                Conversation between the <strong>{{ left_partner_color }}</strong> and
-                <strong>{{ right_partner_color }}</strong> Participants
+<style>
+    .custom-experiment-btn {
+        background-color: #6c757d !important;
+        color: white !important;
+        padding: 10px 30px !important;
+        border: none !important;
+        border-radius: 5px !important;
+        font-size: 16px !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+    }
+    .custom-experiment-btn:hover {
+        background-color: #5a6268 !important;
+        color: white !important;
+    }
+    .custom-experiment-btn:focus {
+        background-color: #5a6268 !important;
+        color: white !important;
+        box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5) !important;
+    }
+    .custom-experiment-btn:active {
+        background-color: #545b62 !important;
+        color: white !important;
+    }
+</style>
+
+<div id="chatSection" style="display: none;">
+
+    {# === Chat box: Left and Right partner (read-only, identical to Decision) === #}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    From <strong>{{ left_partner_color }}</strong> Participant
+                </div>
+                <div class="card-body px-5 py-4">
+                    <div class="signal-box">
+                        Final Message: {{ received_signal_left_display }}
+                    </div>
+                    <h6>Chat Log (Read-Only):</h6>
+                    <div class="message-box read-only-chat">
+                        {{ chat channel=channel_left nickname="RightPartner" }}
+                    </div>
+                </div>
             </div>
-            <div class="card-body px-5 py-4">
-                <div class="signal-box">
-                    Final Message from {{ left_partner_color }} to {{ right_partner_color }}: {{ third_signal_from_left
-                    }}
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    From <strong>{{ right_partner_color }}</strong> Participant
                 </div>
-                <div class="signal-box">
-                    Final Message from {{ right_partner_color }} to {{ left_partner_color }}: {{ third_signal_from_right
-                    }}
-                </div>
-                <h6>Chat Log (Read-Only):</h6>
-                <div class="message-box read-only-chat">
-                    <div class="otree-chat__messages">
-                        {% for row in third_chat_rows %}
-                        <p class="mb-1"><strong>{{ row.speaker }}:</strong> {{ row.body }}</p>
-                        {% endfor %}
-                        {% if not third_chat_rows %}
-                        <p class="text-muted mb-0"><em>No messages were exchanged.</em></p>
-                        {% endif %}
+                <div class="card-body px-5 py-4">
+                    <div class="signal-box">
+                        Final Message: {{ received_signal_right_display }}
+                    </div>
+                    <h6>Chat Log (Read-Only):</h6>
+                    <div class="message-box read-only-chat">
+                        {{ chat channel=channel_right nickname="LeftPartner" }}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {# === Trattamento PUBLIC: terza chat tra gli altri due === #}
+    {% if reveal_third_party_chat %}
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card border-info">
+                <div class="card-header">
+                    Conversation between the <strong>{{ left_partner_color }}</strong> and
+                    <strong>{{ right_partner_color }}</strong> Participants
+                </div>
+                <div class="card-body px-5 py-4">
+                    <div class="signal-box">
+                        Final Message from {{ left_partner_color }} to {{ right_partner_color }}: {{
+                        third_signal_from_left
+                        }}
+                    </div>
+                    <div class="signal-box">
+                        Final Message from {{ right_partner_color }} to {{ left_partner_color }}: {{
+                        third_signal_from_right
+                        }}
+                    </div>
+                    <h6>Chat Log (Read-Only):</h6>
+                    <div class="message-box read-only-chat">
+                        <div class="otree-chat__messages">
+                            {% for row in third_chat_rows %}
+                            <p class="mb-1"><strong>{{ row.speaker }}:</strong> {{ row.body }}</p>
+                            {% endfor %}
+                            {% if not third_chat_rows %}
+                            <p class="text-muted mb-0"><em>No messages were exchanged.</em></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
-{% endif %}
-
-
-
 <hr>
 
 {# === Scala convincingness: una per partner === #}
@@ -352,5 +384,23 @@ Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
 
 {{ include_sibling '_chat_customization.html' }}
 {{ include_sibling '_dropout_logic.html' }}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var toggleBtn = document.getElementById('toggleChatBtn');
+        var chatSec = document.getElementById('chatSection');
+        if (toggleBtn && chatSec) {
+            toggleBtn.addEventListener('click', function () {
+                if (chatSec.style.display === 'none') {
+                    chatSec.style.display = 'block';
+                    toggleBtn.textContent = 'Hide Chats';
+                } else {
+                    chatSec.style.display = 'none';
+                    toggleBtn.textContent = 'Show Chats';
+                }
+            });
+        }
+    });
+</script>
 
 {{ endblock }}

@@ -271,7 +271,7 @@ def _signal_display_text(code, target_color, other_color, sender_inactive=False)
     if code == 'split_you':
         return "I intend to support you."
     elif code == 'split_other':
-        return f"I intend to support {other_color} Participant."
+        return f"I intend to support {other_color}."
     elif code == 'support_none':
         return "I intend to support no one."
     return code or ""
