@@ -6,6 +6,7 @@ from otree.api import (  # type: ignore
     BaseGroup,
     BasePlayer,
     Page,
+    WaitPage,
 )
 from bargaining_tdl_common import (  # type: ignore
     get_page_timeout_seconds,
@@ -736,11 +737,107 @@ class FinalResults(Page):
         player.time_final_results = player.time_on_page or 0
 
 
+class PreFinalResultsWaitPage(WaitPage):
+    body_text = "Waiting for the other participants to finish before computing the final payoffs."
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_inactive_excluded(player)
+
+    @staticmethod
+    def vars_for_template(player):
+        from bargaining_tdl_common import get_main_group_player # type: ignore
+        main_player = get_main_group_player(player)
+        if main_player:
+            from bargaining_tdl_main import _evaluate_dropout, _advance_interrupted_player_to_waitpage # type: ignore
+            _evaluate_dropout(main_player.group)
+            _advance_interrupted_player_to_waitpage(
+                main_player.group, player.participant._index_in_pages
+            )
+        return {}
+
+    @staticmethod
+    def after_all_players_arrive(group):
+        from bargaining_tdl_main import Group as MainGroup, calculate_payoff_vector, VALID_DECISIONS # type: ignore
+        from bargaining_tdl_common import treatment_flag, get_left_partner_id, get_right_partner_id # type: ignore
+        from otree.api import Currency as cu # type: ignore
+        import random
+        import logging
+        logger = logging.getLogger(__name__)
+
+        from bargaining_tdl_common import get_main_group_player
+        
+        main_groups = set()
+        for p in group.get_players():
+            main_player = get_main_group_player(p)
+            if main_player:
+                main_groups.add(main_player.group)
+
+        for main_group in main_groups:
+            p1 = main_group.get_player_by_id(1)
+            p2 = main_group.get_player_by_id(2)
+            p3 = main_group.get_player_by_id(3)
+            players = [p1, p2, p3]
+
+            for p in players:
+                if p.decision_inactive == 99 and not p.decision_choice:
+                    p.decision_choice = random.choice(VALID_DECISIONS)
+
+            c1 = p1.decision_choice
+            c2 = p2.decision_choice
+            c3 = p3.decision_choice
+
+            if any(c not in VALID_DECISIONS for c in [c1, c2, c3]):
+                logger.debug(f"Skipping main_group {main_group.id} (pre-matching or invalid decisions).")
+                continue
+
+            payoff_values, outcome = calculate_payoff_vector(
+                (c1, c2, c3),
+                no_deadweight_loss=bool(treatment_flag(p1, 'no_deadweight_loss', False)),
+            )
+
+            for p, payoff_value in zip(players, payoff_values):
+                p.payoff = cu(payoff_value)
+
+            main_group.group_outcome = outcome
+            main_group.grp_coordinate = int(any(value > 0 for value in payoff_values))
+            
+            for p in players:
+                p.part1_calculated_payoff = p.payoff
+                if not getattr(p, 'part1_payoff_eligible', True):
+                    p.payoff = cu(0)
+
+                p.participant.vars['part1_payoff'] = p.payoff
+                p.participant.vars['part1_group_id'] = main_group.id
+                p.participant.vars['group_outcome'] = outcome
+
+                # Guess bonus computation
+                bonus = 0
+                my_id = p.id_in_group
+                left_id = get_left_partner_id(my_id)
+                right_id = get_right_partner_id(my_id)
+                
+                left_partner = main_group.get_player_by_id(left_id)
+                right_partner = main_group.get_player_by_id(right_id)
+                
+                gl = p.field_maybe_none('guess_left_choice') or ''
+                gr = p.field_maybe_none('guess_right_choice') or ''
+                ldc = left_partner.field_maybe_none('decision_choice') or ''
+                rdc = right_partner.field_maybe_none('decision_choice') or ''
+                
+                if gl and ldc and gl == ldc:
+                    bonus += 10
+                if gr and rdc and gr == rdc:
+                    bonus += 10
+                    
+                p.guess_bonus_cents = bonus
+                p.participant.vars['guess_bonus_cents'] = bonus
+                logger.debug(f"Computed guess_bonus_cents for P{my_id}: {bonus}")
+
+
 page_sequence = [
-    SurveyIntro,
-    SurveyPage1,
-    SurveyPage2,
-    SurveyPage3,
+    SurveyPage10,
+    SurveyQuestions,
     SurveyScaleIntro,
     SurveyPage4,
     SurveyPage5,
@@ -748,9 +845,12 @@ page_sequence = [
     SurveyPage7,
     SurveyPage8,
     SurveyPage9,
-    SurveyPage10,
-    SurveyQuestions,
+    SurveyIntro,
+    SurveyPage1,
+    SurveyPage2,
+    SurveyPage3,
     SurveyFeedback,
     SurveyTerminated,
+    PreFinalResultsWaitPage,
     FinalResults,
 ]

@@ -24,26 +24,6 @@ class PlayerBot(Bot):
     cases = ['mutual_12', 'disagreement', 'no_dwl_star', 'signals_timeout']
 
     def play_round(self):
-        yield SurveyIntro, dict(time_on_page=1.0)
-        yield SurveyPage1, {
-            **{f'sd3_mach_{index:02d}': 3 for index in range(1, 10)},
-            'time_on_page': 2.0,
-        }
-        yield SurveyPage2, {
-            **{f'sd3_narc_{index:02d}': 3 for index in range(1, 10)},
-            'time_on_page': 2.0,
-        }
-        yield SurveyPage3, {
-            **{f'sd3_psych_{index:02d}': 3 for index in range(1, 10)},
-            'time_on_page': 2.0,
-        }
-        yield SurveyScaleIntro, dict(time_on_page=1.0)
-        yield SurveyPage4, dict(willingness_future=5, time_on_page=1.0)
-        yield SurveyPage5, dict(willingness_risk=5, time_on_page=1.0)
-        yield SurveyPage6, dict(reciprocity_positive=5, time_on_page=1.0)
-        yield SurveyPage7, dict(reciprocity_negative=5, time_on_page=1.0)
-        yield SurveyPage8, dict(willingness_donate=5, time_on_page=1.0)
-        yield SurveyPage9, dict(trust_general=5, time_on_page=1.0)
         expect(
             SurveyPage10.get_timeout_seconds(self.player),
             get_page_timeout_seconds(self.player, _SURVEY_PAGE10_TIMEOUT),
@@ -58,6 +38,26 @@ class PlayerBot(Bot):
             job_type='employee',
             time_on_page=2.0,
         )
+        yield SurveyScaleIntro, dict(time_on_page=1.0)
+        yield SurveyPage4, dict(willingness_future=5, time_on_page=1.0)
+        yield SurveyPage5, dict(willingness_risk=5, time_on_page=1.0)
+        yield SurveyPage6, dict(reciprocity_positive=5, time_on_page=1.0)
+        yield SurveyPage7, dict(reciprocity_negative=5, time_on_page=1.0)
+        yield SurveyPage8, dict(willingness_donate=5, time_on_page=1.0)
+        yield SurveyPage9, dict(trust_general=5, time_on_page=1.0)
+        yield SurveyIntro, dict(time_on_page=1.0)
+        yield SurveyPage1, {
+            **{f'sd3_mach_{index:02d}': 3 for index in range(1, 10)},
+            'time_on_page': 2.0,
+        }
+        yield SurveyPage2, {
+            **{f'sd3_narc_{index:02d}': 3 for index in range(1, 10)},
+            'time_on_page': 2.0,
+        }
+        yield SurveyPage3, {
+            **{f'sd3_psych_{index:02d}': 3 for index in range(1, 10)},
+            'time_on_page': 2.0,
+        }
         yield SurveyFeedback, dict(
             instructions_clarity=4,
             general_comment='Instructions were mostly clear.',

@@ -185,8 +185,8 @@ class Player(BasePlayer):
         blank=True,
         label="Which intention was selected first"
     )
-    signal_left_convincingness = models.IntegerField(min=1, max=5)
-    signal_right_convincingness = models.IntegerField(min=1, max=5)
+    guess_left_confidence = models.IntegerField(min=1, max=8, blank=True)
+    guess_right_confidence = models.IntegerField(min=1, max=8, blank=True)
     time_welcome = models.FloatField(initial=0)
     time_chat = models.FloatField(initial=0)
     time_signals = models.FloatField(initial=0)
@@ -1094,8 +1094,8 @@ class PostDecisionConfidence(Page):
     """
     form_model = 'player'
     form_fields = [
-        'signal_left_convincingness',
-        'signal_right_convincingness',
+        'guess_left_confidence',
+        'guess_right_confidence',
         'guess_left_choice',
         'guess_right_choice',
         'time_on_page',
@@ -1209,29 +1209,11 @@ class PostDecisionConfidence(Page):
             # None preserva la distinguibilità da un dato osservato (scala 1-5,
             # zero non è un valore valido). Identico al comportamento già usato
             # per i convincingness in caso di inattività su Signals.
-            player.signal_left_convincingness = None
-            player.signal_right_convincingness = None
+            player.guess_left_confidence = None
+            player.guess_right_confidence = None
 
-        # ── Scoring belief elicitation: 10¢ per ogni guess corretta ──────────
-        my_id = player.id_in_group
-        left_id = get_left_partner_id(my_id)
-        right_id = get_right_partner_id(my_id)
-        left_partner = player.group.get_player_by_id(left_id)
-        right_partner = player.group.get_player_by_id(right_id)
-        bonus = 0
-        gl = player.field_maybe_none('guess_left_choice') or ''
-        gr = player.field_maybe_none('guess_right_choice') or ''
-        ldc = left_partner.field_maybe_none('decision_choice') or ''
-        rdc = right_partner.field_maybe_none('decision_choice') or ''
-        if gl and ldc and gl == ldc:
-            bonus += 10
-        if gr and rdc and gr == rdc:
-            bonus += 10
-        player.guess_bonus_cents = bonus
-        player.participant.vars['guess_bonus_cents'] = bonus
         logger.debug(
-            f"PostDecisionConfidence - time saved: {player.time_post_decision_confidence}, "
-            f"guess_bonus_cents: {bonus}"
+            f"PostDecisionConfidence - time saved: {player.time_post_decision_confidence}"
         )
 
 
@@ -1261,63 +1243,7 @@ class InactivityGoodbyeMain(Page):
     def app_after_this_page(player, upcoming_apps):
         return []
 
-class ResultsWaitPage(WaitPage):
-    @staticmethod
-    def is_displayed(player):
-        """Non mostrare questa pagina se il partecipante ha fallito le control questions."""
-        return not has_failed_control_questions(player, 'intro') and not _is_inactive_excluded(player)
 
-    @staticmethod
-    def vars_for_template(player):
-        _evaluate_dropout(player.group)
-        _advance_interrupted_player_to_waitpage(
-            player.group, player.participant._index_in_pages
-        )
-        return {}
-    
-    @staticmethod
-    def after_all_players_arrive(group: Group):
-        p1 = group.get_player_by_id(1)
-        p2 = group.get_player_by_id(2)
-        p3 = group.get_player_by_id(3)
-        players = [p1, p2, p3]
-
-        # If any player timed out without choosing, assign a random choice now.
-        # The payoff logic below runs unchanged on whatever value is assigned.
-        import random
-        for p in [p1, p2, p3]:
-            if p.decision_inactive == 99:
-                p.decision_choice = random.choice(VALID_DECISIONS)
-
-        # Choices
-        c1 = p1.decision_choice
-        c2 = p2.decision_choice
-        c3 = p3.decision_choice
-
-        payoff_values, outcome = calculate_payoff_vector(
-            (c1, c2, c3),
-            no_deadweight_loss=bool(
-                treatment_flag(p1, 'no_deadweight_loss', False)
-            ),
-        )
-        for p, payoff_value in zip(players, payoff_values):
-            p.payoff = cu(payoff_value)
-
-        group.group_outcome = outcome
-        group.grp_coordinate = int(any(value > 0 for value in payoff_values))
-        
-        for p in players:
-            # Salva il vero payoff calcolato nel DB per tracciabilità
-            p.part1_calculated_payoff = p.payoff
-            
-            # If a player is not eligible (e.g. they dropped out), their official payoff is 0
-            if not p.part1_payoff_eligible:
-                p.payoff = cu(0)
-
-            # Salva i valori originali in participant.vars
-            p.participant.vars['part1_payoff'] = p.payoff
-            p.participant.vars['part1_group_id'] = group.id
-            p.participant.vars['group_outcome'] = outcome
 
 class Results(Page):
     form_model = 'player'
@@ -1358,7 +1284,6 @@ page_sequence = [
     DataMappingWaitPage,
     Decision,
     PostDecisionConfidence,
-    ResultsWaitPage,
     Results,
     InactivityGoodbyeMain
 ]

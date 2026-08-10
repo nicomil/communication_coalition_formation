@@ -1,0 +1,194 @@
+﻿participant_code;session_code;gropu_id;group_id;chat_id;player_color;To;body;timestamp;nickname;channel;inactive;left_player_id;left_player_color;right_player_id;right_player_color;part1_signal_left;part1_signal_right;part1_finaldecision;Part3_finaldecision
+04u70zp4;ln6s1ftc;10;75;1;Blue;Green;vogliamo dividere a metà?;17.792.717.729.209.300;RightPartner;13-bargaining_tdl_main-75_2_3;0;zq85fk59;Green;1635k3od;Red;split_you;split_both;Right;share_one
+04u70zp4;ln6s1ftc;10;75;6;Blue;Green;ok;17.792.718.317.919.400;RightPartner;13-bargaining_tdl_main-75_2_3;0;zq85fk59;Green;1635k3od;Red;split_you;split_both;Right;share_one
+04u70zp4;ln6s1ftc;10;75;8;Blue;Red;ok;1.779.271.844.364.430;LeftPartner;13-bargaining_tdl_main-75_1_3;0;zq85fk59;Green;1635k3od;Red;split_you;split_both;Right;share_one
+04u70zp4;ln6s1ftc;10;75;10;Blue;Green;ok;17.792.718.643.611.100;RightPartner;13-bargaining_tdl_main-75_2_3;0;zq85fk59;Green;1635k3od;Red;split_you;split_both;Right;share_one
+1635k3od;ln6s1ftc;10;75;3;Red;Green;ok;17.792.717.991.100.300;LeftPartner;13-bargaining_tdl_main-75_1_2;0;04u70zp4;Blue;zq85fk59;Green;split_both;split_both;Right;0
+1635k3od;ln6s1ftc;10;75;5;Red;Blue;dividiamo in parti uguali?;17.792.718.291.661.900;RightPartner;13-bargaining_tdl_main-75_1_3;0;04u70zp4;Blue;zq85fk59;Green;split_both;split_both;Right;0
+1635k3od;ln6s1ftc;10;75;7;Red;Green;dividiamo in parti uguali;17.792.718.377.796.900;LeftPartner;13-bargaining_tdl_main-75_1_2;0;04u70zp4;Blue;zq85fk59;Green;split_both;split_both;Right;0
+1iernbcq;ln6s1ftc;2;67;5;Blue;Red;a questo punto sì;17.792.718.581.488.100;LeftPartner;13-bargaining_tdl_main-67_1_3;0;a1qq1ocd;Green;v3691z1i;Red;split_both;split_you;Right;share_both
+2d8kclta;ln6s1ftc;15;80;1;Green;Red;desidero dividere in parti uguali con te e il blu;17.792.717.542.793.900;RightPartner;13-bargaining_tdl_main-80_1_2;0;3yhfj8m6;Red;9d8bae4j;Blue;split_you;split_other;Left;share_one
+2d8kclta;ln6s1ftc;15;80;2;Green;Blue;desidero dividere in parti uguali con te e il rosso;17.792.717.560.090.500;LeftPartner;13-bargaining_tdl_main-80_2_3;0;3yhfj8m6;Red;9d8bae4j;Blue;split_you;split_other;Left;share_one
+2d8kclta;ln6s1ftc;15;80;5;Green;Red;vorrei dividere solo con te perché il blu ha abbandonato;17.792.718.624.631.600;RightPartner;13-bargaining_tdl_main-80_1_2;0;3yhfj8m6;Red;9d8bae4j;Blue;split_you;split_other;Left;share_one
+2d8kclta;ln6s1ftc;15;80;7;Green;Red;ottimo, va benissimo;17.792.718.922.531.700;RightPartner;13-bargaining_tdl_main-80_1_2;0;3yhfj8m6;Red;9d8bae4j;Blue;split_you;split_other;Left;share_one
+2d8kclta;ln6s1ftc;15;80;9;Green;Red;allora dobbiamo cliccare su next?;1.779.271.958.424.540;RightPartner;13-bargaining_tdl_main-80_1_2;0;3yhfj8m6;Red;9d8bae4j;Blue;split_you;split_other;Left;share_one
+2h0fz66r;ocnkhj5c;2;42;5;Blue;Green;ma che dici?;17.791.938.520.551.800;RightPartner;10-bargaining_tdl_main-42_2_3;1;qi1pt07x;Green;kbzsf2k1;Red;split_you;split_other;Left;share_one
+2h0fz66r;ocnkhj5c;2;42;6;Blue;Red;Manco io;17.791.938.631.504.700;LeftPartner;10-bargaining_tdl_main-42_1_3;1;qi1pt07x;Green;kbzsf2k1;Red;split_you;split_other;Left;share_one
+2h0fz66r;ocnkhj5c;2;42;7;Blue;Green;Dividiamo;17.791.938.772.011.000;RightPartner;10-bargaining_tdl_main-42_2_3;1;qi1pt07x;Green;kbzsf2k1;Red;split_you;split_other;Left;share_one
+2s9nar7d;ln6s1ftc;3;68;3;Blue;Green;salve io sono. per condivider;17.792.716.957.488.300;RightPartner;13-bargaining_tdl_main-68_2_3;0;br25c3xd;Green;cw3blg3k;Red;split_both;split_both;Both;share_both
+2s9nar7d;ln6s1ftc;3;68;4;Blue;Red;si;17.792.717.022.875.300;LeftPartner;13-bargaining_tdl_main-68_1_3;0;br25c3xd;Green;cw3blg3k;Red;split_both;split_both;Both;share_both
+2s9nar7d;ln6s1ftc;3;68;6;Blue;Green;io sono per dividere equamente;17.792.717.220.007.200;RightPartner;13-bargaining_tdl_main-68_2_3;0;br25c3xd;Green;cw3blg3k;Red;split_both;split_both;Both;share_both
+2s9nar7d;ln6s1ftc;3;68;9;Blue;Red;si;17.792.717.552.025.100;LeftPartner;13-bargaining_tdl_main-68_1_3;0;br25c3xd;Green;cw3blg3k;Red;split_both;split_both;Both;share_both
+3yhfj8m6;ln6s1ftc;15;80;4;Red;Green;anche io;17.792.717.934.680.100;LeftPartner;13-bargaining_tdl_main-80_1_2;1;9d8bae4j;Blue;2d8kclta;Green;split_other;split_you;Right;share_both
+3yhfj8m6;ln6s1ftc;15;80;6;Red;Green;penso che il blu abbia lasciato. quindi dividiamo noi;17.792.718.777.183.200;LeftPartner;13-bargaining_tdl_main-80_1_2;1;9d8bae4j;Blue;2d8kclta;Green;split_other;split_you;Right;share_both
+3yhfj8m6;ln6s1ftc;15;80;8;Red;Green;procediamo;17.792.719.020.178.500;LeftPartner;13-bargaining_tdl_main-80_1_2;1;9d8bae4j;Blue;2d8kclta;Green;split_other;split_you;Right;share_both
+5mhp2h2j;ln6s1ftc;11;76;3;Green;Red;ok;17.792.716.460.052.800;RightPartner;13-bargaining_tdl_main-76_1_2;0;nf397ou8;Red;ovyw28qv;Blue;split_other;split_you;Right;share_both
+5mhp2h2j;ln6s1ftc;11;76;5;Green;Blue;che vuoi fare?;17.792.716.795.010.000;LeftPartner;13-bargaining_tdl_main-76_2_3;0;nf397ou8;Red;ovyw28qv;Blue;split_other;split_you;Right;share_both
+73thvczv;ln6s1ftc;5;70;1;Blue;Green;Ciao, il Rosso ha abbandonato,  quindi dividiamo solo noi due?;17.792.717.668.279.700;RightPartner;13-bargaining_tdl_main-70_2_3;0;ykrt3sc2;Green;tj95w8dv;#N/D;split_you;split_other;Left;share_both
+7jq6qxh3;ln6s1ftc;14;79;3;Green;Red;condivido;17.792.717.336.373.300;RightPartner;13-bargaining_tdl_main-79_1_2;0;bab8wqjo;Red;bueb4u4i;Blue;split_both;split_both;Both;share_one
+7jq6qxh3;ln6s1ftc;14;79;4;Green;Blue;io direi di dividere equamente;1.779.271.735.640.710;LeftPartner;13-bargaining_tdl_main-79_2_3;0;bab8wqjo;Red;bueb4u4i;Blue;split_both;split_both;Both;share_one
+8ot66gl6;ln6s1ftc;8;73;3;Red;Blue;Ciao Blu;17.792.718.423.099.900;RightPartner;13-bargaining_tdl_main-73_1_3;0;wx1wj6o7;Blue;eoo09gqg;Green;split_you;split_other;Both;0
+8ot66gl6;ln6s1ftc;8;73;7;Red;Blue;ok;17.792.718.967.199.800;RightPartner;13-bargaining_tdl_main-73_1_3;0;wx1wj6o7;Blue;eoo09gqg;Green;split_you;split_other;Both;0
+8ot66gl6;ln6s1ftc;8;73;9;Red;Green;ok;1.779.271.901.148.350;LeftPartner;13-bargaining_tdl_main-73_1_2;0;wx1wj6o7;Blue;eoo09gqg;Green;split_you;split_other;Both;0
+8qxgq3ms;ln6s1ftc;13;78;3;Green;Blue;sì, dividiamo in parti uguali;17.792.716.913.034.400;LeftPartner;13-bargaining_tdl_main-78_2_3;0;pzd9fjek;Red;8yqnncnw;Blue;split_both;split_both;Right;0
+8qxgq3ms;ln6s1ftc;13;78;5;Green;Red;Dividiamo in parti uguali?;17.792.717.250.926.500;RightPartner;13-bargaining_tdl_main-78_1_2;0;pzd9fjek;Red;8yqnncnw;Blue;split_both;split_both;Right;0
+8yqnncnw;ln6s1ftc;13;78;1;Blue;Green;Ciao, dividiamo equamente con tutti?;17.792.716.748.429.700;RightPartner;13-bargaining_tdl_main-78_2_3;0;8qxgq3ms;Green;pzd9fjek;Red;split_both;split_both;Both;share_both
+8yqnncnw;ln6s1ftc;13;78;2;Blue;Red;Ciao, dividiamo equamente con tutti?;17.792.716.904.591.100;LeftPartner;13-bargaining_tdl_main-78_1_3;0;8qxgq3ms;Green;pzd9fjek;Red;split_both;split_both;Both;share_both
+8yqnncnw;ln6s1ftc;13;78;4;Blue;Green;Ok;17.792.716.969.883.300;RightPartner;13-bargaining_tdl_main-78_2_3;0;8qxgq3ms;Green;pzd9fjek;Red;split_both;split_both;Both;share_both
+8yqnncnw;ln6s1ftc;13;78;7;Blue;Red;Il green a me ha risposto e abbiamo deciso di dividere in parti uguali;17.792.718.777.345.900;LeftPartner;13-bargaining_tdl_main-78_1_3;0;8qxgq3ms;Green;pzd9fjek;Red;split_both;split_both;Both;share_both
+8yqnncnw;ln6s1ftc;13;78;10;Blue;Red;Evidentemente il green ha premuto next per errore o ha perso la connessione. Direi di mantenere la parola data e dividere in parti uguali;17.792.719.349.910.500;LeftPartner;13-bargaining_tdl_main-78_1_3;0;8qxgq3ms;Green;pzd9fjek;Red;split_both;split_both;Both;share_both
+8yqnncnw;ln6s1ftc;13;78;12;Blue;Red;Secondo me si;1.779.271.954.983.920;LeftPartner;13-bargaining_tdl_main-78_1_3;0;8qxgq3ms;Green;pzd9fjek;Red;split_both;split_both;Both;share_both
+8yqnncnw;ln6s1ftc;13;78;14;Blue;Red;Ok;17.792.719.734.611.900;LeftPartner;13-bargaining_tdl_main-78_1_3;0;8qxgq3ms;Green;pzd9fjek;Red;split_both;split_both;Both;share_both
+9d8bae4j;ln6s1ftc;15;80;3;Blue;Green;Idem;17.792.717.644.688.100;RightPartner;13-bargaining_tdl_main-80_2_3;0;2d8kclta;Green;3yhfj8m6;Red;split_both;split_both;Right;0
+a1qq1ocd;ln6s1ftc;2;67;1;Green;Red;Ciao! il tempo è partito, che ne dici di dividerci tutto equamente tra 3?;17.792.716.364.091.600;RightPartner;13-bargaining_tdl_main-67_1_2;0;v3691z1i;Red;1iernbcq;Blue;split_both;split_both;Right;0
+a1qq1ocd;ln6s1ftc;2;67;2;Green;Blue;Ciao! Il tempo è partito, che pensi se ci dividiamo le risorse equamente?;17.792.716.779.584.300;LeftPartner;13-bargaining_tdl_main-67_2_3;0;v3691z1i;Red;1iernbcq;Blue;split_both;split_both;Right;0
+a1qq1ocd;ln6s1ftc;2;67;3;Green;Blue;tra tutti e tre;17.792.717.183.300.100;LeftPartner;13-bargaining_tdl_main-67_2_3;0;v3691z1i;Red;1iernbcq;Blue;split_both;split_both;Right;0
+bab8wqjo;ln6s1ftc;14;79;1;Red;Blue;vorrei dividere con tutti ;177.927.171.943.079;RightPartner;13-bargaining_tdl_main-79_1_3;0;bueb4u4i;Blue;7jq6qxh3;Green;split_both;split_both;Right;0
+bab8wqjo;ln6s1ftc;14;79;2;Red;Green;vorrei dividere con tutti ;17.792.717.206.458.200;LeftPartner;13-bargaining_tdl_main-79_1_2;0;bueb4u4i;Blue;7jq6qxh3;Green;split_both;split_both;Right;0
+br25c3xd;ln6s1ftc;3;68;5;Green;Red;vorrei dividere per tre;17.792.717.193.774.700;RightPartner;13-bargaining_tdl_main-68_1_2;0;cw3blg3k;Red;2s9nar7d;Blue;split_both;split_both;Both;share_both
+br25c3xd;ln6s1ftc;3;68;7;Green;Blue;vorrei dividere per tre;17.792.717.348.571.100;LeftPartner;13-bargaining_tdl_main-68_2_3;0;cw3blg3k;Red;2s9nar7d;Blue;split_both;split_both;Both;share_both
+brln0ee7;ln6s1ftc;4;69;1;Red;Blue;sono un pochino confusa sul da farsi ma vorrei sapere se tu hai le idee più chiare;17.792.717.173.393.500;RightPartner;13-bargaining_tdl_main-69_1_3;0;y3atyre1;Blue;gn5d8gey;Green;split_both;split_both;Both;share_both
+brln0ee7;ln6s1ftc;4;69;4;Red;Blue;perfetto;17.792.717.288.767.300;RightPartner;13-bargaining_tdl_main-69_1_3;0;y3atyre1;Blue;gn5d8gey;Green;split_both;split_both;Both;share_both
+brln0ee7;ln6s1ftc;4;69;8;Red;Green;sono un pochino confusa sul da farsi. Tu hai le idee più chiare?;1.779.271.752.857.460;LeftPartner;13-bargaining_tdl_main-69_1_2;0;y3atyre1;Blue;gn5d8gey;Green;split_both;split_both;Both;share_both
+brln0ee7;ln6s1ftc;4;69;10;Red;Green;sono d'accordo con te;17.792.717.612.371.700;LeftPartner;13-bargaining_tdl_main-69_1_2;0;y3atyre1;Blue;gn5d8gey;Green;split_both;split_both;Both;share_both
+brln0ee7;ln6s1ftc;4;69;13;Red;Blue;io vorrei condividere con tutti;17.792.717.718.366.900;RightPartner;13-bargaining_tdl_main-69_1_3;0;y3atyre1;Blue;gn5d8gey;Green;split_both;split_both;Both;share_both
+brln0ee7;ln6s1ftc;4;69;15;Red;Blue;ok, allora procediamo;17.792.717.815.036.600;RightPartner;13-bargaining_tdl_main-69_1_3;0;y3atyre1;Blue;gn5d8gey;Green;split_both;split_both;Both;share_both
+brln0ee7;ln6s1ftc;4;69;17;Red;Green;ok, allora procediamo;1.779.271.790.546.510;LeftPartner;13-bargaining_tdl_main-69_1_2;0;y3atyre1;Blue;gn5d8gey;Green;split_both;split_both;Both;share_both
+bueb4u4i;ln6s1ftc;14;79;5;Blue;Green;Non ho ben capito ma ti scrivo lo stesso. OK come proposto da te;17.792.717.553.565.300;RightPartner;13-bargaining_tdl_main-79_2_3;0;7jq6qxh3;Green;bab8wqjo;Red;split_both;split_both;Both;share_both
+bueb4u4i;ln6s1ftc;14;79;6;Blue;Red;Concordo, va bene;17.792.717.637.056.900;LeftPartner;13-bargaining_tdl_main-79_1_3;0;7jq6qxh3;Green;bab8wqjo;Red;split_both;split_both;Both;share_both
+c2ycwfix;ln6s1ftc;6;71;1;Green;Red;ciao;17.792.717.446.716.800;RightPartner;13-bargaining_tdl_main-71_1_2;0;0j12tjt3;#N/D;vrt0fjm1;#N/D;split_you;split_you;Both;share_both
+cw3blg3k;ln6s1ftc;3;68;1;Red;Blue;Vorrei dividere equamente tra tutti e tre;1.779.271.693.419.300;RightPartner;13-bargaining_tdl_main-68_1_3;0;2s9nar7d;Blue;br25c3xd;Green;split_both;split_both;Both;share_both
+cw3blg3k;ln6s1ftc;3;68;2;Red;Green;Vorrei dividere equamente tra tutti e tre;17.792.716.938.830.100;LeftPartner;13-bargaining_tdl_main-68_1_2;0;2s9nar7d;Blue;br25c3xd;Green;split_both;split_both;Both;share_both
+cw3blg3k;ln6s1ftc;3;68;8;Red;Blue;Anche tu?;17.792.717.386.299.100;RightPartner;13-bargaining_tdl_main-68_1_3;0;2s9nar7d;Blue;br25c3xd;Green;split_both;split_both;Both;share_both
+cw3blg3k;ln6s1ftc;3;68;10;Red;Blue;ok;17.792.717.630.452.700;RightPartner;13-bargaining_tdl_main-68_1_3;0;2s9nar7d;Blue;br25c3xd;Green;split_both;split_both;Both;share_both
+eoo09gqg;ln6s1ftc;8;73;1;Green;Red;Ciao, direi di dividere per 3?;17.792.718.151.234.400;RightPartner;13-bargaining_tdl_main-73_1_2;0;8ot66gl6;Red;wx1wj6o7;Blue;split_both;split_both;Left;0
+eoo09gqg;ln6s1ftc;8;73;2;Green;Blue;Dividiamo per 3 o solo io e te?;1.779.271.816.939.050;LeftPartner;13-bargaining_tdl_main-73_2_3;0;8ot66gl6;Red;wx1wj6o7;Blue;split_both;split_both;Left;0
+eoo09gqg;ln6s1ftc;8;73;6;Green;Blue;perfetto;17.792.718.707.159.700;LeftPartner;13-bargaining_tdl_main-73_2_3;0;8ot66gl6;Red;wx1wj6o7;Blue;split_both;split_both;Left;0
+eoo09gqg;ln6s1ftc;8;73;11;Green;Blue;mi ha detto ok adesso a dividere per 3;17.792.719.101.773.500;LeftPartner;13-bargaining_tdl_main-73_2_3;0;8ot66gl6;Red;wx1wj6o7;Blue;split_both;split_both;Left;0
+ff8ef196;ln6s1ftc;12;77;5;Red;Blue;io sono un pò in confusione.. qualche suggerimento?;17.792.717.199.159.100;RightPartner;13-bargaining_tdl_main-77_1_3;0;jfuhc7aq;Blue;g0cbyn29;Green;split_you;split_other;Left;share_both
+ff8ef196;ln6s1ftc;12;77;8;Red;Blue;ok, se davvero siamo rimasti in 2 siamo a posto con la scelta!;17.792.717.578.822.500;RightPartner;13-bargaining_tdl_main-77_1_3;0;jfuhc7aq;Blue;g0cbyn29;Green;split_you;split_other;Left;share_both
+ff8ef196;ln6s1ftc;12;77;10;Red;Blue;si.. possiamo già cliccare su next, credo;1.779.271.789.885.040;RightPartner;13-bargaining_tdl_main-77_1_3;0;jfuhc7aq;Blue;g0cbyn29;Green;split_you;split_other;Left;share_both
+fujp3a0k;ln6s1ftc;16;81;5;Blue;Red;ok;17.792.718.544.151.100;LeftPartner;13-bargaining_tdl_main-81_1_3;0;r4smz6e6;Green;vlhkphbu;Red;split_both;split_both;Both;share_both
+g0cbyn29;ln6s1ftc;12;77;12;Green;Red;dividiamo in parti uguali;17.792.718.158.179.200;RightPartner;13-bargaining_tdl_main-77_1_2;0;ff8ef196;Red;jfuhc7aq;Blue;split_both;split_both;Both;share_both
+gn5d8gey;ln6s1ftc;4;69;6;Green;Red;voglio dividere con tutti;1.779.271.747.512.880;RightPartner;13-bargaining_tdl_main-69_1_2;0;brln0ee7;Red;y3atyre1;Blue;split_both;split_both;Both;share_both
+gn5d8gey;ln6s1ftc;4;69;7;Green;Blue;voglio dividere con tutti;17.792.717.492.075.700;LeftPartner;13-bargaining_tdl_main-69_2_3;0;brln0ee7;Red;y3atyre1;Blue;split_both;split_both;Both;share_both
+gn5d8gey;ln6s1ftc;4;69;11;Green;Red;nooooo;17.792.717.626.467.600;RightPartner;13-bargaining_tdl_main-69_1_2;0;brln0ee7;Red;y3atyre1;Blue;split_both;split_both;Both;share_both
+gn5d8gey;ln6s1ftc;4;69;18;Green;Red;si ;17.792.718.542.109.100;RightPartner;13-bargaining_tdl_main-69_1_2;0;brln0ee7;Red;y3atyre1;Blue;split_both;split_both;Both;share_both
+hetqaozn;ln6s1ftc;7;72;3;Red;Blue;ciao;17.792.717.068.695.900;RightPartner;13-bargaining_tdl_main-72_1_3;0;y229xlov;Blue;rhilexuj;Green;split_you;split_you;Left;0
+hetqaozn;ln6s1ftc;7;72;4;Red;Blue;ok;17.792.717.183.217.600;RightPartner;13-bargaining_tdl_main-72_1_3;0;y229xlov;Blue;rhilexuj;Green;split_you;split_you;Left;0
+jfuhc7aq;ln6s1ftc;12;77;1;Blue;Green;ciao;17.792.716.510.227.400;RightPartner;13-bargaining_tdl_main-77_2_3;0;g0cbyn29;Green;ff8ef196;Red;split_other;split_you;Right;share_one
+jfuhc7aq;ln6s1ftc;12;77;2;Blue;Red;ciao;17.792.716.687.535.700;LeftPartner;13-bargaining_tdl_main-77_1_3;0;g0cbyn29;Green;ff8ef196;Red;split_other;split_you;Right;share_one
+jfuhc7aq;ln6s1ftc;12;77;3;Blue;Green;ci sei?;17.792.717.108.652.600;RightPartner;13-bargaining_tdl_main-77_2_3;0;g0cbyn29;Green;ff8ef196;Red;split_other;split_you;Right;share_one
+jfuhc7aq;ln6s1ftc;12;77;4;Blue;Red;ci sei?;17.792.717.154.421.800;LeftPartner;13-bargaining_tdl_main-77_1_3;0;g0cbyn29;Green;ff8ef196;Red;split_other;split_you;Right;share_one
+jfuhc7aq;ln6s1ftc;12;77;6;Blue;Red;calcolando che il partecipante verde non c'è;17.792.717.325.854.400;LeftPartner;13-bargaining_tdl_main-77_1_3;0;g0cbyn29;Green;ff8ef196;Red;split_other;split_you;Right;share_one
+jfuhc7aq;ln6s1ftc;12;77;7;Blue;Red;possiamo spartirlo;17.792.717.354.036.100;LeftPartner;13-bargaining_tdl_main-77_1_3;0;g0cbyn29;Green;ff8ef196;Red;split_other;split_you;Right;share_one
+jfuhc7aq;ln6s1ftc;12;77;9;Blue;Red;quindi fare 6 io (blu) e 6 tu (partecipante rosso);17.792.717.648.428.400;LeftPartner;13-bargaining_tdl_main-77_1_3;0;g0cbyn29;Green;ff8ef196;Red;split_other;split_you;Right;share_one
+jfuhc7aq;ln6s1ftc;12;77;11;Blue;Red;perfetto, clicco sul next;17.792.718.089.986.200;LeftPartner;13-bargaining_tdl_main-77_1_3;0;g0cbyn29;Green;ff8ef196;Red;split_other;split_you;Right;share_one
+nf397ou8;ln6s1ftc;11;76;1;Red;Blue;voglio dividere solo con te ;17.792.716.383.180.000;RightPartner;13-bargaining_tdl_main-76_1_3;0;ovyw28qv;Blue;5mhp2h2j;Green;split_you;split_other;Left;share_one
+nf397ou8;ln6s1ftc;11;76;2;Red;Green;non voglio dividere con te ;17.792.716.400.449.900;LeftPartner;13-bargaining_tdl_main-76_1_2;0;ovyw28qv;Blue;5mhp2h2j;Green;split_you;split_other;Left;share_one
+ovyw28qv;ln6s1ftc;11;76;4;Blue;Red;ok ;177.927.167.828.848;LeftPartner;13-bargaining_tdl_main-76_1_3;0;5mhp2h2j;Green;nf397ou8;Red;split_other;split_you;Right;share_one
+pzd9fjek;ln6s1ftc;13;78;6;Red;Blue;ciao, blue siccome tu hai aspettato e sei gentile vorrei dividere solo con te che ne dici?;17.792.718.544.832.800;RightPartner;13-bargaining_tdl_main-78_1_3;0;8yqnncnw;Blue;8qxgq3ms;Green;split_both;split_both;Both;share_both
+pzd9fjek;ln6s1ftc;13;78;8;Red;Blue;Va bene anche a me il green aveva chiesto di divdere in parti uguali, che facciamo?;17.792.719.130.141.200;RightPartner;13-bargaining_tdl_main-78_1_3;0;8yqnncnw;Blue;8qxgq3ms;Green;split_both;split_both;Both;share_both
+pzd9fjek;ln6s1ftc;13;78;9;Red;Blue;dividiamo insieme o tutti insieme?;1.779.271.934.323.370;RightPartner;13-bargaining_tdl_main-78_1_3;0;8yqnncnw;Blue;8qxgq3ms;Green;split_both;split_both;Both;share_both
+pzd9fjek;ln6s1ftc;13;78;11;Red;Blue;dividiamo tutti egualmente?;17.792.719.493.639.100;RightPartner;13-bargaining_tdl_main-78_1_3;0;8yqnncnw;Blue;8qxgq3ms;Green;split_both;split_both;Both;share_both
+pzd9fjek;ln6s1ftc;13;78;13;Red;Blue;ok siamo d'accordo 4 ciascuno;17.792.719.670.843.300;RightPartner;13-bargaining_tdl_main-78_1_3;0;8yqnncnw;Blue;8qxgq3ms;Green;split_both;split_both;Both;share_both
+r4smz6e6;ln6s1ftc;16;81;1;Green;Red;dividiamo in parti uguali;17.792.718.224.092.900;RightPartner;13-bargaining_tdl_main-81_1_2;0;vlhkphbu;Red;fujp3a0k;Blue;split_both;split_both;Both;share_one
+r4smz6e6;ln6s1ftc;16;81;2;Green;Red;?;17.792.718.303.874.200;RightPartner;13-bargaining_tdl_main-81_1_2;0;vlhkphbu;Red;fujp3a0k;Blue;split_both;split_both;Both;share_one
+r4smz6e6;ln6s1ftc;16;81;7;Green;Blue;dividiamo in parti uguali?;17.792.718.679.057.300;LeftPartner;13-bargaining_tdl_main-81_2_3;0;vlhkphbu;Red;fujp3a0k;Blue;split_both;split_both;Both;share_one
+r4smz6e6;ln6s1ftc;16;81;10;Green;Red;si non risponde neanche a me va bene dividiamo noi;17.792.719.064.540.200;RightPartner;13-bargaining_tdl_main-81_1_2;0;vlhkphbu;Red;fujp3a0k;Blue;split_both;split_both;Both;share_one
+r4smz6e6;ln6s1ftc;16;81;12;Green;Red;a me no;17.792.719.334.889.200;RightPartner;13-bargaining_tdl_main-81_1_2;0;vlhkphbu;Red;fujp3a0k;Blue;split_both;split_both;Both;share_one
+r4smz6e6;ln6s1ftc;16;81;15;Green;Red;facciamo tutti 4?;17.792.719.510.569.700;RightPartner;13-bargaining_tdl_main-81_1_2;0;vlhkphbu;Red;fujp3a0k;Blue;split_both;split_both;Both;share_one
+r4smz6e6;ln6s1ftc;16;81;16;Green;Red;a me comunque non ha risposto;1.779.271.967.341.440;RightPartner;13-bargaining_tdl_main-81_1_2;0;vlhkphbu;Red;fujp3a0k;Blue;split_both;split_both;Both;share_one
+r4smz6e6;ln6s1ftc;16;81;17;Green;Red;andiamo avanti?;17.792.719.793.093.400;RightPartner;13-bargaining_tdl_main-81_1_2;0;vlhkphbu;Red;fujp3a0k;Blue;split_both;split_both;Both;share_one
+rhilexuj;ln6s1ftc;7;72;1;Green;Red;voglio dividere con tutti i partecipanti;17.792.716.837.930.000;RightPartner;13-bargaining_tdl_main-72_1_2;0;hetqaozn;Red;y229xlov;Blue;split_other;split_you;Right;share_both
+rhilexuj;ln6s1ftc;7;72;2;Green;Blue;voglio dividere con tutti i partecipanti;17.792.717.025.709.800;LeftPartner;13-bargaining_tdl_main-72_2_3;0;hetqaozn;Red;y229xlov;Blue;split_other;split_you;Right;share_both
+rhilexuj;ln6s1ftc;7;72;6;Green;Blue;si esatto! va bene!;17.792.719.012.033.400;LeftPartner;13-bargaining_tdl_main-72_2_3;0;hetqaozn;Red;y229xlov;Blue;split_other;split_you;Right;share_both
+dx0ls2i4;el73t6hp;2;12;5;Blue;Green;fdsgfda;17.791.876.160.807.500;RightPartner;9-bargaining_tdl_main-12_2_3;0;p3wi5j2i;Green;opt0r6qy;Red;split_other;split_other;Both;share_both
+rhilexuj;ln6s1ftc;7;72;8;Green;Blue;ok;17.792.719.255.240.500;LeftPartner;13-bargaining_tdl_main-72_2_3;0;hetqaozn;Red;y229xlov;Blue;split_other;split_you;Right;share_both
+v3691z1i;ln6s1ftc;2;67;4;Red;Blue;il verde è uscito dividiamo in 2?;17.792.718.258.292.100;RightPartner;13-bargaining_tdl_main-67_1_3;0;1iernbcq;Blue;a1qq1ocd;Green;split_you;split_other;Left;share_both
+v3691z1i;ln6s1ftc;2;67;6;Red;Blue;ok clicchiamo su next;17.792.718.764.988.000;RightPartner;13-bargaining_tdl_main-67_1_3;0;1iernbcq;Blue;a1qq1ocd;Green;split_you;split_other;Left;share_both
+vlhkphbu;ln6s1ftc;16;81;3;Red;Blue;dividiamo in parti uguali;17.792.718.390.183.700;RightPartner;13-bargaining_tdl_main-81_1_3;0;fujp3a0k;Blue;r4smz6e6;Green;split_both;split_both;Both;0
+vlhkphbu;ln6s1ftc;16;81;4;Red;Green;dividiamo in parti uguali;17.792.718.402.017.900;LeftPartner;13-bargaining_tdl_main-81_1_2;0;fujp3a0k;Blue;r4smz6e6;Green;split_both;split_both;Both;0
+vlhkphbu;ln6s1ftc;16;81;6;Red;Green;il blu non risponde dividiamo noi;17.792.718.641.252.700;LeftPartner;13-bargaining_tdl_main-81_1_2;0;fujp3a0k;Blue;r4smz6e6;Green;split_both;split_both;Both;0
+vlhkphbu;ln6s1ftc;16;81;8;Red;Green;il blu ha risposto vuole divider in parti uguali;1.779.271.897.417.770;LeftPartner;13-bargaining_tdl_main-81_1_2;0;fujp3a0k;Blue;r4smz6e6;Green;split_both;split_both;Both;0
+vlhkphbu;ln6s1ftc;16;81;9;Red;Blue;ok;17.792.719.015.458.500;RightPartner;13-bargaining_tdl_main-81_1_3;0;fujp3a0k;Blue;r4smz6e6;Green;split_both;split_both;Both;0
+vlhkphbu;ln6s1ftc;16;81;11;Red;Green;ora ha risposto;1.779.271.920.647.010;LeftPartner;13-bargaining_tdl_main-81_1_2;0;fujp3a0k;Blue;r4smz6e6;Green;split_both;split_both;Both;0
+vlhkphbu;ln6s1ftc;16;81;13;Red;Green;dividiamo in parti uguali?;17.792.719.350.555.500;LeftPartner;13-bargaining_tdl_main-81_1_2;0;fujp3a0k;Blue;r4smz6e6;Green;split_both;split_both;Both;0
+vlhkphbu;ln6s1ftc;16;81;14;Red;Green;ok dividiamo noi;1.779.271.942.882.410;LeftPartner;13-bargaining_tdl_main-81_1_2;0;fujp3a0k;Blue;r4smz6e6;Green;split_both;split_both;Both;0
+vlhkphbu;ln6s1ftc;16;81;18;Red;Green;ok facciamo 4;1.779.271.995.255.380;LeftPartner;13-bargaining_tdl_main-81_1_2;0;fujp3a0k;Blue;r4smz6e6;Green;split_both;split_both;Both;0
+wx1wj6o7;ln6s1ftc;8;73;4;Blue;Green;per 3;17.792.718.557.273.100;RightPartner;13-bargaining_tdl_main-73_2_3;0;eoo09gqg;Green;8ot66gl6;Red;split_both;split_both;Both;share_both
+wx1wj6o7;ln6s1ftc;8;73;5;Blue;Red;per 3;17.792.718.592.114.700;LeftPartner;13-bargaining_tdl_main-73_1_3;0;eoo09gqg;Green;8ot66gl6;Red;split_both;split_both;Both;share_both
+wx1wj6o7;ln6s1ftc;8;73;8;Blue;Green;ok, ma il rosso non risponde;17.792.718.991.577.900;RightPartner;13-bargaining_tdl_main-73_2_3;0;eoo09gqg;Green;8ot66gl6;Red;split_both;split_both;Both;share_both
+wx1wj6o7;ln6s1ftc;8;73;10;Blue;Green;adesso si;17.792.719.051.556.600;RightPartner;13-bargaining_tdl_main-73_2_3;0;eoo09gqg;Green;8ot66gl6;Red;split_both;split_both;Both;share_both
+y229xlov;ln6s1ftc;7;72;5;Blue;Green;Ciao, vorrei dividere solo con te, il red è uscito. Va bene?;17.792.718.685.168.000;RightPartner;13-bargaining_tdl_main-72_2_3;0;rhilexuj;Green;hetqaozn;Red;split_you;split_you;Right;share_both
+y229xlov;ln6s1ftc;7;72;7;Blue;Green;benissimo! procediamo allora;17.792.719.158.389.400;RightPartner;13-bargaining_tdl_main-72_2_3;0;rhilexuj;Green;hetqaozn;Red;split_you;split_you;Right;share_both
+y3atyre1;ln6s1ftc;4;69;2;Blue;Green;Buongiorno;1.779.271.718.750.120;RightPartner;13-bargaining_tdl_main-69_2_3;0;gn5d8gey;Green;brln0ee7;Red;split_both;split_both;Both;share_both
+y3atyre1;ln6s1ftc;4;69;3;Blue;Red;no;1.779.271.722.932.980;LeftPartner;13-bargaining_tdl_main-69_1_3;0;gn5d8gey;Green;brln0ee7;Red;split_both;split_both;Both;share_both
+y3atyre1;ln6s1ftc;4;69;5;Blue;Red;soprattutto perché parlando tutti è difficile;17.792.717.343.456.500;LeftPartner;13-bargaining_tdl_main-69_1_3;0;gn5d8gey;Green;brln0ee7;Red;split_both;split_both;Both;share_both
+y3atyre1;ln6s1ftc;4;69;9;Blue;Green;ok anche io;17.792.717.607.826.500;RightPartner;13-bargaining_tdl_main-69_2_3;0;gn5d8gey;Green;brln0ee7;Red;split_both;split_both;Both;share_both
+y3atyre1;ln6s1ftc;4;69;12;Blue;Red;vorrei dividere l'importo con tutti;17.792.717.701.525.800;LeftPartner;13-bargaining_tdl_main-69_1_3;0;gn5d8gey;Green;brln0ee7;Red;split_both;split_both;Both;share_both
+y3atyre1;ln6s1ftc;4;69;14;Blue;Red;ottimo;1.779.271.776.067.940;LeftPartner;13-bargaining_tdl_main-69_1_3;0;gn5d8gey;Green;brln0ee7;Red;split_both;split_both;Both;share_both
+kbzsf2k1;ocnkhj5c;2;42;1;Red;Blue;Ok Non ci parlo con i BLU;17.791.938.022.623.800;RightPartner;10-bargaining_tdl_main-42_1_3;0;2h0fz66r;Blue;qi1pt07x;Green;split_other;split_you;Right;0
+kbzsf2k1;ocnkhj5c;2;42;2;Red;Green;Mi piacciono i Verdi, dividiamo;17.791.938.137.867.900;LeftPartner;10-bargaining_tdl_main-42_1_2;0;2h0fz66r;Blue;qi1pt07x;Green;split_other;split_you;Right;0
+kbzsf2k1;ocnkhj5c;2;42;9;Red;Blue;Bella per te;17.791.939.110.346.200;RightPartner;10-bargaining_tdl_main-42_1_3;0;2h0fz66r;Blue;qi1pt07x;Green;split_other;split_you;Right;0
+kbzsf2k1;ocnkhj5c;2;42;10;Red;Green;Deal Done;17.791.939.183.024.500;LeftPartner;10-bargaining_tdl_main-42_1_2;0;2h0fz66r;Blue;qi1pt07x;Green;split_other;split_you;Right;0
+y3atyre1;ln6s1ftc;4;69;16;Blue;Red;vado;1.779.271.787.407.750;LeftPartner;13-bargaining_tdl_main-69_1_3;0;gn5d8gey;Green;brln0ee7;Red;split_both;split_both;Both;share_both
+ykrt3sc2;ln6s1ftc;5;70;2;Green;Blue;Ok;17.792.717.937.117.900;LeftPartner;13-bargaining_tdl_main-70_2_3;1;tj95w8dv;#N/D;73thvczv;Blue;split_you;split_you;Both;share_both
+opt0r6qy;el73t6hp;2;12;1;Red;Blue;CIao sono red;17.791.875.112.687.700;RightPartner;9-bargaining_tdl_main-12_1_3;0;dx0ls2i4;Blue;p3wi5j2i;Green;split_both;split_both;Left;share_both
+opt0r6qy;el73t6hp;2;12;2;Red;Green;ciao sono red;17.791.875.138.955.400;LeftPartner;9-bargaining_tdl_main-12_1_2;0;dx0ls2i4;Blue;p3wi5j2i;Green;split_both;split_both;Left;share_both
+zq85fk59;ln6s1ftc;10;75;2;Green;Red;non so che devo fare. comunque condivido;17.792.717.912.170.400;RightPartner;13-bargaining_tdl_main-75_1_2;0;1635k3od;Red;04u70zp4;Blue;split_both;split_both;Both;share_both
+p3wi5j2i;el73t6hp;2;12;3;Green;Red;Ciao red;17.791.875.208.067.800;RightPartner;9-bargaining_tdl_main-12_1_2;0;opt0r6qy;Red;dx0ls2i4;Blue;split_you;split_other;Right;share_one
+p3wi5j2i;el73t6hp;2;12;4;Green;Red;sono green;1.779.187.525.681.320;RightPartner;9-bargaining_tdl_main-12_1_2;0;opt0r6qy;Red;dx0ls2i4;Blue;split_you;split_other;Right;share_one
+zq85fk59;ln6s1ftc;10;75;4;Green;Blue;si;177.927.181.236.472;LeftPartner;13-bargaining_tdl_main-75_2_3;0;1635k3od;Red;04u70zp4;Blue;split_both;split_both;Both;share_both
+zq85fk59;ln6s1ftc;10;75;9;Green;Blue;a questo punto spingo next;17.792.718.457.837.400;LeftPartner;13-bargaining_tdl_main-75_2_3;0;1635k3od;Red;04u70zp4;Blue;split_both;split_both;Both;share_both
+4uvdbn2v;yd5nzig1;3;134;1;Green;Red;hello mate;17.794.392.136.203.900;RightPartner;36-bargaining_tdl_main-134_1_2;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;3;Green;Red;what do you want to do;1.779.439.222.109.730;RightPartner;36-bargaining_tdl_main-134_1_2;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;4;Green;Blue;hello, i would like to split in two;17.794.392.505.249.800;LeftPartner;36-bargaining_tdl_main-134_2_3;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+qi1pt07x;ocnkhj5c;2;42;3;Green;Red;Daje, dividiamo con i rossi;17.791.938.284.196.000;RightPartner;10-bargaining_tdl_main-42_1_2;0;kbzsf2k1;Red;2h0fz66r;Blue;split_you;split_other;Left;share_both
+qi1pt07x;ocnkhj5c;2;42;4;Green;Blue;BLU BU BU BU;17.791.938.388.962.900;LeftPartner;10-bargaining_tdl_main-42_2_3;0;kbzsf2k1;Red;2h0fz66r;Blue;split_you;split_other;Left;share_both
+qi1pt07x;ocnkhj5c;2;42;8;Green;Blue;Daje;1.779.193.890.588.140;LeftPartner;10-bargaining_tdl_main-42_2_3;0;kbzsf2k1;Red;2h0fz66r;Blue;split_you;split_other;Left;share_both
+qi1pt07x;ocnkhj5c;2;42;11;Green;Red;Ok dividiamo;17.791.939.267.034.700;RightPartner;10-bargaining_tdl_main-42_1_2;0;kbzsf2k1;Red;2h0fz66r;Blue;split_you;split_other;Left;share_both
+4uvdbn2v;yd5nzig1;3;134;6;Green;Blue;6 to me and 6 to you;17.794.392.582.626.400;LeftPartner;36-bargaining_tdl_main-134_2_3;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;9;Green;Red;sure;177.943.929.780.566;RightPartner;36-bargaining_tdl_main-134_1_2;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;11;Green;Blue;of course;1.779.439.336.049.820;LeftPartner;36-bargaining_tdl_main-134_2_3;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;13;Green;Blue;do you prefear to split in 3 parts?;1.779.439.352.670.100;LeftPartner;36-bargaining_tdl_main-134_2_3;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;14;Green;Blue;oh what do you do;17.794.393.894.296.800;LeftPartner;36-bargaining_tdl_main-134_2_3;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;15;Green;Blue;are you lefting the chat;17.794.393.948.898.000;LeftPartner;36-bargaining_tdl_main-134_2_3;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;16;Green;Red;i think that blue wants to exclude you;17.794.394.182.327.500;RightPartner;36-bargaining_tdl_main-134_1_2;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;20;Green;Red;let's go punish him;17.794.394.649.298.300;RightPartner;36-bargaining_tdl_main-134_1_2;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;21;Green;Red;6 to me and 6 to you;17.794.394.764.402.800;RightPartner;36-bargaining_tdl_main-134_1_2;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;22;Green;Red;i m lefting the chat and i will propose this;17.794.394.957.102.400;RightPartner;36-bargaining_tdl_main-134_1_2;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;24;Green;Red;don't cheat...;17.794.395.067.877.500;RightPartner;36-bargaining_tdl_main-134_1_2;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+4uvdbn2v;yd5nzig1;3;134;25;Green;Red;i swear;17.794.395.102.349.500;RightPartner;36-bargaining_tdl_main-134_1_2;0;b6mb3dyb;Red;cpn08rvz;Blue;split_you;split_other;Left;share_one
+9r3ttt9c;yd5nzig1;2;133;1;Red;Blue;Hello;17.794.390.773.516.700;RightPartner;36-bargaining_tdl_main-133_1_3;0;dbc3qlg7;Blue;n3fe0c5q;#N/D;split_you;split_other;Left;share_one
+9r3ttt9c;yd5nzig1;2;133;2;Red;Blue;Are you here ?;1.779.439.081.617.280;RightPartner;36-bargaining_tdl_main-133_1_3;0;dbc3qlg7;Blue;n3fe0c5q;#N/D;split_you;split_other;Left;share_one
+9r3ttt9c;yd5nzig1;2;133;5;Red;Blue;What do you want to do ?;17.794.391.088.477.700;RightPartner;36-bargaining_tdl_main-133_1_3;0;dbc3qlg7;Blue;n3fe0c5q;#N/D;split_you;split_other;Left;share_one
+9r3ttt9c;yd5nzig1;2;133;6;Red;Blue;Green participant already left;17.794.391.135.445.600;RightPartner;36-bargaining_tdl_main-133_1_3;0;dbc3qlg7;Blue;n3fe0c5q;#N/D;split_you;split_other;Left;share_one
+9r3ttt9c;yd5nzig1;2;133;9;Red;Blue;between 2 of us ? ;1.779.439.159.590.870;RightPartner;36-bargaining_tdl_main-133_1_3;0;dbc3qlg7;Blue;n3fe0c5q;#N/D;split_you;split_other;Left;share_one
+9r3ttt9c;yd5nzig1;2;133;11;Red;Blue;let's go;17.794.391.674.151.500;RightPartner;36-bargaining_tdl_main-133_1_3;0;dbc3qlg7;Blue;n3fe0c5q;#N/D;split_you;split_other;Left;share_one
+b6mb3dyb;yd5nzig1;3;134;5;Red;Green;hi maybe we should split just between us?;17.794.392.544.713.000;LeftPartner;36-bargaining_tdl_main-134_1_2;0;cpn08rvz;Blue;4uvdbn2v;Green;split_other;split_you;Right;share_both
+b6mb3dyb;yd5nzig1;3;134;7;Red;Blue;hi, do you want to split?;17.794.392.620.395.800;RightPartner;36-bargaining_tdl_main-134_1_3;0;cpn08rvz;Blue;4uvdbn2v;Green;split_other;split_you;Right;share_both
+b6mb3dyb;yd5nzig1;3;134;12;Red;Blue;or what do you want to do?;17.794.393.401.064.300;RightPartner;36-bargaining_tdl_main-134_1_3;0;cpn08rvz;Blue;4uvdbn2v;Green;split_other;split_you;Right;share_both
+b6mb3dyb;yd5nzig1;3;134;17;Red;Green;i know hahaha;17.794.394.285.683.600;LeftPartner;36-bargaining_tdl_main-134_1_2;0;cpn08rvz;Blue;4uvdbn2v;Green;split_other;split_you;Right;share_both
+b6mb3dyb;yd5nzig1;3;134;18;Red;Green;lets punish him maybe;17.794.394.460.403.400;LeftPartner;36-bargaining_tdl_main-134_1_2;0;cpn08rvz;Blue;4uvdbn2v;Green;split_other;split_you;Right;share_both
+b6mb3dyb;yd5nzig1;3;134;19;Red;Green;what are you gonna do?;17.794.394.522.801.900;LeftPartner;36-bargaining_tdl_main-134_1_2;0;cpn08rvz;Blue;4uvdbn2v;Green;split_other;split_you;Right;share_both
+b6mb3dyb;yd5nzig1;3;134;23;Red;Green;idk if i can trust you but ok;17.794.395.005.847.400;LeftPartner;36-bargaining_tdl_main-134_1_2;0;cpn08rvz;Blue;4uvdbn2v;Green;split_other;split_you;Right;share_both
+bnuc6jnp;yd5nzig1;4;135;3;Green;Red;hi;17.794.392.781.542.100;RightPartner;36-bargaining_tdl_main-135_1_2;0;viaxlpcy;Red;sthih2j8;#N/D;split_both;split_both;Both;share_both
+bnuc6jnp;yd5nzig1;4;135;5;Green;Red;let's split also with the other participant;177.943.935.001.765;RightPartner;36-bargaining_tdl_main-135_1_2;0;viaxlpcy;Red;sthih2j8;#N/D;split_both;split_both;Both;share_both
+cpn08rvz;yd5nzig1;3;134;2;Blue;Green;Hi, how do you want to propose to do?;1.779.439.219.831.540;RightPartner;36-bargaining_tdl_main-134_2_3;0;4uvdbn2v;Green;b6mb3dyb;Red;split_you;split_you;Left;0
+cpn08rvz;yd5nzig1;3;134;8;Blue;Red;Do you want to split between me and you?;17.794.392.883.676.300;LeftPartner;36-bargaining_tdl_main-134_1_3;0;4uvdbn2v;Green;b6mb3dyb;Red;split_you;split_you;Left;0
+cpn08rvz;yd5nzig1;3;134;10;Blue;Green;Do you want to exclude participant Red?;17.794.393.157.239.000;RightPartner;36-bargaining_tdl_main-134_2_3;0;4uvdbn2v;Green;b6mb3dyb;Red;split_you;split_you;Left;0
+cpn08rvz;yd5nzig1;3;134;26;Blue;Red;Ok If want to split with me ok;17.794.395.552.514.000;LeftPartner;36-bargaining_tdl_main-134_1_3;0;4uvdbn2v;Green;b6mb3dyb;Red;split_you;split_you;Left;0
+cpn08rvz;yd5nzig1;3;134;27;Blue;Red;I will split with you;17.794.395.552.554.200;LeftPartner;36-bargaining_tdl_main-134_1_3;0;4uvdbn2v;Green;b6mb3dyb;Red;split_you;split_you;Left;0
+cpn08rvz;yd5nzig1;3;134;28;Blue;Red;If you want to split with me ok, But what did write to partipant Green?;17.794.395.552.587.700;LeftPartner;36-bargaining_tdl_main-134_1_3;0;4uvdbn2v;Green;b6mb3dyb;Red;split_you;split_you;Left;0
+dbc3qlg7;yd5nzig1;2;133;3;Blue;Red;hello;17.794.390.836.687.400;LeftPartner;36-bargaining_tdl_main-133_1_3;0;n3fe0c5q;#N/D;9r3ttt9c;Red;split_other;split_other;Right;share_one
+dbc3qlg7;yd5nzig1;2;133;4;Blue;Red;tell me;17.794.390.985.936.800;LeftPartner;36-bargaining_tdl_main-133_1_3;0;n3fe0c5q;#N/D;9r3ttt9c;Red;split_other;split_other;Right;share_one
+dbc3qlg7;yd5nzig1;2;133;7;Blue;Red;let split ;17.794.391.429.887.200;LeftPartner;36-bargaining_tdl_main-133_1_3;0;n3fe0c5q;#N/D;9r3ttt9c;Red;split_other;split_other;Right;share_one
+dbc3qlg7;yd5nzig1;2;133;8;Blue;Red;let s;1.779.439.153.566.820;LeftPartner;36-bargaining_tdl_main-133_1_3;0;n3fe0c5q;#N/D;9r3ttt9c;Red;split_other;split_other;Right;share_one
+dbc3qlg7;yd5nzig1;2;133;10;Blue;Red;yes;17.794.391.627.788.100;LeftPartner;36-bargaining_tdl_main-133_1_3;0;n3fe0c5q;#N/D;9r3ttt9c;Red;split_other;split_other;Right;share_one
+dbc3qlg7;yd5nzig1;2;133;12;Blue;Red;ok;17.794.391.713.354.600;LeftPartner;36-bargaining_tdl_main-133_1_3;0;n3fe0c5q;#N/D;9r3ttt9c;Red;split_other;split_other;Right;share_one
+i4i3tmug;yd5nzig1;5;136;1;Red;Green;I will send to you 6$;17.794.395.633.713.500;LeftPartner;36-bargaining_tdl_main-136_1_2;0;simlh0ez;#N/D;9lowtshx;#N/D;split_other;split_you;Right;share_both
+viaxlpcy;yd5nzig1;4;135;1;Red;Blue;hi;17.794.392.693.559.400;RightPartner;36-bargaining_tdl_main-135_1_3;0;sthih2j8;#N/D;bnuc6jnp;Green;split_both;split_both;Left;share_one
+viaxlpcy;yd5nzig1;4;135;2;Red;Green;hi;17.794.392.709.341.300;LeftPartner;36-bargaining_tdl_main-135_1_2;0;sthih2j8;#N/D;bnuc6jnp;Green;split_both;split_both;Left;share_one
+viaxlpcy;yd5nzig1;4;135;4;Red;Green;lets just split 12$ between two of us;17.794.393.081.409.200;LeftPartner;36-bargaining_tdl_main-135_1_2;0;sthih2j8;#N/D;bnuc6jnp;Green;split_both;split_both;Left;share_one
+viaxlpcy;yd5nzig1;4;135;6;Red;Green;okay ;17.794.393.825.981.200;LeftPartner;36-bargaining_tdl_main-135_1_2;0;sthih2j8;#N/D;bnuc6jnp;Green;split_both;split_both;Left;share_one

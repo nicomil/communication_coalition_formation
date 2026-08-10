@@ -185,8 +185,28 @@
                 </div>
                 {% endfor %}
             </div>
+            <div id="left_confidence_container" class="mt-4" style="display:none;">
+                <strong>How confident are you about your guess:</strong>
+                <div class="mt-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="guess_left_confidence" value="" id="left_conf_1" required>
+                        <label class="form-check-label" for="left_conf_1">not at all confident</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="guess_left_confidence" value="" id="left_conf_2" required>
+                        <label class="form-check-label" for="left_conf_2">fairly confident</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="guess_left_confidence" value="" id="left_conf_3" required>
+                        <label class="form-check-label" for="left_conf_3">highly confident</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="guess_left_confidence" value="" id="left_conf_4" required>
+                        <label class="form-check-label" for="left_conf_4">totally confident</label>
+                    </div>
+                </div>
+            </div>
         </div>
-
         <hr>
 
         <!-- Q2: guess RIGHT partner -->
@@ -202,6 +222,27 @@
                     </label>
                 </div>
                 {% endfor %}
+            </div>
+            <div id="right_confidence_container" class="mt-4" style="display:none;">
+                <strong>How confident are you about your guess:</strong>
+                <div class="mt-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="guess_right_confidence" value="" id="right_conf_1" required>
+                        <label class="form-check-label" for="right_conf_1">not at all confident</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="guess_right_confidence" value="" id="right_conf_2" required>
+                        <label class="form-check-label" for="right_conf_2">fairly confident</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="guess_right_confidence" value="" id="right_conf_3" required>
+                        <label class="form-check-label" for="right_conf_3">highly confident</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="guess_right_confidence" value="" id="right_conf_4" required>
+                        <label class="form-check-label" for="right_conf_4">totally confident</label>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -329,52 +370,7 @@ Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
 </div>
 <hr>
 
-{# === Scala convincingness: una per partner === #}
-<div class="card border-secondary mt-3">
-    <div class="card-header bg-secondary text-white">
-        <h4>How confident are you that your conversations were convincing?</h4>
-    </div>
-    <div class="card-body px-5 py-4">
-        <p>Please rate your confidence for each conversation on a scale from 1 (Not very confident) to 5 (Highly
-            confident).</p>
 
-        <div class="mb-4">
-            <strong>Conversation with the {{ left_partner_color }} Participant</strong>
-            <div class="convincingness-scale" role="radiogroup"
-                aria-label="Convincingness of conversation with {{ left_partner_color }} Participant">
-                {% for value in convincingness_scale %}
-                <label for="pdc_left_convincingness_{{ value }}">
-                    <span>{{ value }}</span>
-                    <input type="radio" name="signal_left_convincingness" value="{{ value }}"
-                        id="pdc_left_convincingness_{{ value }}" required>
-                </label>
-                {% endfor %}
-            </div>
-            <div class="convincingness-anchors">
-                <span>Not very confident</span>
-                <span>Highly confident</span>
-            </div>
-        </div>
-
-        <div class="mb-4">
-            <strong>Conversation with the {{ right_partner_color }} Participant</strong>
-            <div class="convincingness-scale" role="radiogroup"
-                aria-label="Convincingness of conversation with {{ right_partner_color }} Participant">
-                {% for value in convincingness_scale %}
-                <label for="pdc_right_convincingness_{{ value }}">
-                    <span>{{ value }}</span>
-                    <input type="radio" name="signal_right_convincingness" value="{{ value }}"
-                        id="pdc_right_convincingness_{{ value }}" required>
-                </label>
-                {% endfor %}
-            </div>
-            <div class="convincingness-anchors">
-                <span>Not very confident</span>
-                <span>Highly confident</span>
-            </div>
-        </div>
-    </div>
-</div>
 
 <br>
 
@@ -387,6 +383,7 @@ Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Toggle Chats functionality
         var toggleBtn = document.getElementById('toggleChatBtn');
         var chatSec = document.getElementById('chatSection');
         if (toggleBtn && chatSec) {
@@ -398,6 +395,60 @@ Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
                     chatSec.style.display = 'none';
                     toggleBtn.textContent = 'Show Chats';
                 }
+            });
+        }
+
+        // Dynamic Confidence Logic for Left Partner Guess
+        const leftChoices = document.querySelectorAll('input[name="guess_left_choice"]');
+        const leftConfContainer = document.getElementById('left_confidence_container');
+        if (leftConfContainer) {
+            const leftConfRadios = leftConfContainer.querySelectorAll('input[type="radio"]');
+            leftChoices.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    leftConfContainer.style.display = 'block';
+                    // Reset selection when changing guess
+                    leftConfRadios.forEach(r => r.checked = false);
+                    
+                    // For Left partner, 'Right' means "You"
+                    if (this.value === 'Right') {
+                        leftConfRadios[0].value = 5;
+                        leftConfRadios[1].value = 6;
+                        leftConfRadios[2].value = 7;
+                        leftConfRadios[3].value = 8;
+                    } else {
+                        leftConfRadios[0].value = 4;
+                        leftConfRadios[1].value = 3;
+                        leftConfRadios[2].value = 2;
+                        leftConfRadios[3].value = 1;
+                    }
+                });
+            });
+        }
+
+        // Dynamic Confidence Logic for Right Partner Guess
+        const rightChoices = document.querySelectorAll('input[name="guess_right_choice"]');
+        const rightConfContainer = document.getElementById('right_confidence_container');
+        if (rightConfContainer) {
+            const rightConfRadios = rightConfContainer.querySelectorAll('input[type="radio"]');
+            rightChoices.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    rightConfContainer.style.display = 'block';
+                    // Reset selection when changing guess
+                    rightConfRadios.forEach(r => r.checked = false);
+                    
+                    // For Right partner, 'Left' means "You"
+                    if (this.value === 'Left') {
+                        rightConfRadios[0].value = 5;
+                        rightConfRadios[1].value = 6;
+                        rightConfRadios[2].value = 7;
+                        rightConfRadios[3].value = 8;
+                    } else {
+                        rightConfRadios[0].value = 4;
+                        rightConfRadios[1].value = 3;
+                        rightConfRadios[2].value = 2;
+                        rightConfRadios[3].value = 1;
+                    }
+                });
             });
         }
     });

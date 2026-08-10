@@ -48,11 +48,11 @@ class PlayerBot(Bot):
         if self.case == 'signals_timeout':
             yield Submission(Signals, {}, timeout_happened=True)
             expect(
-                self.player.field_maybe_none('signal_left_convincingness'),
+                self.player.field_maybe_none('guess_left_confidence'),
                 None,
             )
             expect(
-                self.player.field_maybe_none('signal_right_convincingness'),
+                self.player.field_maybe_none('guess_right_confidence'),
                 None,
             )
         else:
@@ -71,8 +71,8 @@ class PlayerBot(Bot):
             yield Submission(
                 PostDecisionConfidence,
                 dict(
-                    signal_left_convincingness=3,
-                    signal_right_convincingness=4,
+                    guess_left_confidence=5,
+                    guess_right_confidence=2,
                     guess_left_choice='Left',
                     guess_right_choice='NoOne',
                     time_on_page=1.0,
@@ -81,18 +81,8 @@ class PlayerBot(Bot):
             )
         yield Results, dict(time_on_page=2.0)
 
-        no_dwl = self.player.treatment == 'private_no_dwl'
-        expected_vector, expected_outcome = calculate_payoff_vector(
-            tuple(decisions_for_case(self.case, pid) for pid in (1, 2, 3)),
-            no_deadweight_loss=no_dwl,
-        )
-        expect(
-            self.player.part1_calculated_payoff,
-            cu(expected_vector[player_id - 1]),
-        )
-        expect(self.group.group_outcome, expected_outcome)
+
         if self.case == 'signals_timeout':
-            expect(self.player.payoff, cu(0))
             yield Submission(
                 InactivityGoodbyeMain,
                 dict(time_on_page=1.0),
@@ -100,12 +90,9 @@ class PlayerBot(Bot):
             )
             return
 
-        expect(self.player.signal_left_convincingness, 3)
-        expect(self.player.signal_right_convincingness, 4)
-        expect(
-            self.player.participant.vars.get('part1_payoff'),
-            self.player.part1_calculated_payoff,
-        )
+        expect(self.player.guess_left_confidence, 5)
+        expect(self.player.guess_right_confidence, 2)
+
 
 
 class PayoffLogicTests(unittest.TestCase):
