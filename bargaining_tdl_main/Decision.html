@@ -222,10 +222,10 @@ non tocca l'altro. #}
             </div>
             <div class="card-body px-5 py-4">
                 <div class="signal-box">
-                    Final Message from {{ left_partner_color }} to {{ right_partner_color }}: {{ third_signal_from_left }}
+                    Final Message from {{ left_partner_color }} to {{ right_partner_color }}: {{ third_signal_from_left|safe }}
                 </div>
                 <div class="signal-box">
-                    Final Message from {{ right_partner_color }} to {{ left_partner_color }}: {{ third_signal_from_right }}
+                    Final Message from {{ right_partner_color }} to {{ left_partner_color }}: {{ third_signal_from_right|safe }}
                 </div>
                 <h6>Chat Log (Read-Only):</h6>
                 <div class="message-box read-only-chat">

@@ -16,12 +16,22 @@
             </li>
         </p>
         <p>
-            <li><strong>If two participants support each other, they will earn $3 each, and the third participant will
-                    earn $0</strong>
+            <li>If two participants support <strong>each other,</strong> they will earn $3 each, and the third
+                participant will
+                earn $0.
             </li>
         </p>
         <p>
-            <li><strong>Otherwise, everyone will earn $0</strong>
+            {% if no_deadweight_loss %}
+            {# TODO sperimentatore: sostituire SOLO questo ramo con il wording
+            approvato della regola $12. Per ora è la copia richiesta della
+            versione Private TDL. #}
+            <li>If two participants support the third, <strong>and the third supports no one,</strong> the supported
+                participant will earn $6, and the supporters will earn $0.</li>
+            {% endif %}
+        </p>
+        <p>
+            <li><strong>In all other cases</strong>, everyone will earn $0.
             </li>
         </p>
         <p>
@@ -107,7 +117,7 @@
                 experimental session and before payments are finalized. If it is found that the above conditions have
                 been
                 violated, your payment for this experiment will be completely forfeited. We expect and appreciate your
-                cooperation in maintaining a keeping this polite.</em>
+                cooperation in maintaining in keeping this polite.</em>
         </p>
 
 

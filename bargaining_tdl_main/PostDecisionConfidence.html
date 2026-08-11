@@ -167,9 +167,8 @@
         <h4 class="mb-0">Guess your partners' choices</h4>
     </div>
     <div class="card-body px-5 py-4">
-        <p>In this part of the experiment you can earn a bonus by guessing the choices of the
-            participants you were matched with. You will earn an additional <strong>10 cents</strong>
-            for each guess you get correct.</p>
+        <p>In this part of the experiment we ask you to guess the choices of the
+            participants you were matched with.</p>
 
         <!-- Q1: guess LEFT partner -->
         <div class="mb-4">
@@ -342,12 +341,12 @@ Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
                 <div class="card-body px-5 py-4">
                     <div class="signal-box">
                         Final Message from {{ left_partner_color }} to {{ right_partner_color }}: {{
-                        third_signal_from_left
+                        third_signal_from_left|safe
                         }}
                     </div>
                     <div class="signal-box">
                         Final Message from {{ right_partner_color }} to {{ left_partner_color }}: {{
-                        third_signal_from_right
+                        third_signal_from_right|safe
                         }}
                     </div>
                     <h6>Chat Log (Read-Only):</h6>

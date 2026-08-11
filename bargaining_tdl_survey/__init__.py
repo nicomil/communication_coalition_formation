@@ -8,13 +8,6 @@ from otree.api import (  # type: ignore
     Page,
     WaitPage,
 )
-from bargaining_tdl_common import (  # type: ignore
-    get_page_timeout_seconds,
-    timeout_submission_with_time,
-)
-
-_SURVEY_PAGE_TIMEOUT = 180
-_SURVEY_PAGE10_TIMEOUT = 300
 
 AGREEMENT_SCALE = [
     (1, 'Disagree strongly'),
@@ -62,9 +55,7 @@ SD3_PSYCHOPATHY_ITEMS = [
 
 
 class _SurveyTimedPage(Page):
-    @staticmethod
-    def get_timeout_seconds(player):
-        return get_page_timeout_seconds(player, _SURVEY_PAGE_TIMEOUT)
+    pass
 
 
 doc = """
@@ -286,26 +277,6 @@ class Player(BasePlayer):
 # PAGES
 # ──────────────────────────────────────────────
 
-class SurveyIntro(_SurveyTimedPage):
-    """Introductory page with thank-you text and survey description."""
-    form_model = 'player'
-    form_fields = ['time_on_page']
-    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT)
-
-    @staticmethod
-    def vars_for_template(player):
-        from otree.api import Currency as cu
-        return {
-            'participation_fee': cu(
-                player.session.config.get('participation_fee', 1.50)
-            )
-        }
-
-    @staticmethod
-    def before_next_page(player, timeout_happened):
-        player.time_survey_intro = player.time_on_page or 0
-
-
 class SurveyQuestions(_SurveyTimedPage):
     """Demographic questions page."""
     form_model = 'player'
@@ -319,21 +290,10 @@ class SurveyQuestions(_SurveyTimedPage):
         'time_on_page',
     ]
 
-    timeout_submission = timeout_submission_with_time(
-        _SURVEY_PAGE_TIMEOUT,
-        gender=0,
-        birth_year=1990,
-        field_of_study=1,
-        university_years=0,
-        main_situation='paid_work',
-        job_type='not_employed',
-    )
 
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_questions = player.time_on_page or 0
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'survey_questions_timeout')
 
 
 def _matrix_context(player, items):
@@ -358,7 +318,6 @@ class SurveyPage1(_SurveyTimedPage):
         *(field_name for field_name, _ in SD3_MACHIAVELLIANISM_ITEMS),
         'time_on_page',
     ]
-    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT)
 
     @staticmethod
     def vars_for_template(player):
@@ -367,8 +326,6 @@ class SurveyPage1(_SurveyTimedPage):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_sd3_mach = player.time_on_page or 0
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'survey_sd3_mach_timeout')
 
     @staticmethod
     def is_displayed(player):
@@ -382,7 +339,6 @@ class SurveyPage2(_SurveyTimedPage):
         *(field_name for field_name, _ in SD3_NARCISSISM_ITEMS),
         'time_on_page',
     ]
-    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT)
 
     @staticmethod
     def vars_for_template(player):
@@ -391,8 +347,6 @@ class SurveyPage2(_SurveyTimedPage):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_sd3_narc = player.time_on_page or 0
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'survey_sd3_narc_timeout')
 
     @staticmethod
     def is_displayed(player):
@@ -406,7 +360,6 @@ class SurveyPage3(_SurveyTimedPage):
         *(field_name for field_name, _ in SD3_PSYCHOPATHY_ITEMS),
         'time_on_page',
     ]
-    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT)
 
     @staticmethod
     def vars_for_template(player):
@@ -415,23 +368,6 @@ class SurveyPage3(_SurveyTimedPage):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_sd3_psych = player.time_on_page or 0
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'survey_sd3_psych_timeout')
-
-    @staticmethod
-    def is_displayed(player):
-        return not _is_inactive_excluded(player)
-
-
-class SurveyScaleIntro(_SurveyTimedPage):
-    """Instructions page explaining the 0–10 willingness and self-assessment scales."""
-    form_model = 'player'
-    form_fields = ['time_on_page']
-    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT)
-
-    @staticmethod
-    def before_next_page(player, timeout_happened):
-        player.time_survey_scale_intro = player.time_on_page or 0
 
     @staticmethod
     def is_displayed(player):
@@ -442,7 +378,6 @@ class SurveyPage4(_SurveyTimedPage):
     """Willingness to delay gratification — 0–10 scale."""
     form_model = 'player'
     form_fields = ['willingness_future', 'time_on_page']
-    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, willingness_future=0)
 
     @staticmethod
     def vars_for_template(player):
@@ -451,8 +386,6 @@ class SurveyPage4(_SurveyTimedPage):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page4 = player.time_on_page or 0
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'survey_page4_timeout')
 
     @staticmethod
     def is_displayed(player):
@@ -463,7 +396,6 @@ class SurveyPage5(_SurveyTimedPage):
     """General willingness to take risks — 0–10 scale."""
     form_model = 'player'
     form_fields = ['willingness_risk', 'time_on_page']
-    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, willingness_risk=0)
 
     @staticmethod
     def vars_for_template(player):
@@ -472,8 +404,6 @@ class SurveyPage5(_SurveyTimedPage):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page5 = player.time_on_page or 0
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'survey_page5_timeout')
 
     @staticmethod
     def is_displayed(player):
@@ -484,7 +414,6 @@ class SurveyPage6(_SurveyTimedPage):
     """Positive reciprocity self-assessment — 0–10 scale."""
     form_model = 'player'
     form_fields = ['reciprocity_positive', 'time_on_page']
-    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, reciprocity_positive=0)
 
     @staticmethod
     def vars_for_template(player):
@@ -493,8 +422,6 @@ class SurveyPage6(_SurveyTimedPage):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page6 = player.time_on_page or 0
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'survey_page6_timeout')
 
     @staticmethod
     def is_displayed(player):
@@ -505,7 +432,6 @@ class SurveyPage7(_SurveyTimedPage):
     """Negative reciprocity self-assessment — 0–10 scale."""
     form_model = 'player'
     form_fields = ['reciprocity_negative', 'time_on_page']
-    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, reciprocity_negative=0)
 
     @staticmethod
     def vars_for_template(player):
@@ -514,8 +440,6 @@ class SurveyPage7(_SurveyTimedPage):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page7 = player.time_on_page or 0
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'survey_page7_timeout')
 
     @staticmethod
     def is_displayed(player):
@@ -526,7 +450,6 @@ class SurveyPage8(_SurveyTimedPage):
     """Altruism — willingness to donate to good causes — 0–10 scale."""
     form_model = 'player'
     form_fields = ['willingness_donate', 'time_on_page']
-    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, willingness_donate=0)
 
     @staticmethod
     def vars_for_template(player):
@@ -535,8 +458,6 @@ class SurveyPage8(_SurveyTimedPage):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page8 = player.time_on_page or 0
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'survey_page8_timeout')
 
     @staticmethod
     def is_displayed(player):
@@ -547,7 +468,6 @@ class SurveyPage9(_SurveyTimedPage):
     """General trust self-assessment — 0–10 scale."""
     form_model = 'player'
     form_fields = ['trust_general', 'time_on_page']
-    timeout_submission = timeout_submission_with_time(_SURVEY_PAGE_TIMEOUT, trust_general=0)
 
     @staticmethod
     def vars_for_template(player):
@@ -556,8 +476,6 @@ class SurveyPage9(_SurveyTimedPage):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page9 = player.time_on_page or 0
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'survey_page9_timeout')
 
     @staticmethod
     def is_displayed(player):
@@ -568,14 +486,6 @@ class SurveyPage10(_SurveyTimedPage):
     """11-20 game — guess a number between 110 and 200."""
     form_model = 'player'
     form_fields = ['beauty_contest_guess', 'time_on_page']
-    timeout_submission = timeout_submission_with_time(
-        _SURVEY_PAGE10_TIMEOUT,
-        beauty_contest_guess=1.1,
-    )
-
-    @staticmethod
-    def get_timeout_seconds(player):
-        return get_page_timeout_seconds(player, _SURVEY_PAGE10_TIMEOUT)
 
     @staticmethod
     def beauty_contest_guess_error_message(player, value):
@@ -587,8 +497,6 @@ class SurveyPage10(_SurveyTimedPage):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_page10 = player.time_on_page or 0
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'survey_page10_timeout')
 
     @staticmethod
     def is_displayed(player):
@@ -599,11 +507,6 @@ class SurveyFeedback(_SurveyTimedPage):
     """Feedback page shown after survey page 10 and before final results."""
     form_model = 'player'
     form_fields = ['instructions_clarity', 'general_comment', 'time_on_page']
-    timeout_submission = timeout_submission_with_time(
-        _SURVEY_PAGE_TIMEOUT,
-        instructions_clarity=1,
-        general_comment='No comment provided (timeout).',
-    )
 
     @staticmethod
     def vars_for_template(player):
@@ -612,8 +515,6 @@ class SurveyFeedback(_SurveyTimedPage):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_survey_feedback = player.time_on_page or 0
-        if timeout_happened:
-            _mark_inactive_exclusion(player, 'survey_feedback_timeout')
 
     @staticmethod
     def is_displayed(player):
@@ -661,9 +562,7 @@ class FinalResults(Page):
         part1_payoff_val = player.participant.vars.get('part1_payoff', cu(0))
         if not part1_payoff_eligible:
             part1_payoff_val = cu(0)
-        guess_bonus_cents = player.participant.vars.get('guess_bonus_cents', 0)
-        guess_bonus = cu(guess_bonus_cents / 100)
-        subtotal = base_fee + part1_payoff_val + beauty_contest_bonus + guess_bonus
+        subtotal = base_fee + part1_payoff_val + beauty_contest_bonus
 
         from bargaining_tdl_common import get_main_group_player, TOPOLOGY, COLOR_MAPPING
         
@@ -713,8 +612,6 @@ class FinalResults(Page):
             'subtotal': subtotal,
             'base_fee': base_fee,
             'beauty_contest_bonus': beauty_contest_bonus,
-            'guess_bonus': guess_bonus,
-            'guess_bonus_cents': guess_bonus_cents,
             'left_color': left_color,
             'right_color': right_color,
             'left_choice_display': left_choice_display,
@@ -811,41 +708,18 @@ class PreFinalResultsWaitPage(WaitPage):
                 p.participant.vars['part1_group_id'] = main_group.id
                 p.participant.vars['group_outcome'] = outcome
 
-                # Guess bonus computation
-                bonus = 0
-                my_id = p.id_in_group
-                left_id = get_left_partner_id(my_id)
-                right_id = get_right_partner_id(my_id)
-                
-                left_partner = main_group.get_player_by_id(left_id)
-                right_partner = main_group.get_player_by_id(right_id)
-                
-                gl = p.field_maybe_none('guess_left_choice') or ''
-                gr = p.field_maybe_none('guess_right_choice') or ''
-                ldc = left_partner.field_maybe_none('decision_choice') or ''
-                rdc = right_partner.field_maybe_none('decision_choice') or ''
-                
-                if gl and ldc and gl == ldc:
-                    bonus += 10
-                if gr and rdc and gr == rdc:
-                    bonus += 10
-                    
-                p.guess_bonus_cents = bonus
-                p.participant.vars['guess_bonus_cents'] = bonus
-                logger.debug(f"Computed guess_bonus_cents for P{my_id}: {bonus}")
+
 
 
 page_sequence = [
     SurveyPage10,
     SurveyQuestions,
-    SurveyScaleIntro,
     SurveyPage4,
     SurveyPage5,
     SurveyPage6,
     SurveyPage7,
     SurveyPage8,
     SurveyPage9,
-    SurveyIntro,
     SurveyPage1,
     SurveyPage2,
     SurveyPage3,

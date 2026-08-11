@@ -244,8 +244,7 @@ class Player(BasePlayer):
         initial='',
         doc="Player's guess of right partner's decision_choice (NoOne/Left/Right from right partner's POV)"
     )
-    # Bonus per guess corrette (in centesimi, 10 per ogni risposta corretta, max 20)
-    guess_bonus_cents = models.IntegerField(initial=0)
+
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -609,7 +608,7 @@ def _third_party_signal_display(code, receiver_color, other_color):
     if code == 'split_you':
         return f"'I intend to support you.' (i.e. {receiver_color})"
     elif code == 'split_other':
-        return f"'I intend to support {other_color}.' (i.e. you)"
+        return f"'I intend to support {other_color}.' <i>(i.e. you)</i>"
     elif code == 'support_none':
         return "'I intend to support no one.'"
     return f"'{code}'" if code else ""
