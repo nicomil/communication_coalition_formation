@@ -282,7 +282,7 @@ class Player(BasePlayer):
     time_instructions_part1 = models.FloatField(initial=0)
     time_control_questions = models.FloatField(initial=0)
     time_goodbye = models.FloatField(initial=0)
-    time_chat_and_signals = models.FloatField(initial=0)
+
     
     # Hidden field for JavaScript to populate
     time_on_page = models.FloatField(initial=0, blank=True)
@@ -865,7 +865,7 @@ class Goodbye(Page):
     @staticmethod
     def js_vars(player):
         return dict(
-            completionlink=player.session.config.get('completionlink', '').strip(),
+            dropoutlink=player.session.config.get('dropoutlink_cq', '').strip(),
         )
     
     @staticmethod

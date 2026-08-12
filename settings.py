@@ -20,10 +20,19 @@ _load_dotenv()
 _BARGAINING_APP_SEQUENCE = [
     'bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_survey',
 ]
-_BARGAINING_COMPLETIONLINK = environ.get(
-    'PROLIFIC_COMPLETION_URL',
-    'https://app.prolific.com/submissions/complete?cc=C1HQEIID',
-)
+# --- CODICI PROLIFIC PILOT ---
+# Sostituisci i link qui sotto con quelli generati su Prolific per ciascuno dei 3 studi.
+# Questi verranno usati automaticamente quando il tuo co-autore farà il git push.
+
+# 1. Studio A (Public TDL)
+PUBLIC_COMPLETION = "https://app.prolific.com/submissions/complete?cc=INSERISCI_QUI_PUBLIC_COMPLETION"
+
+# 2. Studio B (Private TDL)
+PRIVATE_COMPLETION = "https://app.prolific.com/submissions/complete?cc=INSERISCI_QUI_PRIVATE_COMPLETION"
+
+# 3. Studio C (Private No DWL)
+NO_DWL_COMPLETION = "https://app.prolific.com/submissions/complete?cc=INSERISCI_QUI_NODWL_COMPLETION"
+# -----------------------------
 
 SESSION_CONFIGS = [
     # Produzione RCT: tre trattamenti, randomizzati in blocchi permutati 3:3:3.
@@ -32,7 +41,7 @@ SESSION_CONFIGS = [
         display_name="Bargaining Game — 3-arm RCT",
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=18,
-        completionlink=_BARGAINING_COMPLETIONLINK,
+        completionlink=PUBLIC_COMPLETION,
         active_treatments=['private', 'public', 'private_no_dwl'],
     ),
     # Trattamenti isolati per test e pilot.
@@ -41,7 +50,7 @@ SESSION_CONFIGS = [
         display_name="Bargaining Game — Public TDL only",
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=9,
-        completionlink=_BARGAINING_COMPLETIONLINK,
+        completionlink=PUBLIC_COMPLETION,
         active_treatments=['public'],
     ),
     dict(
@@ -49,7 +58,7 @@ SESSION_CONFIGS = [
         display_name="Bargaining Game — Private TDL only",
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=9,
-        completionlink=_BARGAINING_COMPLETIONLINK,
+        completionlink=PRIVATE_COMPLETION,
         active_treatments=['private'],
     ),
     dict(
@@ -57,7 +66,7 @@ SESSION_CONFIGS = [
         display_name="Bargaining Game — Private No-DWL only",
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=9,
-        completionlink=_BARGAINING_COMPLETIONLINK,
+        completionlink=NO_DWL_COMPLETION,
         active_treatments=['private_no_dwl'],
     ),
 ]

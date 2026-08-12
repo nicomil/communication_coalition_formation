@@ -4,12 +4,9 @@
     (function () {
         const form = document.querySelector('form');
         if (!form) return;
-        const reconnectWait = document.getElementById('reconnect-wait');
         const nextButton = document.querySelector('.otree-btn-next') || document.querySelector('.btn-primary.next-button');
         let hasSubmitted = false;
         let liveSyncTimer = null;
-        let reconnectUiTimer = null;
-        let localReconnectSeconds = 0;
 
         function setNextButtonBlocked(blocked) {
             if (!nextButton) return;
@@ -18,26 +15,7 @@
             nextButton.style.cursor = blocked ? 'not-allowed' : 'pointer';
         }
 
-        function stopLocalReconnectCountdown() {
-            if (reconnectUiTimer) {
-                clearInterval(reconnectUiTimer);
-                reconnectUiTimer = null;
-            }
-        }
 
-        function startLocalReconnectCountdown(seconds) {
-            stopLocalReconnectCountdown();
-            localReconnectSeconds = Math.max(0, Number(seconds) || 0);
-            reconnectUiTimer = setInterval(function () {
-                localReconnectSeconds = Math.max(0, localReconnectSeconds - 1);
-                if (reconnectWait && reconnectWait.style.display !== 'none') {
-                    reconnectWait.textContent = 'One participant disconnected. Waiting up to ' + localReconnectSeconds + ' seconds for reconnection.';
-                }
-                if (localReconnectSeconds <= 0) {
-                    stopLocalReconnectCountdown();
-                }
-            }, 1000);
-        }
 
         function requestAutoSubmit(reason) {
             if (hasSubmitted) return;
@@ -70,9 +48,7 @@
 
         // Initial status
         applyStatus({
-            should_auto_advance: {{ should_auto_advance|json }},
-            waiting_on_reconnect: {{ waiting_on_reconnect|json }},
-            reconnect_seconds_left: {{ reconnect_seconds_left|json }}
+            should_auto_advance: {{ should_auto_advance|json }}
         });
 
         window.liveRecv = function (data) {

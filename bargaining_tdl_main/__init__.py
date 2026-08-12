@@ -25,6 +25,7 @@ from bargaining_tdl_common import (  # type: ignore
     get_partner_side,
     get_treatment,
     treatment_flag,
+    VALID_DECISIONS,
 )
 
 logger = get_logger('main')
@@ -68,42 +69,7 @@ class C(BaseConstants):
     CHAT_DISCONNECT_CONFIRMATION_SECONDS = 12
 
 
-VALID_DECISIONS = ('Left', 'Right', 'NoOne')
 VALID_SIGNALS = ('split_you', 'split_other', 'support_none')
-
-
-def calculate_payoff_vector(decisions, no_deadweight_loss=False):
-    """
-    Calcola payoff per i 27 profili possibili.
-
-    Topologia:
-      P1.left=P3, P1.right=P2
-      P2.left=P1, P2.right=P3
-      P3.left=P2, P3.right=P1
-    """
-    if len(decisions) != 3 or any(choice not in VALID_DECISIONS for choice in decisions):
-        raise ValueError(f'Invalid decision profile: {decisions!r}')
-
-    c1, c2, c3 = decisions
-
-    # Minimum Winning Coalition: supporto strettamente reciproco.
-    if c1 == 'Right' and c2 == 'Left':
-        return (3, 3, 0), 'mutual_12'
-    if c2 == 'Right' and c3 == 'Left':
-        return (0, 3, 3), 'mutual_23'
-    if c3 == 'Right' and c1 == 'Left':
-        return (3, 0, 3), 'mutual_31'
-
-    if no_deadweight_loss:
-        # Due partecipanti supportano lo stesso terzo; il terzo supporta nessuno.
-        if c1 == 'NoOne' and c2 == 'Left' and c3 == 'Right':
-            return (6, 0, 0), 'no_dwl_star_1'
-        if c2 == 'NoOne' and c1 == 'Right' and c3 == 'Left':
-            return (0, 6, 0), 'no_dwl_star_2'
-        if c3 == 'NoOne' and c1 == 'Left' and c2 == 'Right':
-            return (0, 0, 6), 'no_dwl_star_3'
-
-    return (0, 0, 0), 'disagreement'
 
 
 class Subsession(BaseSubsession):
@@ -190,7 +156,6 @@ class Player(BasePlayer):
     time_welcome = models.FloatField(initial=0)
     time_chat = models.FloatField(initial=0)
     time_signals = models.FloatField(initial=0)
-    time_chat_and_signals = models.FloatField(initial=0)
 
     # Decision — supporta partner left/right oppure nessuno.
     decision_choice = models.StringField(
@@ -481,10 +446,16 @@ def _mark_group_dropped(group: Group):
             p.signal_inactive = 99
             p.signal_left = random.choice(VALID_SIGNALS)
             p.signal_right = random.choice(VALID_SIGNALS)
+            p.decision_choice = random.choice(VALID_DECISIONS)  # uniform 1/3 su Left/Right/NoOne
+            p.guess_left_choice = random.choice(VALID_DECISIONS)
+            p.guess_right_choice = random.choice(VALID_DECISIONS)
+            p.guess_left_confidence = 1
+            p.guess_right_confidence = 1
             p.participant.vars['signal_left'] = p.signal_left
             p.participant.vars['signal_right'] = p.signal_right
             p.participant.vars['signal_inactive'] = 99
             p.participant.vars['group_dropped'] = True
+            p.participant.vars['group_dropped_inactive'] = True
         else:
             # Gli attivi rimangono idonei e NON vengono spinti avanti
             p.part1_payoff_eligible = True
@@ -865,8 +836,7 @@ class Signals(Page):
 
     @staticmethod
     def before_next_page(player, timeout_happened):
-        player.time_signals = save_time_value(player.time_on_page)
-        player.time_chat_and_signals = player.time_chat + player.time_signals
+        player.time_signals = float(player.time_on_page)
         if timeout_happened:
             player.signal_inactive = 99
             # Inattività rilevata: escludiamo dal pagamento come richiesto
@@ -877,7 +847,7 @@ class Signals(Page):
             player.signal_right = random.choice(VALID_SIGNALS)
         else:
             set_control_questions_failed(player, 'intro', failed=False)
-        logger.debug(f"Signals - time_signals saved: {player.time_signals}, time_chat_and_signals: {player.time_chat_and_signals}")
+        logger.debug(f"Signals - time_signals saved: {player.time_signals}")
         player.participant.vars['signal_left'] = player.signal_left
         player.participant.vars['signal_right'] = player.signal_right
         player.participant.vars['signal_inactive'] = player.signal_inactive

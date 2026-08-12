@@ -143,12 +143,9 @@
         if (!form) return;
         const leftColumn = document.querySelector('[data-chat-column="left"]');
         const rightColumn = document.querySelector('[data-chat-column="right"]');
-        const reconnectWait = document.getElementById('reconnect-wait');
         const nextButton = document.querySelector('.otree-btn-next');
         let hasSubmitted = false;
         let liveSyncTimer = null;
-        let reconnectUiTimer = null;
-        let localReconnectSeconds = 0;
         const placeholderByColumn = new WeakMap();
 
         function getDefaultPlaceholder(input) {
@@ -166,26 +163,7 @@
             nextButton.style.cursor = blocked ? 'not-allowed' : 'pointer';
         }
 
-        function stopLocalReconnectCountdown() {
-            if (reconnectUiTimer) {
-                clearInterval(reconnectUiTimer);
-                reconnectUiTimer = null;
-            }
-        }
 
-        function startLocalReconnectCountdown(seconds) {
-            stopLocalReconnectCountdown();
-            localReconnectSeconds = Math.max(0, Number(seconds) || 0);
-            reconnectUiTimer = setInterval(function () {
-                localReconnectSeconds = Math.max(0, localReconnectSeconds - 1);
-                if (reconnectWait && reconnectWait.style.display !== 'none') {
-                    reconnectWait.textContent = 'One participant disconnected. Waiting up to ' + localReconnectSeconds + ' seconds for reconnection.';
-                }
-                if (localReconnectSeconds <= 0) {
-                    stopLocalReconnectCountdown();
-                }
-            }, 1000);
-        }
 
         function setColumnStatus(column, isActive) {
             if (!column) return;
@@ -226,7 +204,7 @@
             setColumnStatus(rightColumn, rightActive);
 
             if (payload.should_auto_advance) {
-                requestAutoSubmit('two-left');
+                requestAutoSubmit('dropout-advance');
             }
         }
 

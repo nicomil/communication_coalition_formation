@@ -7,6 +7,41 @@ from .logger import get_logger
 
 logger = get_logger('utils')
 
+VALID_DECISIONS = ('Left', 'Right', 'NoOne')
+
+def custom_calculate_payoff_vector(decisions, no_deadweight_loss=False):
+    """
+    Calcola payoff per i 27 profili possibili.
+
+    Topologia:
+      P1.left=P3, P1.right=P2
+      P2.left=P1, P2.right=P3
+      P3.left=P2, P3.right=P1
+    """
+    if len(decisions) != 3 or any(choice not in VALID_DECISIONS for choice in decisions):
+        raise ValueError(f'Invalid decision profile: {decisions!r}')
+
+    c1, c2, c3 = decisions
+
+    # Minimum Winning Coalition: supporto strettamente reciproco.
+    if c1 == 'Right' and c2 == 'Left':
+        return (3, 3, 0), 'mutual_12'
+    if c2 == 'Right' and c3 == 'Left':
+        return (0, 3, 3), 'mutual_23'
+    if c3 == 'Right' and c1 == 'Left':
+        return (3, 0, 3), 'mutual_31'
+
+    if no_deadweight_loss:
+        # Due partecipanti supportano lo stesso terzo; il terzo supporta nessuno.
+        if c1 == 'NoOne' and c2 == 'Left' and c3 == 'Right':
+            return (6, 0, 0), 'no_dwl_star_1'
+        if c2 == 'NoOne' and c1 == 'Right' and c3 == 'Left':
+            return (0, 6, 0), 'no_dwl_star_2'
+        if c3 == 'NoOne' and c1 == 'Left' and c2 == 'Right':
+            return (0, 0, 6), 'no_dwl_star_3'
+
+    return (0, 0, 0), 'disagreement'
+
 # Cache per get_main_group_player - evita lookup multipli dello stesso player
 # Max size 128 entries (sufficiente per sessioni tipiche)
 # Nota: La cache usa session_id e participant_id come chiavi

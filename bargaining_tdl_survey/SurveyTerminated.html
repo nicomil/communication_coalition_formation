@@ -8,19 +8,31 @@
     }
 </style>
 
-<div class="card bg-white mt-4 mb-4 shadow-sm">
+<div class="card bg-white mt-4 mb-4 shadow-sm border-danger">
     <div class="card-body px-5 py-4">
-        <p><strong>Thank you for your participation!</strong></p>
-        <p>Your experiment session ended due to inactivity.</p>
-        <p>If you have any questions, please contact the experimenter.</p>
-        <p class="mt-3">
-            <strong>The experiment has ended. You may close this window.</strong>
-        </p>
-        <p class="mt-3 mb-0">
-            You will now be redirected to Prolific completion page.
-            If redirect does not start automatically,
-            <a id="completion-link" href="#">click here to complete your submission</a>.
-        </p>
+        {% if is_cq_dropout %}
+        <h4 class="text-danger mb-4">Comprehension Check Failed</h4>
+        <p>Thank you for your time. Unfortunately, you did not pass the comprehension checks required for this study
+            after five attempts. You cannot proceed with the experiment.</p>
+        <div class="alert alert-warning mt-3" role="alert">
+            <h5 class="alert-heading">Action Required</h5>
+            <p class="mb-0">Please enter this code <strong>DROPOUT_CQs</strong> on Prolific as your 'Completion Code'
+                and then select 'Stop without completing' (or 'Return Submission') to free up this spot.</p>
+        </div>
+        {% else %}
+        <h4 class="text-danger mb-4">Session Terminated</h4>
+        <p>Your experiment session ended due to inactivity or failure to respond in time. You cannot proceed with the
+            experiment.</p>
+        <div class="alert alert-warning mt-3" role="alert">
+            <h5 class="alert-heading">Action Required</h5>
+            <p class="mb-0">Please enter this code <strong>DROPOUT_Timeout</strong> on Prolific as your 'Completion
+                Code' and then select 'Stop without completing' (or 'Return Submission') to free up this spot.</p>
+        </div>
+        {% endif %}
+        <div class="mt-4 text-center">
+            <a id="completion-link" href="https://app.prolific.com/" class="btn btn-outline-danger btn-lg">Return to
+                Prolific</a>
+        </div>
     </div>
 </div>
 
@@ -28,15 +40,8 @@
 
 <script>
     (function () {
-        const completionlink = (js_vars && js_vars.completionlink) ? String(js_vars.completionlink).trim() : '';
         const completionLinkEl = document.getElementById('completion-link');
-        if (!completionLinkEl || !completionlink) {
-            return;
-        }
-        completionLinkEl.href = completionlink;
-        window.setTimeout(function () {
-            window.location.href = completionlink;
-        }, 2000);
+        // No automatic redirect, user must click the button to go back to prolific.
     })();
 </script>
 

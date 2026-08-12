@@ -3,7 +3,7 @@ import unittest
 
 from otree.api import Bot, Currency as cu, expect, Submission  # type: ignore
 
-from bargaining_tdl_common import TREATMENTS
+from bargaining_tdl_common import TREATMENTS, VALID_DECISIONS, custom_calculate_payoff_vector
 from . import (
     C,
     Chat,
@@ -12,8 +12,6 @@ from . import (
     PostDecisionConfidence,
     Results,
     Signals,
-    VALID_DECISIONS,
-    calculate_payoff_vector,
 )
 
 
@@ -120,7 +118,7 @@ class PayoffLogicTests(unittest.TestCase):
         for treatment, config in TREATMENTS.items():
             for profile in itertools.product(VALID_DECISIONS, repeat=3):
                 with self.subTest(treatment=treatment, profile=profile):
-                    actual, _ = calculate_payoff_vector(
+                    actual, _ = custom_calculate_payoff_vector(
                         profile,
                         no_deadweight_loss=config['no_deadweight_loss'],
                     )
@@ -132,15 +130,15 @@ class PayoffLogicTests(unittest.TestCase):
     def test_control_question_profiles(self):
         # Example 1: Green/Blue support each other.
         self.assertEqual(
-            calculate_payoff_vector(('Right', 'Left', 'NoOne'))[0],
+            custom_calculate_payoff_vector(('Right', 'Left', 'NoOne'))[0],
             (6, 6, 0),
         )
         # Example 2: both partners support Green, who supports no one.
         profile = ('NoOne', 'Left', 'Right')
-        self.assertEqual(calculate_payoff_vector(profile, False)[0], (0, 0, 0))
-        self.assertEqual(calculate_payoff_vector(profile, True)[0], (12, 0, 0))
+        self.assertEqual(custom_calculate_payoff_vector(profile, False)[0], (0, 0, 0))
+        self.assertEqual(custom_calculate_payoff_vector(profile, True)[0], (12, 0, 0))
         # Example 3: directed cycle.
         self.assertEqual(
-            calculate_payoff_vector(('Right', 'Right', 'NoOne'))[0],
+            custom_calculate_payoff_vector(('Right', 'Right', 'NoOne'))[0],
             (0, 0, 0),
         )

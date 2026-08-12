@@ -78,15 +78,14 @@ class Group(BaseGroup):
     pass
 
 
-def _mark_inactive_exclusion(player, reason):
-    player.participant.inactive_excluded = True
-    player.participant.inactive_excluded_reason = reason
-    player.participant.vars['inactive_excluded'] = True
-    player.participant.vars['inactive_excluded_reason'] = reason
+
 
 
 def _is_inactive_excluded(player):
     return bool(player.participant.vars.get('inactive_excluded', False))
+
+def _is_group_dropped_inactive(player):
+    return bool(player.participant.vars.get('group_dropped_inactive', False))
 
 
 class Player(BasePlayer):
@@ -256,12 +255,10 @@ class Player(BasePlayer):
 
     # Time tracking
     time_on_page = models.FloatField(initial=0, blank=True)
-    time_survey_intro = models.FloatField(initial=0)
     time_survey_questions = models.FloatField(initial=0)
     time_survey_sd3_mach = models.FloatField(initial=0)
     time_survey_sd3_narc = models.FloatField(initial=0)
     time_survey_sd3_psych = models.FloatField(initial=0)
-    time_survey_scale_intro = models.FloatField(initial=0)
     time_survey_page4 = models.FloatField(initial=0)
     time_survey_page5 = models.FloatField(initial=0)
     time_survey_page6 = models.FloatField(initial=0)
@@ -329,7 +326,7 @@ class SurveyPage1(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
 class SurveyPage2(_SurveyTimedPage):
@@ -350,7 +347,7 @@ class SurveyPage2(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
 class SurveyPage3(_SurveyTimedPage):
@@ -371,7 +368,7 @@ class SurveyPage3(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
 class SurveyPage4(_SurveyTimedPage):
@@ -389,7 +386,7 @@ class SurveyPage4(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
 class SurveyPage5(_SurveyTimedPage):
@@ -407,7 +404,7 @@ class SurveyPage5(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
 class SurveyPage6(_SurveyTimedPage):
@@ -425,7 +422,7 @@ class SurveyPage6(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
 class SurveyPage7(_SurveyTimedPage):
@@ -443,7 +440,7 @@ class SurveyPage7(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
 class SurveyPage8(_SurveyTimedPage):
@@ -461,7 +458,7 @@ class SurveyPage8(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
 class SurveyPage9(_SurveyTimedPage):
@@ -479,7 +476,7 @@ class SurveyPage9(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
 class SurveyPage10(_SurveyTimedPage):
@@ -500,7 +497,7 @@ class SurveyPage10(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
 class SurveyFeedback(_SurveyTimedPage):
@@ -518,7 +515,7 @@ class SurveyFeedback(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
 class SurveyTerminated(Page):
@@ -528,12 +525,19 @@ class SurveyTerminated(Page):
 
     @staticmethod
     def is_displayed(player):
-        return _is_inactive_excluded(player)
+        return _is_inactive_excluded(player) or _is_group_dropped_inactive(player)
+
+    @staticmethod
+    def vars_for_template(player):
+        is_cq_dropout = player.participant.vars.get('inactive_excluded_reason') == 'intro'
+        return dict(is_cq_dropout=is_cq_dropout)
 
     @staticmethod
     def js_vars(player):
+        is_cq_dropout = player.participant.vars.get('inactive_excluded_reason') == 'intro'
+        link = player.session.config.get('dropoutlink_cq', '').strip() if is_cq_dropout else player.session.config.get('dropoutlink_inactive', '').strip()
         return dict(
-            completionlink=player.session.config.get('completionlink', '').strip(),
+            dropoutlink=link,
         )
 
     @staticmethod
@@ -548,7 +552,7 @@ class FinalResults(Page):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
     @staticmethod
     def vars_for_template(player):
@@ -625,8 +629,10 @@ class FinalResults(Page):
 
     @staticmethod
     def js_vars(player):
+        is_cq_dropout = player.participant.vars.get('inactive_excluded_reason') == 'intro'
+        link = player.session.config.get('dropoutlink_cq', '').strip() if is_cq_dropout else player.session.config.get('dropoutlink_inactive', '').strip()
         return dict(
-            completionlink=player.session.config.get('completionlink', '').strip(),
+            dropoutlink=link,
         )
 
     @staticmethod
@@ -639,7 +645,7 @@ class PreFinalResultsWaitPage(WaitPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player)
+        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
     @staticmethod
     def vars_for_template(player):
@@ -655,8 +661,8 @@ class PreFinalResultsWaitPage(WaitPage):
 
     @staticmethod
     def after_all_players_arrive(group):
-        from bargaining_tdl_main import Group as MainGroup, calculate_payoff_vector, VALID_DECISIONS # type: ignore
-        from bargaining_tdl_common import treatment_flag, get_left_partner_id, get_right_partner_id # type: ignore
+        from bargaining_tdl_main import Group as MainGroup # type: ignore
+        from bargaining_tdl_common import treatment_flag, get_left_partner_id, get_right_partner_id, custom_calculate_payoff_vector, VALID_DECISIONS # type: ignore
         from otree.api import Currency as cu # type: ignore
         import random
         import logging
@@ -688,7 +694,7 @@ class PreFinalResultsWaitPage(WaitPage):
                 logger.debug(f"Skipping main_group {main_group.id} (pre-matching or invalid decisions).")
                 continue
 
-            payoff_values, outcome = calculate_payoff_vector(
+            payoff_values, outcome = custom_calculate_payoff_vector(
                 (c1, c2, c3),
                 no_deadweight_loss=bool(treatment_flag(p1, 'no_deadweight_loss', False)),
             )

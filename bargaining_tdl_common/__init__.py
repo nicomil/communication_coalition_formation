@@ -39,6 +39,8 @@ from .utils import (
     get_right_partner_id,
     get_partner_side,
     get_partner_colors,
+    custom_calculate_payoff_vector,
+    VALID_DECISIONS,
 )
 from .treatments import (
     TREATMENTS,
@@ -80,6 +82,8 @@ __all__ = [
     'get_right_partner_id',
     'get_partner_side',
     'get_partner_colors',
+    'custom_calculate_payoff_vector',
+    'VALID_DECISIONS',
     'TREATMENTS',
     'DEFAULT_TREATMENT',
     'DEFAULT_ACTIVE_TREATMENTS',
