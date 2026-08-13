@@ -14,8 +14,8 @@
             after five attempts. You cannot proceed with the experiment.</p>
         <div class="alert alert-warning mt-3" role="alert">
             <h5 class="alert-heading">Action Required</h5>
-            <p class="mb-0">Please enter this code <strong>DROPOUT_CQs</strong> on Prolific as your 'Completion Code'
-                and then select 'Stop without completing' (or 'Return Submission') to free up this spot.</p>
+            <p class="mb-0">Please click the button below to return to Prolific and select
+                'Stop without completing' (or 'Return Submission') to free up this spot.</p>
         </div>
         <div class="mt-4 text-center">
             <a id="completion-link" href="https://app.prolific.com/" class="btn btn-outline-danger btn-lg">Return to
@@ -68,7 +68,10 @@
         }, true);
 
         var completionLinkEl = document.getElementById('completion-link');
-        // No automatic redirect for returned submissions, let the user click the button.
+        var dropoutlink = (js_vars && js_vars.dropoutlink) ? String(js_vars.dropoutlink).trim() : '';
+        if (completionLinkEl && dropoutlink) {
+            completionLinkEl.href = dropoutlink;
+        }
     });
 </script>
 {{ endblock }}
