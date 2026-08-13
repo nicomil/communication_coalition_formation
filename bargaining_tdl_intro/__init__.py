@@ -864,8 +864,12 @@ class Goodbye(Page):
 
     @staticmethod
     def js_vars(player):
+        link = player.session.config.get(
+            'dropoutlink_inactive' if _is_inactive_excluded(player) else 'dropoutlink_cq',
+            ''
+        ).strip()
         return dict(
-            dropoutlink=player.session.config.get('dropoutlink_cq', '').strip(),
+            dropoutlink=link,
         )
     
     @staticmethod

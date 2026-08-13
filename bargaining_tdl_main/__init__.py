@@ -1190,15 +1190,9 @@ class PostDecisionConfidence(Page):
         if timeout_happened:
             player.guess_left_confidence = None
             player.guess_right_confidence = None
-            # Timeout on PDC = inactivity: mark as excluded so InactivityGoodbyeMain
-            # catches them and redirects to CSXVWB27. They do NOT proceed to Results.
-            player.decision_inactive = 99
-            player.part1_payoff_eligible = False
-            player.participant.vars['part1_payoff_eligible'] = False
-            player.participant.inactive_excluded = True
-            player.participant.inactive_excluded_reason = 'post_decision_confidence_timeout'
-            player.participant.vars['inactive_excluded'] = True
-            player.participant.vars['inactive_excluded_reason'] = 'post_decision_confidence_timeout'
+            # CASO 7: Se il giocatore va in timeout su PostDecisionConfidence, 
+            # questa è una scelta ausiliaria e NON lo escludiamo. 
+            # Il timeout lo spingerà in automatico a Results.
 
         logger.debug(
             f"PostDecisionConfidence - time saved: {player.time_post_decision_confidence}"
@@ -1238,13 +1232,9 @@ class InactivityGoodbyeMain(Page):
 class Results(Page):
     form_model = 'player'
     form_fields = ['time_on_page']
-    _RESULTS_TIMEOUT = 180
-    timeout_submission = timeout_submission_with_time(_RESULTS_TIMEOUT)
-
-    @staticmethod
-    def get_timeout_seconds(player):
-        return get_page_timeout_seconds(player, Results._RESULTS_TIMEOUT)
-
+    
+    # CASO 8: Rimosso il timeout da Results
+    
     @staticmethod
     def is_displayed(player):
         """Non mostrare questa pagina se il partecipante ha fallito le control questions."""

@@ -9,9 +9,15 @@
 </style>
 <div class="card bg-white mt-4 mb-4 shadow-sm border-danger">
     <div class="card-body px-5 py-4">
+        {% if is_inactive %}
+        <h4 class="text-danger mb-4">Inactivity Timeout</h4>
+        <p>Thank you for your time. Unfortunately, you did not respond in time during the comprehension checks. 
+            Because you were inactive, you cannot proceed with the experiment.</p>
+        {% else %}
         <h4 class="text-danger mb-4">Comprehension Check Failed</h4>
         <p>Thank you for your time. Unfortunately, you did not pass the comprehension checks required for this study
             after five attempts. You cannot proceed with the experiment.</p>
+        {% endif %}
         <div class="alert alert-warning mt-3" role="alert">
             <h5 class="alert-heading">Action Required</h5>
             <p class="mb-1">Please use the button below to return to Prolific and select
