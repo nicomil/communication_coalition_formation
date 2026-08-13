@@ -12,7 +12,19 @@ from . import (  # type: ignore
     SurveyPage9,
     SurveyPage10,
     SurveyFeedback,
+    SurveyTerminated,
     FinalResults,
+)
+
+
+DEMOGRAPHICS = dict(
+    gender=0,
+    birth_year=1990,
+    field_of_study=1,
+    university_years=5,
+    main_situation='paid_work',
+    job_type='employee',
+    time_on_page=2.0,
 )
 
 
@@ -20,6 +32,19 @@ class PlayerBot(Bot):
     cases = ['mutual_12', 'disagreement', 'no_dwl_star', 'signals_timeout']
 
     def play_round(self):
+        if not SurveyPage10.is_displayed(self.player):
+            # Partecipante escluso (timeout su Signals oppure gruppo droppato).
+            # Tutte le pagine del survey lo saltano tranne SurveyQuestions, che
+            # non definisce is_displayed: la sequenza si chiude su
+            # SurveyTerminated senza passare da FinalResults.
+            yield SurveyQuestions, DEMOGRAPHICS
+            yield Submission(
+                SurveyTerminated,
+                dict(time_on_page=1.0),
+                check_html=False,
+            )
+            return
+
         yield SurveyPage10, dict(beauty_contest_guess=1.5, time_on_page=1.0)
         yield SurveyQuestions, dict(
             gender=0,
