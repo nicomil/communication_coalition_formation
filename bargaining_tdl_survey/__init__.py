@@ -557,6 +557,12 @@ class FinalResults(Page):
     @staticmethod
     def vars_for_template(player):
         from otree.api import Currency as cu
+        from bargaining_tdl_common import get_main_group_player, TOPOLOGY, COLOR_MAPPING
+        
+        main_player = get_main_group_player(player)
+
+        if main_player:
+            _calculate_payoffs_if_needed(main_player.group)
         
         part1_group_id = player.participant.vars.get('part1_group_id')
         part1_payoff_eligible = bool(player.participant.vars.get('part1_payoff_eligible', True))
@@ -567,8 +573,6 @@ class FinalResults(Page):
         if not part1_payoff_eligible:
             part1_payoff_val = cu(0)
         subtotal = base_fee + part1_payoff_val + beauty_contest_bonus
-
-        from bargaining_tdl_common import get_main_group_player, TOPOLOGY, COLOR_MAPPING
         
         main_player = get_main_group_player(player)
         left_choice_display = ""
@@ -640,6 +644,87 @@ class FinalResults(Page):
         player.time_final_results = player.time_on_page or 0
 
 
+class WaitForPart1Results(Page):
+    """
+    Questa pagina sostituisce la WaitPage di oTree. Non blocca nessuno.
+    Mostra un caricamento e si auto-aggiorna finché l'ultimo membro del gruppo
+    non ha cliccato Next su Decision (concludendo la sua Part 1).
+    """
+    @staticmethod
+    def is_displayed(player):
+        from bargaining_tdl_common import get_main_group_player # type: ignore
+        from bargaining_tdl_main import _is_inactive_excluded # type: ignore
+        
+        # Se è stato già escluso, non gli mostriamo nulla
+        if _is_inactive_excluded(player) or getattr(player.participant, 'group_dropped', False):
+            return False
+
+        main_player = get_main_group_player(player)
+        if not main_player:
+            return False
+
+        # Verifica se qualcuno nel main_group sta ancora prendendo la decisione
+        for p in main_player.group.get_players():
+            # Se un giocatore non ha una scelta ed è ancora attivo (decision_inactive != 99),
+            # vuol dire che non ha ancora finito la Part 1.
+            if not p.decision_choice and p.decision_inactive != 99:
+                return True # Mostra questa pagina (che ricaricherà ogni 5 secondi)
+        
+        # Tutti hanno finito la Part 1, possiamo calcolare i payoff e andare avanti
+        return False
+
+
+def _calculate_payoffs_if_needed(main_group):
+    # Calcola i payoff solo una volta per il gruppo
+    if getattr(main_group, 'part1_payoffs_calculated', False):
+        return
+
+    from bargaining_tdl_common import treatment_flag, custom_calculate_payoff_vector, VALID_DECISIONS # type: ignore
+    from otree.api import Currency as cu # type: ignore
+    import random
+    import logging
+    logger = logging.getLogger(__name__)
+
+    p1 = main_group.get_player_by_id(1)
+    p2 = main_group.get_player_by_id(2)
+    p3 = main_group.get_player_by_id(3)
+    players = [p1, p2, p3]
+
+    for p in players:
+        if p.decision_inactive == 99 and not p.decision_choice:
+            p.decision_choice = random.choice(VALID_DECISIONS)
+
+    c1 = p1.decision_choice
+    c2 = p2.decision_choice
+    c3 = p3.decision_choice
+
+    if any(c not in VALID_DECISIONS for c in [c1, c2, c3]):
+        logger.debug(f"Skipping group {main_group.id} (invalid decisions).")
+        return
+
+    payoff_values, outcome = custom_calculate_payoff_vector(
+        (c1, c2, c3),
+        no_deadweight_loss=bool(treatment_flag(p1, 'no_deadweight_loss', False)),
+    )
+
+    for p, payoff_value in zip(players, payoff_values):
+        p.payoff = cu(payoff_value)
+
+    main_group.group_outcome = outcome
+    main_group.grp_coordinate = int(any(value > 0 for value in payoff_values))
+    
+    for p in players:
+        p.part1_calculated_payoff = p.payoff
+        if not getattr(p, 'part1_payoff_eligible', True):
+            p.payoff = cu(0)
+
+        p.participant.vars['part1_payoff'] = p.payoff
+        p.participant.vars['part1_group_id'] = main_group.id
+        p.participant.vars['group_outcome'] = outcome
+
+    main_group.part1_payoffs_calculated = True
+
+
 
 
 page_sequence = [
@@ -656,5 +741,6 @@ page_sequence = [
     SurveyPage3,
     SurveyFeedback,
     SurveyTerminated,
+    WaitForPart1Results,
     FinalResults,
 ]

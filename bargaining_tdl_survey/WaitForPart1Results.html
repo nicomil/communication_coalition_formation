@@ -1,0 +1,14 @@
+{{ extends "global/Page.html" }}
+{{ block title }}Please wait{{ endblock }}
+{{ block content }}
+    <div class="alert alert-info">
+        <p>Waiting for the other participants in your group to finish Part 1 so we can compute your final payoff.</p>
+        <p>This page will automatically refresh every 5 seconds.</p>
+    </div>
+    
+    <script>
+        setTimeout(function() {
+            window.location.reload();
+        }, 5000);
+    </script>
+{{ endblock }}

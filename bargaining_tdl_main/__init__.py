@@ -1232,65 +1232,7 @@ class InactivityGoodbyeMain(Page):
         return []
 
 
-class ResultsWaitPage(WaitPage):
-    body_text = "Please wait a few moments for the other participants to complete Part 1. You will proceed to the survey shortly."
 
-    @staticmethod
-    def is_displayed(player):
-        return not has_failed_control_questions(player, 'intro') and not _is_inactive_excluded(player)
-
-    @staticmethod
-    def vars_for_template(player):
-        _evaluate_dropout(player.group)
-        _advance_interrupted_player_to_waitpage(
-            player.group, player.participant._index_in_pages
-        )
-        return {}
-
-    @staticmethod
-    def after_all_players_arrive(group: Group):
-        from bargaining_tdl_common import treatment_flag, custom_calculate_payoff_vector, VALID_DECISIONS # type: ignore
-        from otree.api import Currency as cu # type: ignore
-        import random
-        import logging
-        logger = logging.getLogger(__name__)
-
-        p1 = group.get_player_by_id(1)
-        p2 = group.get_player_by_id(2)
-        p3 = group.get_player_by_id(3)
-        players = [p1, p2, p3]
-
-        for p in players:
-            if p.decision_inactive == 99 and not p.decision_choice:
-                p.decision_choice = random.choice(VALID_DECISIONS)
-
-        c1 = p1.decision_choice
-        c2 = p2.decision_choice
-        c3 = p3.decision_choice
-
-        if any(c not in VALID_DECISIONS for c in [c1, c2, c3]):
-            logger.debug(f"Skipping group {group.id} (invalid decisions).")
-            return
-
-        payoff_values, outcome = custom_calculate_payoff_vector(
-            (c1, c2, c3),
-            no_deadweight_loss=bool(treatment_flag(p1, 'no_deadweight_loss', False)),
-        )
-
-        for p, payoff_value in zip(players, payoff_values):
-            p.payoff = cu(payoff_value)
-
-        group.group_outcome = outcome
-        group.grp_coordinate = int(any(value > 0 for value in payoff_values))
-        
-        for p in players:
-            p.part1_calculated_payoff = p.payoff
-            if not getattr(p, 'part1_payoff_eligible', True):
-                p.payoff = cu(0)
-
-            p.participant.vars['part1_payoff'] = p.payoff
-            p.participant.vars['part1_group_id'] = group.id
-            p.participant.vars['group_outcome'] = outcome
 
 
 class Results(Page):
@@ -1333,6 +1275,5 @@ page_sequence = [
     Decision,
     PostDecisionConfidence,
     Results,
-    ResultsWaitPage,
     InactivityGoodbyeMain
 ]
