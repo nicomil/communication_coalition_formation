@@ -675,8 +675,10 @@ class WaitForPart1Results(Page):
 
 
 def _calculate_payoffs_if_needed(main_group):
+    p1 = main_group.get_player_by_id(1)
+    
     # Calcola i payoff solo una volta per il gruppo
-    if getattr(main_group, 'part1_payoffs_calculated', False):
+    if 'part1_payoff' in p1.participant.vars:
         return
 
     from bargaining_tdl_common import treatment_flag, custom_calculate_payoff_vector, VALID_DECISIONS # type: ignore
@@ -721,8 +723,6 @@ def _calculate_payoffs_if_needed(main_group):
         p.participant.vars['part1_payoff'] = p.payoff
         p.participant.vars['part1_group_id'] = main_group.id
         p.participant.vars['group_outcome'] = outcome
-
-    main_group.part1_payoffs_calculated = True
 
 
 
