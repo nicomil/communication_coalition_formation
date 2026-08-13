@@ -640,81 +640,6 @@ class FinalResults(Page):
         player.time_final_results = player.time_on_page or 0
 
 
-class PreFinalResultsWaitPage(WaitPage):
-    body_text = "Waiting for the other participants to finish before computing the final payoffs."
-
-    @staticmethod
-    def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
-
-    @staticmethod
-    def vars_for_template(player):
-        from bargaining_tdl_common import get_main_group_player # type: ignore
-        main_player = get_main_group_player(player)
-        if main_player:
-            from bargaining_tdl_main import _evaluate_dropout, _advance_interrupted_player_to_waitpage # type: ignore
-            _evaluate_dropout(main_player.group)
-            _advance_interrupted_player_to_waitpage(
-                main_player.group, player.participant._index_in_pages
-            )
-        return {}
-
-    @staticmethod
-    def after_all_players_arrive(group):
-        from bargaining_tdl_main import Group as MainGroup # type: ignore
-        from bargaining_tdl_common import treatment_flag, get_left_partner_id, get_right_partner_id, custom_calculate_payoff_vector, VALID_DECISIONS # type: ignore
-        from otree.api import Currency as cu # type: ignore
-        import random
-        import logging
-        logger = logging.getLogger(__name__)
-
-        from bargaining_tdl_common import get_main_group_player
-        
-        main_groups = set()
-        for p in group.get_players():
-            main_player = get_main_group_player(p)
-            if main_player:
-                main_groups.add(main_player.group)
-
-        for main_group in main_groups:
-            p1 = main_group.get_player_by_id(1)
-            p2 = main_group.get_player_by_id(2)
-            p3 = main_group.get_player_by_id(3)
-            players = [p1, p2, p3]
-
-            for p in players:
-                if p.decision_inactive == 99 and not p.decision_choice:
-                    p.decision_choice = random.choice(VALID_DECISIONS)
-
-            c1 = p1.decision_choice
-            c2 = p2.decision_choice
-            c3 = p3.decision_choice
-
-            if any(c not in VALID_DECISIONS for c in [c1, c2, c3]):
-                logger.debug(f"Skipping main_group {main_group.id} (pre-matching or invalid decisions).")
-                continue
-
-            payoff_values, outcome = custom_calculate_payoff_vector(
-                (c1, c2, c3),
-                no_deadweight_loss=bool(treatment_flag(p1, 'no_deadweight_loss', False)),
-            )
-
-            for p, payoff_value in zip(players, payoff_values):
-                p.payoff = cu(payoff_value)
-
-            main_group.group_outcome = outcome
-            main_group.grp_coordinate = int(any(value > 0 for value in payoff_values))
-            
-            for p in players:
-                p.part1_calculated_payoff = p.payoff
-                if not getattr(p, 'part1_payoff_eligible', True):
-                    p.payoff = cu(0)
-
-                p.participant.vars['part1_payoff'] = p.payoff
-                p.participant.vars['part1_group_id'] = main_group.id
-                p.participant.vars['group_outcome'] = outcome
-
-
 
 
 page_sequence = [
@@ -731,6 +656,5 @@ page_sequence = [
     SurveyPage3,
     SurveyFeedback,
     SurveyTerminated,
-    PreFinalResultsWaitPage,
     FinalResults,
 ]
