@@ -633,10 +633,8 @@ class FinalResults(Page):
 
     @staticmethod
     def js_vars(player):
-        is_cq_dropout = player.participant.vars.get('inactive_excluded_reason') == 'intro'
-        link = player.session.config.get('dropoutlink_cq', '').strip() if is_cq_dropout else player.session.config.get('dropoutlink_inactive', '').strip()
         return dict(
-            dropoutlink=link,
+            completionlink=player.session.config.get('completionlink', '').strip(),
         )
 
     @staticmethod
