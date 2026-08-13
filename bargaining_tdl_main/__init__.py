@@ -839,12 +839,18 @@ class Signals(Page):
         player.time_signals = float(player.time_on_page)
         if timeout_happened:
             player.signal_inactive = 99
-            # Inattività rilevata: escludiamo dal pagamento come richiesto
             player.part1_payoff_eligible = False
             player.participant.vars['part1_payoff_eligible'] = False
             import random
             player.signal_left = random.choice(VALID_SIGNALS)
             player.signal_right = random.choice(VALID_SIGNALS)
+            # Mark as inactive: ExperimentTerminated (next in page_sequence) will
+            # catch this player and redirect to CSXVWB27 — they do NOT proceed
+            # to Decision/PDC/Results.
+            player.participant.inactive_excluded = True
+            player.participant.inactive_excluded_reason = 'signals_timeout'
+            player.participant.vars['inactive_excluded'] = True
+            player.participant.vars['inactive_excluded_reason'] = 'signals_timeout'
         else:
             set_control_questions_failed(player, 'intro', failed=False)
         logger.debug(f"Signals - time_signals saved: {player.time_signals}")
@@ -1048,6 +1054,11 @@ class Decision(Page):
     def before_next_page(player, timeout_happened):
         player.time_decision = save_time_value(player.time_on_page)
         if timeout_happened:
+            # Randomize the decision choice with equal probability 1/3 each.
+            # Using a fixed default ('Left') would systematically bias the data
+            # whenever a participant drops out, creating an experimental confound.
+            import random
+            player.decision_choice = random.choice(['Left', 'Right', 'NoOne'])
             # Mark as inactive (99) for dataset tracking.
             player.decision_inactive = 99
             # Inattività rilevata: escludiamo dal pagamento
@@ -1175,11 +1186,17 @@ class PostDecisionConfidence(Page):
     def before_next_page(player, timeout_happened):
         player.time_post_decision_confidence = save_time_value(player.time_on_page)
         if timeout_happened:
-            # None preserva la distinguibilità da un dato osservato (scala 1-5,
-            # zero non è un valore valido). Identico al comportamento già usato
-            # per i convincingness in caso di inattività su Signals.
             player.guess_left_confidence = None
             player.guess_right_confidence = None
+            # Timeout on PDC = inactivity: mark as excluded so InactivityGoodbyeMain
+            # catches them and redirects to CSXVWB27. They do NOT proceed to Results.
+            player.decision_inactive = 99
+            player.part1_payoff_eligible = False
+            player.participant.vars['part1_payoff_eligible'] = False
+            player.participant.inactive_excluded = True
+            player.participant.inactive_excluded_reason = 'post_decision_confidence_timeout'
+            player.participant.vars['inactive_excluded'] = True
+            player.participant.vars['inactive_excluded_reason'] = 'post_decision_confidence_timeout'
 
         logger.debug(
             f"PostDecisionConfidence - time saved: {player.time_post_decision_confidence}"

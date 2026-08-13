@@ -25,13 +25,19 @@ _BARGAINING_APP_SEQUENCE = [
 # Questi verranno usati automaticamente quando il tuo co-autore farà il git push.
 
 # 1. Studio A (Public TDL)
-PUBLIC_COMPLETION = "https://app.prolific.com/submissions/complete?cc=INSERISCI_QUI_PUBLIC_COMPLETION"
+PUBLIC_COMPLETION  = "https://app.prolific.com/submissions/complete?cc=CTKDYE8E"
+PUBLIC_DROPOUT_CQ  = "https://app.prolific.com/submissions/complete?cc=C7WZD8AX"
+PUBLIC_DROPOUT_INE = "https://app.prolific.com/submissions/complete?cc=CHWGZZMH"
 
 # 2. Studio B (Private TDL)
-PRIVATE_COMPLETION = "https://app.prolific.com/submissions/complete?cc=INSERISCI_QUI_PRIVATE_COMPLETION"
+PRIVATE_COMPLETION  = "https://app.prolific.com/submissions/complete?cc=C1G2IEC2"
+PRIVATE_DROPOUT_CQ  = "https://app.prolific.com/submissions/complete?cc=C13STBXG"
+PRIVATE_DROPOUT_INE = "https://app.prolific.com/submissions/complete?cc=CSXVWB27"
 
 # 3. Studio C (Private No DWL)
-NO_DWL_COMPLETION = "https://app.prolific.com/submissions/complete?cc=INSERISCI_QUI_NODWL_COMPLETION"
+NO_DWL_COMPLETION  = "https://app.prolific.com/submissions/complete?cc=CU9DDEAQ"
+NO_DWL_DROPOUT_CQ  = "https://app.prolific.com/submissions/complete?cc=CMPNPYY3"
+NO_DWL_DROPOUT_INE = "https://app.prolific.com/submissions/complete?cc=CFORQW3N"
 # -----------------------------
 
 SESSION_CONFIGS = [
@@ -51,6 +57,8 @@ SESSION_CONFIGS = [
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=9,
         completionlink=PUBLIC_COMPLETION,
+        dropoutlink_cq=PUBLIC_DROPOUT_CQ,
+        dropoutlink_inactive=PUBLIC_DROPOUT_INE,
         active_treatments=['public'],
     ),
     dict(
@@ -59,6 +67,8 @@ SESSION_CONFIGS = [
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=9,
         completionlink=PRIVATE_COMPLETION,
+        dropoutlink_cq=PRIVATE_DROPOUT_CQ,
+        dropoutlink_inactive=PRIVATE_DROPOUT_INE,
         active_treatments=['private'],
     ),
     dict(
@@ -67,6 +77,8 @@ SESSION_CONFIGS = [
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=9,
         completionlink=NO_DWL_COMPLETION,
+        dropoutlink_cq=NO_DWL_DROPOUT_CQ,
+        dropoutlink_inactive=NO_DWL_DROPOUT_INE,
         active_treatments=['private_no_dwl'],
     ),
 ]
