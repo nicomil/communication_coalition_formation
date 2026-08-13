@@ -1233,7 +1233,7 @@ class InactivityGoodbyeMain(Page):
 
 
 class ResultsWaitPage(WaitPage):
-    body_text = "Waiting for other participants to finish the initial phase."
+    body_text = "Please wait a few moments for the other participants to complete Part 1. You will proceed to the survey shortly."
 
     @staticmethod
     def is_displayed(player):
@@ -1332,7 +1332,7 @@ page_sequence = [
     DataMappingWaitPage,
     Decision,
     PostDecisionConfidence,
-    ResultsWaitPage,
     Results,
+    ResultsWaitPage,
     InactivityGoodbyeMain
 ]
