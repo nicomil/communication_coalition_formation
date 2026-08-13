@@ -844,13 +844,11 @@ class Signals(Page):
             import random
             player.signal_left = random.choice(VALID_SIGNALS)
             player.signal_right = random.choice(VALID_SIGNALS)
-            # Mark as inactive: ExperimentTerminated (next in page_sequence) will
-            # catch this player and redirect to CSXVWB27 — they do NOT proceed
-            # to Decision/PDC/Results.
-            player.participant.inactive_excluded = True
-            player.participant.inactive_excluded_reason = 'signals_timeout'
-            player.participant.vars['inactive_excluded'] = True
-            player.participant.vars['inactive_excluded_reason'] = 'signals_timeout'
+            # NOTE: do NOT set inactive_excluded here.
+            # The inactive player must still pass through DataMappingWaitPage so
+            # the other two group members are not blocked forever on that WaitPage.
+            # InactivityGoodbyeMain (end of page_sequence) will catch them via
+            # `not player.part1_payoff_eligible` and redirect to dropoutlink_inactive.
         else:
             set_control_questions_failed(player, 'intro', failed=False)
         logger.debug(f"Signals - time_signals saved: {player.time_signals}")
