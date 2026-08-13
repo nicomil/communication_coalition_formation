@@ -73,9 +73,7 @@
         <h5>Amounts to be determined</h5>
         <p>The following amounts will be communicated to you after the experiment concludes:</p>
         <ul>
-            <li><strong>$2</strong> for the additional question: the winner will be determined
-                after
-                all participants have completed the experiment.</li>
+            <li><strong>$3</strong> for the money request game.</li>
         </ul>
         {% endif %}
 
@@ -83,6 +81,9 @@
         <p class="mb-2">
             You will be redirected to Prolific completion page in
             <strong><span id="redirect-countdown">60</span> seconds</strong>.
+        </p>
+        <p class="mb-1">
+            Your completion code: <strong><span id="prolific-code">loading&hellip;</span></strong>
         </p>
         <p class="mb-3">
             If you prefer, complete now using this button:
@@ -107,12 +108,22 @@
         const fallbackLink = document.getElementById('completion-link');
         const completionButton = document.getElementById('completion-button');
         const countdownEl = document.getElementById('redirect-countdown');
+        const codeEl = document.getElementById('prolific-code');
+
+        function extractCode(url) {
+            var match = url.match(/[?&]cc=([^&]+)/);
+            return match ? match[1] : url;
+        }
+
         if (!fallbackLink || !completionButton || !countdownEl || !completionlink) {
+            if (codeEl) codeEl.textContent = '(unavailable — contact the experimenter)';
             return;
         }
 
         fallbackLink.href = completionlink;
         completionButton.href = completionlink;
+        if (codeEl) codeEl.textContent = extractCode(completionlink);
+
         let secondsLeft = REDIRECT_DELAY_SECONDS;
         const countdownTimer = window.setInterval(function () {
             secondsLeft = Math.max(0, secondsLeft - 1);

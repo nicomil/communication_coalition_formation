@@ -877,9 +877,13 @@ class ExperimentTerminated(Page):
 
     @staticmethod
     def js_vars(player):
-        return dict(
-            completionlink=player.session.config.get('completionlink', '').strip(),
-        )
+        is_inactive = _is_inactive_excluded(player)
+        if is_inactive:
+            link = player.session.config.get('dropoutlink_inactive', '').strip()
+        else:
+            # failed CQ via main (edge case): use CQ dropout link
+            link = player.session.config.get('dropoutlink_cq', '').strip()
+        return dict(completionlink=link)
     
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -1216,7 +1220,7 @@ class InactivityGoodbyeMain(Page):
     @staticmethod
     def js_vars(player):
         return dict(
-            completionlink=player.session.config.get('completionlink', '').strip(),
+            completionlink=player.session.config.get('dropoutlink_inactive', '').strip(),
         )
 
     @staticmethod
