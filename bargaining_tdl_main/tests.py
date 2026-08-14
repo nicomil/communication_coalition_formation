@@ -8,7 +8,6 @@ from . import (
     C,
     Chat,
     Decision,
-    ExperimentTerminated,
     InactivityGoodbyeMain,
     PostDecisionConfidence,
     Results,
@@ -54,39 +53,19 @@ class PlayerBot(Bot):
                 self.player.field_maybe_none('guess_right_confidence'),
                 None,
             )
-            # Il timeout su Signals ora marca il partecipante come
-            # inactive_excluded: passa da ExperimentTerminated, che chiude la
-            # sequenza di app (app_after_this_page -> []). Le pagine residue
-            # di questa app restano però in sequenza: Decision non ha
-            # is_displayed, quindi viene comunque servita, mentre
-            # PostDecisionConfidence e Results sono saltate.
-            expect(self.player.participant.inactive_excluded, True)
-            expect(
-                self.player.participant.inactive_excluded_reason,
-                'signals_timeout',
+            # Il timeout su Signals NON marca più inactive_excluded: il
+            # giocatore deve attraversare DataMappingWaitPage, altrimenti gli
+            # altri due del gruppo restano bloccati sulla WaitPage. Perde solo
+            # l'idoneità al pagamento; il flusso prosegue normale fino a
+            # InactivityGoodbyeMain, che lo intercetta su part1_payoff_eligible.
+            expect(self.player.part1_payoff_eligible, False)
+        else:
+            yield Signals, dict(
+                signal_left=signal_left,
+                signal_right=signal_right,
+                first_intention_selected='left',
+                time_on_page=1.0,
             )
-            yield Submission(
-                ExperimentTerminated,
-                dict(time_on_page=1.0),
-                check_html=False,
-            )
-            yield Decision, dict(
-                decision_choice=decisions_for_case(self.case, player_id),
-                time_on_page=1.5,
-            )
-            yield Submission(
-                InactivityGoodbyeMain,
-                dict(time_on_page=1.0),
-                check_html=False,
-            )
-            return
-
-        yield Signals, dict(
-            signal_left=signal_left,
-            signal_right=signal_right,
-            first_intention_selected='left',
-            time_on_page=1.0,
-        )
 
         decision = decisions_for_case(self.case, player_id)
         yield Decision, dict(decision_choice=decision, time_on_page=1.5)
@@ -104,7 +83,15 @@ class PlayerBot(Bot):
                 ),
                 check_html=False,
             )
-        yield Results, dict(time_on_page=2.0)
+        if Results.is_displayed(self.player):
+            yield Results, dict(time_on_page=2.0)
+        if InactivityGoodbyeMain.is_displayed(self.player):
+            yield Submission(
+                InactivityGoodbyeMain,
+                dict(time_on_page=1.0),
+                check_html=False,
+            )
+            return
 
         expect(self.player.guess_left_confidence, 5)
         expect(self.player.guess_right_confidence, 2)
@@ -114,22 +101,26 @@ class PlayerBot(Bot):
 class PayoffLogicTests(unittest.TestCase):
     """Oracle indipendente per 27 profili × 3 trattamenti."""
 
+    # Importi dimezzati rispetto al disegno originale (6/12) dopo
+    # l'eliminazione della vecchia strategia (2,2,2): coalizione reciproca
+    # $3 a testa, star no-DWL $6 al sostenuto. Coerente con le istruzioni e
+    # con le control questions, che offrono solo $6/$3/$0.
     @staticmethod
     def expected(profile, no_dwl):
         c1, c2, c3 = profile
         if c1 == 'Right' and c2 == 'Left':
-            return (6, 6, 0)
+            return (3, 3, 0)
         if c2 == 'Right' and c3 == 'Left':
-            return (0, 6, 6)
+            return (0, 3, 3)
         if c3 == 'Right' and c1 == 'Left':
-            return (6, 0, 6)
+            return (3, 0, 3)
         if no_dwl:
             if c1 == 'NoOne' and c2 == 'Left' and c3 == 'Right':
-                return (12, 0, 0)
+                return (6, 0, 0)
             if c2 == 'NoOne' and c1 == 'Right' and c3 == 'Left':
-                return (0, 12, 0)
+                return (0, 6, 0)
             if c3 == 'NoOne' and c1 == 'Left' and c2 == 'Right':
-                return (0, 0, 12)
+                return (0, 0, 6)
         return (0, 0, 0)
 
     def test_all_profiles_in_all_treatments(self):
@@ -149,12 +140,12 @@ class PayoffLogicTests(unittest.TestCase):
         # Example 1: Green/Blue support each other.
         self.assertEqual(
             custom_calculate_payoff_vector(('Right', 'Left', 'NoOne'))[0],
-            (6, 6, 0),
+            (3, 3, 0),
         )
         # Example 2: both partners support Green, who supports no one.
         profile = ('NoOne', 'Left', 'Right')
         self.assertEqual(custom_calculate_payoff_vector(profile, False)[0], (0, 0, 0))
-        self.assertEqual(custom_calculate_payoff_vector(profile, True)[0], (12, 0, 0))
+        self.assertEqual(custom_calculate_payoff_vector(profile, True)[0], (6, 0, 0))
         # Example 3: directed cycle.
         self.assertEqual(
             custom_calculate_payoff_vector(('Right', 'Right', 'NoOne'))[0],
