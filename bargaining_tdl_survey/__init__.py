@@ -642,34 +642,6 @@ class FinalResults(Page):
         player.time_final_results = player.time_on_page or 0
 
 
-class WaitForPart1Results(Page):
-    """
-    Questa pagina sostituisce la WaitPage di oTree. Non blocca nessuno.
-    Mostra un caricamento e si auto-aggiorna finché l'ultimo membro del gruppo
-    non ha cliccato Next su Decision (concludendo la sua Part 1).
-    """
-    @staticmethod
-    def is_displayed(player):
-        from bargaining_tdl_common import get_main_group_player # type: ignore
-        from bargaining_tdl_main import _is_inactive_excluded # type: ignore
-        
-        # Se è stato già escluso, non gli mostriamo nulla
-        if _is_inactive_excluded(player) or getattr(player.participant, 'group_dropped', False):
-            return False
-
-        main_player = get_main_group_player(player)
-        if not main_player:
-            return False
-
-        # Verifica se qualcuno nel main_group sta ancora prendendo la decisione
-        for p in main_player.group.get_players():
-            # Se un giocatore non ha una scelta ed è ancora attivo (decision_inactive != 99),
-            # vuol dire che non ha ancora finito la Part 1.
-            if not p.decision_choice and p.decision_inactive != 99:
-                return True # Mostra questa pagina (che ricaricherà ogni 5 secondi)
-        
-        # Tutti hanno finito la Part 1, possiamo calcolare i payoff e andare avanti
-        return False
 
 
 def _calculate_payoffs_if_needed(main_group):
@@ -739,6 +711,5 @@ page_sequence = [
     SurveyPage3,
     SurveyFeedback,
     SurveyTerminated,
-    WaitForPart1Results,
     FinalResults,
 ]
