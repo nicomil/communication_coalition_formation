@@ -8,7 +8,6 @@ from . import (
     C,
     Chat,
     Decision,
-    ExperimentTerminated,
     InactivityGoodbyeMain,
     PostDecisionConfidence,
     Results,
@@ -54,39 +53,19 @@ class PlayerBot(Bot):
                 self.player.field_maybe_none('guess_right_confidence'),
                 None,
             )
-            # Il timeout su Signals ora marca il partecipante come
-            # inactive_excluded: passa da ExperimentTerminated, che chiude la
-            # sequenza di app (app_after_this_page -> []). Le pagine residue
-            # di questa app restano però in sequenza: Decision non ha
-            # is_displayed, quindi viene comunque servita, mentre
-            # PostDecisionConfidence e Results sono saltate.
-            expect(self.player.participant.inactive_excluded, True)
-            expect(
-                self.player.participant.inactive_excluded_reason,
-                'signals_timeout',
+            # Il timeout su Signals NON marca più inactive_excluded: il
+            # giocatore deve attraversare DataMappingWaitPage, altrimenti gli
+            # altri due del gruppo restano bloccati sulla WaitPage. Perde solo
+            # l'idoneità al pagamento; il flusso prosegue normale fino a
+            # InactivityGoodbyeMain, che lo intercetta su part1_payoff_eligible.
+            expect(self.player.part1_payoff_eligible, False)
+        else:
+            yield Signals, dict(
+                signal_left=signal_left,
+                signal_right=signal_right,
+                first_intention_selected='left',
+                time_on_page=1.0,
             )
-            yield Submission(
-                ExperimentTerminated,
-                dict(time_on_page=1.0),
-                check_html=False,
-            )
-            yield Decision, dict(
-                decision_choice=decisions_for_case(self.case, player_id),
-                time_on_page=1.5,
-            )
-            yield Submission(
-                InactivityGoodbyeMain,
-                dict(time_on_page=1.0),
-                check_html=False,
-            )
-            return
-
-        yield Signals, dict(
-            signal_left=signal_left,
-            signal_right=signal_right,
-            first_intention_selected='left',
-            time_on_page=1.0,
-        )
 
         decision = decisions_for_case(self.case, player_id)
         yield Decision, dict(decision_choice=decision, time_on_page=1.5)
@@ -104,7 +83,15 @@ class PlayerBot(Bot):
                 ),
                 check_html=False,
             )
-        yield Results, dict(time_on_page=2.0)
+        if Results.is_displayed(self.player):
+            yield Results, dict(time_on_page=2.0)
+        if InactivityGoodbyeMain.is_displayed(self.player):
+            yield Submission(
+                InactivityGoodbyeMain,
+                dict(time_on_page=1.0),
+                check_html=False,
+            )
+            return
 
         expect(self.player.guess_left_confidence, 5)
         expect(self.player.guess_right_confidence, 2)
