@@ -101,22 +101,26 @@ class PlayerBot(Bot):
 class PayoffLogicTests(unittest.TestCase):
     """Oracle indipendente per 27 profili × 3 trattamenti."""
 
+    # Importi dimezzati rispetto al disegno originale (6/12) dopo
+    # l'eliminazione della vecchia strategia (2,2,2): coalizione reciproca
+    # $3 a testa, star no-DWL $6 al sostenuto. Coerente con le istruzioni e
+    # con le control questions, che offrono solo $6/$3/$0.
     @staticmethod
     def expected(profile, no_dwl):
         c1, c2, c3 = profile
         if c1 == 'Right' and c2 == 'Left':
-            return (6, 6, 0)
+            return (3, 3, 0)
         if c2 == 'Right' and c3 == 'Left':
-            return (0, 6, 6)
+            return (0, 3, 3)
         if c3 == 'Right' and c1 == 'Left':
-            return (6, 0, 6)
+            return (3, 0, 3)
         if no_dwl:
             if c1 == 'NoOne' and c2 == 'Left' and c3 == 'Right':
-                return (12, 0, 0)
+                return (6, 0, 0)
             if c2 == 'NoOne' and c1 == 'Right' and c3 == 'Left':
-                return (0, 12, 0)
+                return (0, 6, 0)
             if c3 == 'NoOne' and c1 == 'Left' and c2 == 'Right':
-                return (0, 0, 12)
+                return (0, 0, 6)
         return (0, 0, 0)
 
     def test_all_profiles_in_all_treatments(self):
@@ -136,12 +140,12 @@ class PayoffLogicTests(unittest.TestCase):
         # Example 1: Green/Blue support each other.
         self.assertEqual(
             custom_calculate_payoff_vector(('Right', 'Left', 'NoOne'))[0],
-            (6, 6, 0),
+            (3, 3, 0),
         )
         # Example 2: both partners support Green, who supports no one.
         profile = ('NoOne', 'Left', 'Right')
         self.assertEqual(custom_calculate_payoff_vector(profile, False)[0], (0, 0, 0))
-        self.assertEqual(custom_calculate_payoff_vector(profile, True)[0], (12, 0, 0))
+        self.assertEqual(custom_calculate_payoff_vector(profile, True)[0], (6, 0, 0))
         # Example 3: directed cycle.
         self.assertEqual(
             custom_calculate_payoff_vector(('Right', 'Right', 'NoOne'))[0],
