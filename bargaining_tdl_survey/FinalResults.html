@@ -78,15 +78,11 @@
         {% endif %}
 
         <hr>
-        <p class="mb-2">
-            You will be redirected to Prolific completion page in
-            <strong><span id="redirect-countdown">60</span> seconds</strong>.
-        </p>
         <p class="mb-1">
             Your completion code: <strong><span id="prolific-code">loading&hellip;</span></strong>
         </p>
         <p class="mb-3">
-            If you prefer, complete now using this button:
+            Please use the button below to return to Prolific and complete your submission:
         </p>
         <p class="mb-0">
             <a id="completion-button" href="#" class="btn btn-primary">Complete on Prolific now</a>
@@ -103,11 +99,9 @@
 
 <script>
     (function () {
-        const REDIRECT_DELAY_SECONDS = 60;
         const completionlink = (js_vars && js_vars.completionlink) ? String(js_vars.completionlink).trim() : '';
         const fallbackLink = document.getElementById('completion-link');
         const completionButton = document.getElementById('completion-button');
-        const countdownEl = document.getElementById('redirect-countdown');
         const codeEl = document.getElementById('prolific-code');
 
         function extractCode(url) {
@@ -115,27 +109,14 @@
             return match ? match[1] : url;
         }
 
-        if (!fallbackLink || !completionButton || !countdownEl || !completionlink) {
+        if (!completionlink) {
             if (codeEl) codeEl.textContent = '(unavailable — contact the experimenter)';
             return;
         }
 
-        fallbackLink.href = completionlink;
-        completionButton.href = completionlink;
+        if (fallbackLink) fallbackLink.href = completionlink;
+        if (completionButton) completionButton.href = completionlink;
         if (codeEl) codeEl.textContent = extractCode(completionlink);
-
-        let secondsLeft = REDIRECT_DELAY_SECONDS;
-        const countdownTimer = window.setInterval(function () {
-            secondsLeft = Math.max(0, secondsLeft - 1);
-            countdownEl.textContent = String(secondsLeft);
-            if (secondsLeft <= 0) {
-                window.clearInterval(countdownTimer);
-            }
-        }, 1000);
-
-        window.setTimeout(function () {
-            window.location.href = completionlink;
-        }, REDIRECT_DELAY_SECONDS * 1000);
     })();
 </script>
 
