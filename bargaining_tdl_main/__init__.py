@@ -577,7 +577,7 @@ def _third_party_signal_display(code, receiver_color, other_color):
     Restituisce il testo con chiarimento parentetico dove necessario.
     """
     if code == 'split_you':
-        return f"'I intend to support you.' (i.e. {receiver_color})"
+        return f"'I intend to support you.' <i>(i.e. {receiver_color})</i>"
     elif code == 'split_other':
         return f"'I intend to support {other_color}.' <i>(i.e. you)</i>"
     elif code == 'support_none':

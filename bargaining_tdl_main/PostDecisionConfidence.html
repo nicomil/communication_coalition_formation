@@ -1,5 +1,5 @@
 {{ extends "_templates/global/Page.html" }}
-{{ block title }}Bonus Questions{{ endblock }}
+{{ block title }}Questions about Part 1{{ endblock }}
 {{ block content }}
 
 <style>
@@ -74,91 +74,12 @@
     }
 </style>
 
-<style>
-    /* Timer hidden by default; JS will reveal it at 1 minute remaining */
-    .otree-timer,
-    .otree-timer__time-left,
-    #otree-timer {
-        display: none !important;
-    }
 
-    /* Urgent style when timer is shown */
-    #otree-timer.timer-visible,
-    .otree-timer.timer-visible {
-        display: block !important;
-        position: fixed !important;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 10000;
-        min-width: 340px;
-        max-width: min(92vw, 760px);
-        background-color: #f8d7da;
-        color: #842029;
-        border: 2px solid #f5c2c7;
-        border-radius: 6px;
-        padding: 10px 16px;
-        font-weight: bold;
-        font-size: 1.1em;
-        text-align: center;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
-    }
-
-    /* Also show inner time display when parent is revealed */
-    .otree-timer.timer-visible .otree-timer__time-left,
-    #otree-timer.timer-visible .otree-timer__time-left,
-    .otree-timer.timer-visible * {
-        display: inline !important;
-    }
-</style>
-
-<script>
-    (function () {
-        var SHOW_AT_SECONDS = 60;
-        var timerShown = false;
-
-        function revealTimer() {
-            var els = [
-                document.getElementById('otree-timer'),
-                document.querySelector('.otree-timer'),
-                document.querySelector('.otree-timer__time-left')
-            ];
-            els.forEach(function (el) {
-                if (el && !timerShown) {
-                    el.classList.add('timer-visible');
-                }
-            });
-            timerShown = true;
-        }
-
-        function checkTimer() {
-            if (timerShown) return;
-            var timerEl = document.getElementById('otree-timer') || document.querySelector('.otree-timer');
-            if (!timerEl) return;
-            var text = timerEl.innerText || timerEl.textContent || '';
-            var match = text.match(/(\d+):(\d{2})/);
-            if (match) {
-                var minutes = parseInt(match[1], 10);
-                var seconds = parseInt(match[2], 10);
-                var totalSeconds = minutes * 60 + seconds;
-                if (totalSeconds <= SHOW_AT_SECONDS) {
-                    revealTimer();
-                }
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            setInterval(checkTimer, 500);
-        });
-    })();
-</script>
 
 {{ include_sibling '_button_style.html' }}
 
 </p>
-<p><strong>Note that if you have not made your decision within 5 minutes, you will be
-        excluded from the experiment.</strong>
-</p>
+
 <h4>You are the {{ my_color }} Participant.</h4>
 
 {# === Belief Elicitation: Guess partners' choices === #}
@@ -188,19 +109,23 @@
                 <strong>How confident are you about your guess:</strong>
                 <div class="mt-2">
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="guess_left_confidence" value="" id="left_conf_1" required>
+                        <input class="form-check-input" type="radio" name="guess_left_confidence" value=""
+                            id="left_conf_1" required>
                         <label class="form-check-label" for="left_conf_1">not at all confident</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="guess_left_confidence" value="" id="left_conf_2" required>
+                        <input class="form-check-input" type="radio" name="guess_left_confidence" value=""
+                            id="left_conf_2" required>
                         <label class="form-check-label" for="left_conf_2">fairly confident</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="guess_left_confidence" value="" id="left_conf_3" required>
+                        <input class="form-check-input" type="radio" name="guess_left_confidence" value=""
+                            id="left_conf_3" required>
                         <label class="form-check-label" for="left_conf_3">highly confident</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="guess_left_confidence" value="" id="left_conf_4" required>
+                        <input class="form-check-input" type="radio" name="guess_left_confidence" value=""
+                            id="left_conf_4" required>
                         <label class="form-check-label" for="left_conf_4">totally confident</label>
                     </div>
                 </div>
@@ -226,19 +151,23 @@
                 <strong>How confident are you about your guess:</strong>
                 <div class="mt-2">
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="guess_right_confidence" value="" id="right_conf_1" required>
+                        <input class="form-check-input" type="radio" name="guess_right_confidence" value=""
+                            id="right_conf_1" required>
                         <label class="form-check-label" for="right_conf_1">not at all confident</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="guess_right_confidence" value="" id="right_conf_2" required>
+                        <input class="form-check-input" type="radio" name="guess_right_confidence" value=""
+                            id="right_conf_2" required>
                         <label class="form-check-label" for="right_conf_2">fairly confident</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="guess_right_confidence" value="" id="right_conf_3" required>
+                        <input class="form-check-input" type="radio" name="guess_right_confidence" value=""
+                            id="right_conf_3" required>
                         <label class="form-check-label" for="right_conf_3">highly confident</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="guess_right_confidence" value="" id="right_conf_4" required>
+                        <input class="form-check-input" type="radio" name="guess_right_confidence" value=""
+                            id="right_conf_4" required>
                         <label class="form-check-label" for="right_conf_4">totally confident</label>
                     </div>
                 </div>
@@ -276,15 +205,18 @@ Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
         font-weight: bold !important;
         cursor: pointer !important;
     }
+
     .custom-experiment-btn:hover {
         background-color: #5a6268 !important;
         color: white !important;
     }
+
     .custom-experiment-btn:focus {
         background-color: #5a6268 !important;
         color: white !important;
         box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5) !important;
     }
+
     .custom-experiment-btn:active {
         background-color: #545b62 !important;
         color: white !important;
@@ -403,11 +335,11 @@ Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
         if (leftConfContainer) {
             const leftConfRadios = leftConfContainer.querySelectorAll('input[type="radio"]');
             leftChoices.forEach(radio => {
-                radio.addEventListener('change', function() {
+                radio.addEventListener('change', function () {
                     leftConfContainer.style.display = 'block';
                     // Reset selection when changing guess
                     leftConfRadios.forEach(r => r.checked = false);
-                    
+
                     // For Left partner, 'Right' means "You"
                     if (this.value === 'Right') {
                         leftConfRadios[0].value = 5;
@@ -430,11 +362,11 @@ Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
         if (rightConfContainer) {
             const rightConfRadios = rightConfContainer.querySelectorAll('input[type="radio"]');
             rightChoices.forEach(radio => {
-                radio.addEventListener('change', function() {
+                radio.addEventListener('change', function () {
                     rightConfContainer.style.display = 'block';
                     // Reset selection when changing guess
                     rightConfRadios.forEach(r => r.checked = false);
-                    
+
                     // For Right partner, 'Left' means "You"
                     if (this.value === 'Left') {
                         rightConfRadios[0].value = 5;
