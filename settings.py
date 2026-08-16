@@ -92,7 +92,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     real_world_currency_per_point=1.00, participation_fee=1.50, doc="",
     control_questions_max_attempts=5,  # Numero massimo di tentativi per le control questions
     skip_intro_control_questions=False,  # Temporarily disable intro control questions
-    use_test_timers=False,  # Set all page timers to 60s for testing
+    use_test_timers=True,  # Set all page timers to 60s for testing
     require_prolific_id=True,  # False solo in dev locale; produzione: sempre True
 )
 

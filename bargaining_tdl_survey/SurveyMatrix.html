@@ -1,5 +1,5 @@
 {{ extends "_templates/global/Page.html" }}
-{{ block title }}Please indicate how much you agree or disagree with each statement{{ endblock }}
+{{ block title }}{{ page_title }}{{ endblock }}
 {{ block content }}
 
 {{ include_sibling '_button_style.html' }}
@@ -64,6 +64,9 @@
 
 <div class="card bg-white mt-4 mb-4 shadow-sm">
     <div class="card-body px-4 py-4">
+        <p class="fw-bold mb-1">
+            Please indicate how much you agree or disagree with each statement.
+        </p>
         <p class="text-muted mb-0">
             Select exactly one response for every statement.
         </p>
@@ -89,15 +92,9 @@
                         </th>
                         {% for value, label in agreement_scale %}
                         <td class="radio-cell">
-                            <input
-                                type="radio"
-                                name="{{ item.field_name }}"
-                                id="{{ item.field_name }}_{{ value }}"
-                                value="{{ value }}"
-                                aria-labelledby="{{ item.field_name }}_statement"
-                                aria-label="{{ label }}"
-                                {% if item.current_value == value %}checked{% endif %}
-                                required>
+                            <input type="radio" name="{{ item.field_name }}" id="{{ item.field_name }}_{{ value }}"
+                                value="{{ value }}" aria-labelledby="{{ item.field_name }}_statement"
+                                aria-label="{{ label }}" {% if item.current_value == value %}checked{% endif %} required>
                         </td>
                         {% endfor %}
                     </tr>

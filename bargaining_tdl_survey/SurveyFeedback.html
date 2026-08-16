@@ -1,5 +1,5 @@
 {{ extends "_templates/global/Page.html" }}
-{{ block title }}Survey - Feedback{{ endblock }}
+{{ block title }}Experiment - Feedback{{ endblock }}
 {{ block content }}
 
 {{ include_sibling '_button_style.html' }}
@@ -59,14 +59,8 @@
             <label for="id_general_comment" class="form-label fw-bold">
                 Please write any general comment about the experiment:
             </label>
-            <textarea
-                name="general_comment"
-                id="id_general_comment"
-                class="form-control"
-                rows="5"
-                required
-                placeholder="Example: I had to wait too long, some instructions were unclear..."
-            ></textarea>
+            <textarea name="general_comment" id="id_general_comment" class="form-control" rows="5" required
+                placeholder="Example: I had to wait too long, some instructions were unclear..."></textarea>
         </div>
     </div>
 </div>

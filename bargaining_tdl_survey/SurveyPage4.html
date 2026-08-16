@@ -1,5 +1,5 @@
 {{ extends "_templates/global/Page.html" }}
-{{ block title }}Survey{{ endblock }}
+{{ block title }}Survey Page 2 of 5{{ endblock }}
 {{ block content }}
 
 <style>
@@ -50,30 +50,155 @@
 <div class="card bg-white mt-4 mb-4 shadow-sm">
     <div class="card-body px-5 py-4">
 
-        <p class="fw-bold mb-1">
-            How willing are you to give up something that is beneficial for you today in order
-            to benefit more from that in the future?
-        </p>
-        <p class="text-muted mb-3" style="font-size:0.9rem;">
-            (0 = completely unwilling to do so, 10 = very willing to do so)
-        </p>
-
-        <div class="scale-container">
-            {{ for value in scale_values }}
-            <div class="scale-item">
-                <span class="scale-number">{{ value }}</span>
-                <input type="radio" name="willingness_future" value="{{ value }}" id="wf_{{ value }}" required>
+        <!-- Question 1: willingness_future (Page 4) -->
+        <div class="mb-5">
+            <p class="fw-bold mb-1">
+                How willing are you to give up something that is beneficial for you today in order
+                to benefit more from that in the future?
+            </p>
+            <p class="text-muted mb-3" style="font-size:0.9rem;">
+                (0 = completely unwilling to do so, 10 = very willing to do so)
+            </p>
+            <div class="scale-container">
+                {{ for value in scale_values }}
+                <div class="scale-item">
+                    <span class="scale-number">{{ value }}</span>
+                    <input type="radio" name="willingness_future" value="{{ value }}" id="wf_{{ value }}" required>
+                </div>
+                {{ endfor }}
             </div>
-            {{ endfor }}
+            <div class="scale-labels">
+                <span>Completely unwilling</span>
+                <span>Very willing</span>
+            </div>
+            <div id="willingness_future-error" class="text-danger mt-2" style="display:none;"></div>
         </div>
 
-        <div class="scale-labels">
-            <span>Completely unwilling</span>
-            <span>Very willing</span>
+        <hr class="mb-5">
+
+        <!-- Question 2: willingness_risk (Page 5) -->
+        <div class="mb-5">
+            <p class="fw-bold mb-1">
+                Please tell me, in general, how willing or unwilling you are to take risks.
+            </p>
+            <p class="text-muted mb-3" style="font-size:0.9rem;">
+                (0 = completely unwilling to do so, 10 = very willing to do so)
+            </p>
+            <div class="scale-container">
+                {{ for value in scale_values }}
+                <div class="scale-item">
+                    <span class="scale-number">{{ value }}</span>
+                    <input type="radio" name="willingness_risk" value="{{ value }}" id="wr_{{ value }}" required>
+                </div>
+                {{ endfor }}
+            </div>
+            <div class="scale-labels">
+                <span>Completely unwilling</span>
+                <span>Very willing</span>
+            </div>
+            <div id="willingness_risk-error" class="text-danger mt-2" style="display:none;"></div>
         </div>
 
-        <!-- Hidden error field placeholder for oTree validation -->
-        <div id="willingness_future-error" class="text-danger mt-2" style="display:none;"></div>
+        <hr class="mb-5">
+
+        <!-- Question 3: reciprocity_positive (Page 6) -->
+        <div class="mb-5">
+            <p class="fw-bold mb-1">
+                When someone does me a favor I am willing to return it.
+            </p>
+            <p class="text-muted mb-3" style="font-size:0.9rem;">
+                (0 = does not describe me at all, 10 = describes me perfectly)
+            </p>
+            <div class="scale-container">
+                {{ for value in scale_values }}
+                <div class="scale-item">
+                    <span class="scale-number">{{ value }}</span>
+                    <input type="radio" name="reciprocity_positive" value="{{ value }}" id="rp_{{ value }}" required>
+                </div>
+                {{ endfor }}
+            </div>
+            <div class="scale-labels">
+                <span>Does not describe me at all</span>
+                <span>Describes me perfectly</span>
+            </div>
+            <div id="reciprocity_positive-error" class="text-danger mt-2" style="display:none;"></div>
+        </div>
+
+        <hr class="mb-5">
+
+        <!-- Question 4: reciprocity_negative (Page 7) -->
+        <div class="mb-5">
+            <p class="fw-bold mb-1">
+                If I am treated very unjustly, I will take revenge at the first occasion,
+                even if there is a cost to do so.
+            </p>
+            <p class="text-muted mb-3" style="font-size:0.9rem;">
+                (0 = does not describe me at all, 10 = describes me perfectly)
+            </p>
+            <div class="scale-container">
+                {{ for value in scale_values }}
+                <div class="scale-item">
+                    <span class="scale-number">{{ value }}</span>
+                    <input type="radio" name="reciprocity_negative" value="{{ value }}" id="rn_{{ value }}" required>
+                </div>
+                {{ endfor }}
+            </div>
+            <div class="scale-labels">
+                <span>Does not describe me at all</span>
+                <span>Describes me perfectly</span>
+            </div>
+            <div id="reciprocity_negative-error" class="text-danger mt-2" style="display:none;"></div>
+        </div>
+
+        <hr class="mb-5">
+
+        <!-- Question 5: willingness_donate (Page 8) -->
+        <div class="mb-5">
+            <p class="fw-bold mb-1">
+                How willing are you to give to good causes without expecting anything in return?
+            </p>
+            <p class="text-muted mb-3" style="font-size:0.9rem;">
+                (0 = completely unwilling to do so, 10 = very willing to do so)
+            </p>
+            <div class="scale-container">
+                {{ for value in scale_values }}
+                <div class="scale-item">
+                    <span class="scale-number">{{ value }}</span>
+                    <input type="radio" name="willingness_donate" value="{{ value }}" id="wd_{{ value }}" required>
+                </div>
+                {{ endfor }}
+            </div>
+            <div class="scale-labels">
+                <span>Completely unwilling</span>
+                <span>Very willing</span>
+            </div>
+            <div id="willingness_donate-error" class="text-danger mt-2" style="display:none;"></div>
+        </div>
+
+        <hr class="mb-5">
+
+        <!-- Question 6: trust_general (Page 9) -->
+        <div class="mb-2">
+            <p class="fw-bold mb-1">
+                I assume that people have only the best intentions.
+            </p>
+            <p class="text-muted mb-3" style="font-size:0.9rem;">
+                (0 = does not describe me at all, 10 = describes me perfectly)
+            </p>
+            <div class="scale-container">
+                {{ for value in scale_values }}
+                <div class="scale-item">
+                    <span class="scale-number">{{ value }}</span>
+                    <input type="radio" name="trust_general" value="{{ value }}" id="tg_{{ value }}" required>
+                </div>
+                {{ endfor }}
+            </div>
+            <div class="scale-labels">
+                <span>Does not describe me at all</span>
+                <span>Describes me perfectly</span>
+            </div>
+            <div id="trust_general-error" class="text-danger mt-2" style="display:none;"></div>
+        </div>
 
     </div>
 </div>

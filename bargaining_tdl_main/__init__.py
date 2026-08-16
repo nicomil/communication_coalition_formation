@@ -445,6 +445,13 @@ def _seconds_since_last_request(player: Player):
     return max(0.0, time.time() - ts)
 
 
+def custom_export(players):
+    # Riferimento dummy per silenziare il warning (id=131) del linter di oTree
+    # per funzioni esportate in un'altra app (bargaining_tdl_survey).
+    _ = [seconds_until_absent, finalize_absent_players]
+    yield ['session', 'participant', 'player', 'payoff']
+
+
 def is_participant_absent(player: Player):
     """True se il partecipante non risponde più: o il timeout della pagina su
     cui è fermo è già scaduto lato server, o non contatta il server da
@@ -544,13 +551,13 @@ def _evaluate_dropout(group: Group):
             _mark_group_dropped(group)
         return
 
-    # Controlliamo se qualcuno è sparito (nessun ping recente e non ha ancora finito la fase)
-    # Nota: escludiamo chi ha già finito la fase di chat (chat_left_pX). L'heartbeat
-    # esiste solo su Chat.html, quindi dopo l'uscita dalla chat il last_ping si
-    # congela per design: non va interpretato come disconnessione.
-    left_state = _chat_left_state(group)
+    # Controlliamo se qualcuno è sparito (nessun ping recente su pagine attive)
     for player_id in [1, 2, 3]:
-        if left_state[player_id]:
+        p = group.get_player_by_id(player_id)
+        page = p.participant._get_page_instance()
+        
+        # Ignoriamo chi è su WaitPage o risultati, dove l'heartbeat è sospeso per design.
+        if not page or page.__class__.__name__ not in ['Chat', 'Signals', 'Decision']:
             continue
 
         grace_until = _get_submit_grace_until(group, player_id)
@@ -899,23 +906,17 @@ class Signals(Page):
     def before_next_page(player, timeout_happened):
         player.time_signals = float(player.time_on_page)
         if timeout_happened:
-            player.signal_inactive = 99
-            player.part1_payoff_eligible = False
-            player.participant.vars['part1_payoff_eligible'] = False
-            import random
-            player.signal_left = random.choice(VALID_SIGNALS)
-            player.signal_right = random.choice(VALID_SIGNALS)
-            # NOTE: do NOT set inactive_excluded here.
-            # The inactive player must still pass through DataMappingWaitPage so
-            # the other two group members are not blocked forever on that WaitPage.
-            # InactivityGoodbyeMain (end of page_sequence) will catch them via
-            # `not player.part1_payoff_eligible` and redirect to dropoutlink_inactive.
+            player.participant.vars['timeout_excluded'] = True
+            player.group.interrupted_player_id = player.id_in_group
+            _mark_group_dropped(player.group)
         else:
             set_control_questions_failed(player, 'intro', failed=False)
         logger.debug(f"Signals - time_signals saved: {player.time_signals}")
-        player.participant.vars['signal_left'] = player.signal_left
-        player.participant.vars['signal_right'] = player.signal_right
-        player.participant.vars['signal_inactive'] = player.signal_inactive
+        
+        if not timeout_happened:
+            player.participant.vars['signal_left'] = player.signal_left
+            player.participant.vars['signal_right'] = player.signal_right
+            player.participant.vars['signal_inactive'] = player.signal_inactive
 
 
 class ExperimentTerminated(Page):
@@ -925,22 +926,22 @@ class ExperimentTerminated(Page):
     
     @staticmethod
     def is_displayed(player):
-        """Mostra questa pagina solo se il partecipante ha fallito le control questions."""
-        return has_failed_control_questions(player, 'intro') or _is_inactive_excluded(player)
+        """Mostra questa pagina se il partecipante ha fallito le CQ o è andato in timeout."""
+        return has_failed_control_questions(player, 'intro') or _is_inactive_excluded(player) or player.participant.vars.get('timeout_excluded')
 
     @staticmethod
     def vars_for_template(player):
         return dict(
-            is_inactive=_is_inactive_excluded(player)
+            is_inactive=_is_inactive_excluded(player) or player.participant.vars.get('timeout_excluded', False)
         )
 
     @staticmethod
     def js_vars(player):
         is_inactive = _is_inactive_excluded(player)
-        if is_inactive:
+        is_timeout = player.participant.vars.get('timeout_excluded')
+        if is_timeout or is_inactive:
             link = player.session.config.get('dropoutlink_inactive', '').strip()
         else:
-            # failed CQ via main (edge case): use CQ dropout link
             link = player.session.config.get('dropoutlink_cq', '').strip()
         return dict(completionlink=link)
     
@@ -955,12 +956,13 @@ class ExperimentTerminated(Page):
 
 class DataMappingWaitPage(WaitPage):
     """Sync and map participant.vars (intro chat/signals) to group received_* fields."""
+    template_name = 'bargaining_tdl_main/DataMappingWaitPage.html'
     title_text = "Please wait"
     body_text = "Waiting for other participants."
 
     @staticmethod
     def is_displayed(player):
-        return not has_failed_control_questions(player, 'intro')
+        return not has_failed_control_questions(player, 'intro') and not player.participant.vars.get('timeout_excluded')
 
     @staticmethod
     def vars_for_template(player):
@@ -1117,16 +1119,12 @@ class Decision(Page):
     def before_next_page(player, timeout_happened):
         player.time_decision = save_time_value(player.time_on_page)
         if timeout_happened:
-            # Randomize the decision choice with equal probability 1/3 each.
-            # Using a fixed default ('Left') would systematically bias the data
-            # whenever a participant drops out, creating an experimental confound.
             import random
             player.decision_choice = random.choice(['Left', 'Right', 'NoOne'])
-            # Mark as inactive (99) for dataset tracking.
             player.decision_inactive = 99
-            # Inattività rilevata: escludiamo dal pagamento
             player.part1_payoff_eligible = False
             player.participant.vars['part1_payoff_eligible'] = False
+            player.participant.vars['timeout_excluded'] = True
 
 
 class PostDecisionConfidence(Page):
@@ -1143,16 +1141,6 @@ class PostDecisionConfidence(Page):
         'guess_right_choice',
         'time_on_page',
     ]
-    _PDC_TIMEOUT = 300
-    timeout_submission = timeout_submission_with_time(
-        _PDC_TIMEOUT,
-        guess_left_choice='NoOne',
-        guess_right_choice='NoOne',
-    )
-
-    @staticmethod
-    def get_timeout_seconds(player):
-        return get_page_timeout_seconds(player, PostDecisionConfidence._PDC_TIMEOUT)
 
     @staticmethod
     def is_displayed(player):
@@ -1267,13 +1255,12 @@ class InactivityGoodbyeMain(Page):
 
     @staticmethod
     def is_displayed(player):
-        # Se il giocatore è stato escluso per inattività o dropout, vede questa pagina
-        return _is_inactive_excluded(player) or player.decision_inactive == 99 or not player.part1_payoff_eligible
+        return _is_inactive_excluded(player) or player.decision_inactive == 99 or not player.part1_payoff_eligible or player.participant.vars.get('timeout_excluded')
 
     @staticmethod
     def js_vars(player):
         return dict(
-            completionlink=player.session.config.get('dropoutlink_inactive', '').strip(),
+            completionlink=player.session.config.get('dropoutlink_inactive', '').strip()
         )
 
     @staticmethod

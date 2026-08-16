@@ -318,7 +318,10 @@ class SurveyPage1(_SurveyTimedPage):
 
     @staticmethod
     def vars_for_template(player):
-        return _matrix_context(player, SD3_MACHIAVELLIANISM_ITEMS)
+        return {
+            **_matrix_context(player, SD3_MACHIAVELLIANISM_ITEMS),
+            'page_title': "Survey Page 3 of 5"
+        }
 
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -339,7 +342,10 @@ class SurveyPage2(_SurveyTimedPage):
 
     @staticmethod
     def vars_for_template(player):
-        return _matrix_context(player, SD3_NARCISSISM_ITEMS)
+        return {
+            **_matrix_context(player, SD3_NARCISSISM_ITEMS),
+            'page_title': "Survey Page 4 of 5"
+        }
 
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -360,7 +366,10 @@ class SurveyPage3(_SurveyTimedPage):
 
     @staticmethod
     def vars_for_template(player):
-        return _matrix_context(player, SD3_PSYCHOPATHY_ITEMS)
+        return {
+            **_matrix_context(player, SD3_PSYCHOPATHY_ITEMS),
+            'page_title': "Survey Page 5 of 5"
+        }
 
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -372,9 +381,17 @@ class SurveyPage3(_SurveyTimedPage):
 
 
 class SurveyPage4(_SurveyTimedPage):
-    """Willingness to delay gratification — 0–10 scale."""
+    """Combined Survey Page (4-9)"""
     form_model = 'player'
-    form_fields = ['willingness_future', 'time_on_page']
+    form_fields = [
+        'willingness_future',
+        'willingness_risk',
+        'reciprocity_positive',
+        'reciprocity_negative',
+        'willingness_donate',
+        'trust_general',
+        'time_on_page'
+    ]
 
     @staticmethod
     def vars_for_template(player):
@@ -389,94 +406,7 @@ class SurveyPage4(_SurveyTimedPage):
         return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
-class SurveyPage5(_SurveyTimedPage):
-    """General willingness to take risks — 0–10 scale."""
-    form_model = 'player'
-    form_fields = ['willingness_risk', 'time_on_page']
 
-    @staticmethod
-    def vars_for_template(player):
-        return {'scale_values': list(range(11))}
-
-    @staticmethod
-    def before_next_page(player, timeout_happened):
-        player.time_survey_page5 = player.time_on_page or 0
-
-    @staticmethod
-    def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
-
-
-class SurveyPage6(_SurveyTimedPage):
-    """Positive reciprocity self-assessment — 0–10 scale."""
-    form_model = 'player'
-    form_fields = ['reciprocity_positive', 'time_on_page']
-
-    @staticmethod
-    def vars_for_template(player):
-        return {'scale_values': list(range(11))}
-
-    @staticmethod
-    def before_next_page(player, timeout_happened):
-        player.time_survey_page6 = player.time_on_page or 0
-
-    @staticmethod
-    def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
-
-
-class SurveyPage7(_SurveyTimedPage):
-    """Negative reciprocity self-assessment — 0–10 scale."""
-    form_model = 'player'
-    form_fields = ['reciprocity_negative', 'time_on_page']
-
-    @staticmethod
-    def vars_for_template(player):
-        return {'scale_values': list(range(11))}
-
-    @staticmethod
-    def before_next_page(player, timeout_happened):
-        player.time_survey_page7 = player.time_on_page or 0
-
-    @staticmethod
-    def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
-
-
-class SurveyPage8(_SurveyTimedPage):
-    """Altruism — willingness to donate to good causes — 0–10 scale."""
-    form_model = 'player'
-    form_fields = ['willingness_donate', 'time_on_page']
-
-    @staticmethod
-    def vars_for_template(player):
-        return {'scale_values': list(range(11))}
-
-    @staticmethod
-    def before_next_page(player, timeout_happened):
-        player.time_survey_page8 = player.time_on_page or 0
-
-    @staticmethod
-    def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
-
-
-class SurveyPage9(_SurveyTimedPage):
-    """General trust self-assessment — 0–10 scale."""
-    form_model = 'player'
-    form_fields = ['trust_general', 'time_on_page']
-
-    @staticmethod
-    def vars_for_template(player):
-        return {'scale_values': list(range(11))}
-
-    @staticmethod
-    def before_next_page(player, timeout_happened):
-        player.time_survey_page9 = player.time_on_page or 0
-
-    @staticmethod
-    def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
 
 
 class SurveyPage10(_SurveyTimedPage):
@@ -789,15 +719,16 @@ def _calculate_payoffs_if_needed(main_group, force=False):
 
 
 
+class SurveyIntro(Page):
+    form_model = 'player'
+    form_fields = ['time_on_page']
+
+
 page_sequence = [
     SurveyPage10,
+    SurveyIntro,
     SurveyQuestions,
     SurveyPage4,
-    SurveyPage5,
-    SurveyPage6,
-    SurveyPage7,
-    SurveyPage8,
-    SurveyPage9,
     SurveyPage1,
     SurveyPage2,
     SurveyPage3,
