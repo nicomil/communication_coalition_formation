@@ -545,6 +545,77 @@ class SurveyTerminated(Page):
         return []
 
 
+class WaitForPart1Results(Page):
+    """Attesa breve prima di FinalResults, mostrata solo se il gruppo non è
+    ancora chiudibile.
+
+    Caso tipico: un compagno ha chiuso il browser e non ha deciso. Il suo
+    timer di pagina non scatta (vive nel client), quindi senza questa pagina
+    chi ha finito arriverebbe su FinalResults con la decisione del compagno
+    ancora NULL — che è l'origine dell'Application error 500.
+
+    La pagina si auto-ricarica: appena il compagno decide, oppure appena
+    scatta la finalizzazione d'ufficio, is_displayed diventa False e oTree
+    manda avanti da solo. Chi trova il gruppo già pronto non la vede mai.
+    """
+    form_model = 'player'
+    form_fields = ['time_on_page']
+
+    @staticmethod
+    def is_displayed(player):
+        if _is_inactive_excluded(player) or _is_group_dropped_inactive(player):
+            return False
+        from bargaining_tdl_common import get_main_group_player # type: ignore
+        main_player = get_main_group_player(player)
+        if not main_player:
+            return False
+        # Il tentativo di calcolo è idempotente: si ferma da solo se i payoff
+        # del gruppo sono già stati scritti.
+        return not _calculate_payoffs_if_needed(main_player.group)
+
+    @staticmethod
+    def get_timeout_seconds(player):
+        """Rete di sicurezza per chi ha il JavaScript bloccato: allo scadere
+        si finalizza comunque. Dura quanto manca al compagno più lento per
+        essere considerato assente."""
+        from bargaining_tdl_common import get_main_group_player # type: ignore
+        from bargaining_tdl_main import seconds_until_absent # type: ignore
+        main_player = get_main_group_player(player)
+        if not main_player:
+            return 5
+        pending = [
+            seconds_until_absent(p)
+            for p in main_player.group.get_players()
+            if not p.field_maybe_none('decision_choice')
+        ]
+        return max(5, min(pending) + 5) if pending else 5
+
+    @staticmethod
+    def vars_for_template(player):
+        from bargaining_tdl_common import get_main_group_player # type: ignore
+        from bargaining_tdl_main import seconds_until_absent # type: ignore
+        main_player = get_main_group_player(player)
+        wait_seconds = 0
+        if main_player:
+            pending = [
+                seconds_until_absent(p)
+                for p in main_player.group.get_players()
+                if not p.field_maybe_none('decision_choice')
+            ]
+            wait_seconds = min(pending) if pending else 0
+        return dict(wait_seconds=wait_seconds)
+
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        if not timeout_happened:
+            return
+        # Timeout raggiunto: si chiude comunque, senza aspettare oltre.
+        from bargaining_tdl_common import get_main_group_player # type: ignore
+        main_player = get_main_group_player(player)
+        if main_player:
+            _calculate_payoffs_if_needed(main_player.group, force=True)
+
+
 class FinalResults(Page):
     """Final screen of the experiment summarizing payoffs."""
     form_model = 'player'
@@ -562,7 +633,8 @@ class FinalResults(Page):
         main_player = get_main_group_player(player)
 
         if main_player:
-            _calculate_payoffs_if_needed(main_player.group)
+            # force=True: siamo all'ultima pagina, oltre non si aspetta più.
+            _calculate_payoffs_if_needed(main_player.group, force=True)
         
         part1_group_id = player.participant.vars.get('part1_group_id')
         part1_payoff_eligible = bool(player.participant.vars.get('part1_payoff_eligible', True))
@@ -609,9 +681,18 @@ class FinalResults(Page):
             left_inactive = (left_partner.decision_inactive == 99)
             right_inactive = (right_partner.decision_inactive == 99)
 
-            my_choice_display = format_choice(main_player.decision_choice, my_id)
-            left_choice_display = format_choice(left_partner.decision_choice, left_id)
-            right_choice_display = format_choice(right_partner.decision_choice, right_id)
+            # field_maybe_none: se un partner non ha mai deciso il campo è NULL
+            # e la lettura diretta solleverebbe TypeError, mandando in 500 la
+            # pagina finale di chi invece ha completato.
+            my_choice_display = format_choice(
+                main_player.field_maybe_none('decision_choice'), my_id
+            )
+            left_choice_display = format_choice(
+                left_partner.field_maybe_none('decision_choice'), left_id
+            )
+            right_choice_display = format_choice(
+                right_partner.field_maybe_none('decision_choice'), right_id
+            )
 
         return {
             'part1_group_id': part1_group_id,
@@ -644,16 +725,21 @@ class FinalResults(Page):
 
 
 
-def _calculate_payoffs_if_needed(main_group):
+def _calculate_payoffs_if_needed(main_group, force=False):
+    """Calcola i payoff di Part 1 se il gruppo è pronto.
+
+    Ritorna True se i payoff sono disponibili, False se manca ancora la
+    decisione di qualcuno che potrebbe tornare.
+    """
     p1 = main_group.get_player_by_id(1)
-    
+
     # Calcola i payoff solo una volta per il gruppo
     if 'part1_payoff' in p1.participant.vars:
-        return
+        return True
 
     from bargaining_tdl_common import treatment_flag, custom_calculate_payoff_vector, VALID_DECISIONS # type: ignore
+    from bargaining_tdl_main import finalize_absent_players # type: ignore
     from otree.api import Currency as cu # type: ignore
-    import random
     import logging
     logger = logging.getLogger(__name__)
 
@@ -662,17 +748,21 @@ def _calculate_payoffs_if_needed(main_group):
     p3 = main_group.get_player_by_id(3)
     players = [p1, p2, p3]
 
-    for p in players:
-        if p.decision_inactive == 99 and not p.decision_choice:
-            p.decision_choice = random.choice(VALID_DECISIONS)
+    # Chi è sparito senza decidere riceve ora una scelta casuale, così gli
+    # altri due non restano appesi. Con force=True non si aspetta oltre.
+    if not finalize_absent_players(main_group, force=force):
+        logger.info(
+            f"Gruppo {main_group.id}: decisione mancante, payoff rimandati."
+        )
+        return False
 
-    c1 = p1.decision_choice
-    c2 = p2.decision_choice
-    c3 = p3.decision_choice
+    c1 = p1.field_maybe_none('decision_choice')
+    c2 = p2.field_maybe_none('decision_choice')
+    c3 = p3.field_maybe_none('decision_choice')
 
     if any(c not in VALID_DECISIONS for c in [c1, c2, c3]):
         logger.debug(f"Skipping group {main_group.id} (invalid decisions).")
-        return
+        return False
 
     payoff_values, outcome = custom_calculate_payoff_vector(
         (c1, c2, c3),
@@ -694,6 +784,8 @@ def _calculate_payoffs_if_needed(main_group):
         p.participant.vars['part1_group_id'] = main_group.id
         p.participant.vars['group_outcome'] = outcome
 
+    return True
+
 
 
 
@@ -711,5 +803,6 @@ page_sequence = [
     SurveyPage3,
     SurveyFeedback,
     SurveyTerminated,
+    WaitForPart1Results,
     FinalResults,
 ]

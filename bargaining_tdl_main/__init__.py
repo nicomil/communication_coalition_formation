@@ -431,6 +431,67 @@ def _notify_browser_auto_advance(participant):
         )
 
 
+# Secondi di silenzio oltre i quali un partecipante viene finalizzato d'ufficio.
+# Serve perché il timer di pagina di oTree vive nel browser: se la scheda è
+# chiusa il timeout non scatta mai, decision_choice resta NULL e gli altri due
+# del gruppo non possono chiudere Part 1.
+ABSENT_FINALIZE_SECONDS = 180
+
+
+def _seconds_since_last_request(player: Player):
+    ts = player.participant._last_request_timestamp or 0
+    if not ts:
+        return 0.0
+    return max(0.0, time.time() - ts)
+
+
+def is_participant_absent(player: Player):
+    """True se il partecipante non risponde più: o il timeout della pagina su
+    cui è fermo è già scaduto lato server, o non contatta il server da
+    ABSENT_FINALIZE_SECONDS."""
+    expiration = player.participant._timeout_expiration_time or 0
+    if expiration and time.time() > expiration:
+        return True
+    return _seconds_since_last_request(player) > ABSENT_FINALIZE_SECONDS
+
+
+def seconds_until_absent(player: Player):
+    """Quanto manca prima che questo giocatore possa essere finalizzato."""
+    if is_participant_absent(player):
+        return 0
+    remaining = [ABSENT_FINALIZE_SECONDS - _seconds_since_last_request(player)]
+    expiration = player.participant._timeout_expiration_time or 0
+    if expiration:
+        remaining.append(expiration - time.time())
+    return max(0, int(round(min(remaining))))
+
+
+def finalize_absent_players(group: Group, force=False):
+    """Assegna una scelta casuale a chi è sparito senza decidere, così il
+    gruppo può calcolare i payoff. Chi viene finalizzato così perde
+    l'idoneità al pagamento di Part 1: l'osservazione non è sua.
+
+    Ritorna True se tutti e tre hanno ora una decisione valida.
+    """
+    import random
+    for p in group.get_players():
+        if p.field_maybe_none('decision_choice'):
+            continue
+        if not (force or is_participant_absent(p)):
+            continue
+        p.decision_choice = random.choice(VALID_DECISIONS)
+        p.decision_inactive = 99
+        p.part1_payoff_eligible = False
+        p.participant.part1_payoff_eligible = False
+        p.participant.vars['part1_payoff_eligible'] = False
+        logger.info(
+            f"finalize_absent_players: gruppo {group.id}, giocatore "
+            f"{p.id_in_group} assente da {_seconds_since_last_request(p):.0f}s, "
+            f"scelta casuale {p.decision_choice}"
+        )
+    return all(p.field_maybe_none('decision_choice') for p in group.get_players())
+
+
 def _mark_group_dropped(group: Group):
     group.group_dropped = True
     # We do NOT set group.part1_payoff_eligible = False globally anymore.

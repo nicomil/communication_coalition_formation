@@ -2,12 +2,28 @@
 {{ block title }}Please wait{{ endblock }}
 {{ block content }}
     <div class="alert alert-info">
-        <p>Waiting for the other participants in your group to finish Part 1 so we can compute your final payoff.</p>
-        <p>This page will automatically refresh every 5 seconds.</p>
+        <p>
+            We are computing your final payoff. One participant in your group has
+            not submitted their decision yet.
+        </p>
+        <p>
+            This takes at most a couple of minutes. Please keep this page open —
+            it continues on its own, you do not need to do anything.
+        </p>
     </div>
-    
+
+    <style>
+        /* Niente pulsante Next: avanzare a mano qui significherebbe far
+           assegnare una scelta casuale a un compagno che sta ancora
+           decidendo. Si prosegue solo da soli, al ricaricamento o allo
+           scadere del timer di pagina. */
+        .otree-btn-next { display: none !important; }
+    </style>
+
     <script>
-        setTimeout(function() {
+        // Ricarica finché il gruppo non è chiudibile: quando i payoff sono
+        // pronti is_displayed diventa False e oTree manda avanti da solo.
+        setTimeout(function () {
             window.location.reload();
         }, 5000);
     </script>
