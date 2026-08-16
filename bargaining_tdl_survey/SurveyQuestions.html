@@ -1,5 +1,5 @@
 {{ extends "_templates/global/Page.html" }}
-{{ block title }}Survey – Questions{{ endblock }}
+{{ block title }}Survey Page 1 of 5{{ endblock }}
 {{ block content }}
 
 <style>
@@ -69,7 +69,7 @@
 {{ next_button }}
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         const jobTypeWrapper = document.getElementById("job-type-wrapper");
         const mainSituationRadios = document.querySelectorAll('input[name="main_situation"]');
         let manuallySelected = false; // Prevent overwriting user choice if they re-select paid_work
@@ -93,7 +93,7 @@
                     // Remember if the user had selected something else manually before we auto-set it
                     const currentlyChecked = document.querySelector('input[name="job_type"]:checked');
                     if (currentlyChecked && currentlyChecked.value !== 'not_employed') {
-                        manuallySelected = false; 
+                        manuallySelected = false;
                     }
                     notEmployedRadio.checked = true;
                 }
@@ -102,7 +102,7 @@
 
         // Listen for changes on job type to mark if user manually chose an option
         document.querySelectorAll('input[name="job_type"]').forEach(r => {
-            r.addEventListener('change', function() {
+            r.addEventListener('change', function () {
                 if (this.value !== 'not_employed') {
                     manuallySelected = true;
                 }
@@ -110,7 +110,7 @@
         });
 
         mainSituationRadios.forEach(r => r.addEventListener('change', updateJobTypeVisibility));
-        
+
         // Run on load
         updateJobTypeVisibility();
     });

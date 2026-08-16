@@ -79,7 +79,9 @@
 {{ include_sibling '_button_style.html' }}
 
 </p>
-
+<p>Please answer the following questions about the task you have just completed.</p>
+<p>In this part of the experiment we ask you to guess the choices of the
+    participants you were matched with.</p>
 <h4>You are the {{ my_color }} Participant.</h4>
 
 {# === Belief Elicitation: Guess partners' choices === #}
@@ -88,8 +90,25 @@
         <h4 class="mb-0">Guess your partners' choices</h4>
     </div>
     <div class="card-body px-5 py-4">
-        <p>In this part of the experiment we ask you to guess the choices of the
-            participants you were matched with.</p>
+        {# === Intro text: trattamento-specifico ===
+        Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
+        {% if reveal_third_party_chat %}
+        {# ---- Ramo PUBLIC ---- #}
+        <p>
+            If you wish to review the chats between participants in your group, push the button below you will read the
+            chats at the bottom of the page.
+        </p>
+        {% else %}
+        {# ---- Ramo PRIVATE ---- #}
+        <p>
+            If you wish to review the chats between participants in your group, push the button below, you will read the
+            chats at the bottom of the page.
+        </p>
+        {% endif %}
+
+        <div class="mb-3 mt-4 text-center">
+            <button type="button" class="custom-experiment-btn" id="toggleChatBtn">Show Chats</button>
+        </div>
 
         <!-- Q1: guess LEFT partner -->
         <div class="mb-4">
@@ -175,24 +194,7 @@
         </div>
     </div>
 </div>
-{# === Intro text: trattamento-specifico ===
-Modificare il ramo PUBLIC o PRIVATE in modo indipendente. #}
-{% if reveal_third_party_chat %}
-{# ---- Ramo PUBLIC ---- #}
-<p>
-    <strong> Please push the button below to read the conversations — including the one between the other two
-        participants.</strong>
-</p>
-{% else %}
-{# ---- Ramo PRIVATE ---- #}
-<p>
-    <strong> Please push the button below to read the conversations with both the other Participants.</strong>
-</p>
-{% endif %}
 
-<div class="mb-3 mt-4">
-    <button type="button" class="custom-experiment-btn" id="toggleChatBtn">Show Chats</button>
-</div>
 
 <style>
     .custom-experiment-btn {
