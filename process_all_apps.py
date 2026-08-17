@@ -10,8 +10,13 @@ from pathlib import Path
 CORE_MAPPING = {
     'playerid': 'participant.id_in_session',
     'participant_code': 'participant.code',
+    # Identificano la raccolta: con i pilot lanciati un trattamento alla volta
+    # servono per unire i file e per sapere da quale sessione viene ogni riga.
+    'session_code': 'session.code',
+    'session_config': 'session.config.name',
     'groupid': 'bargaining_tdl_main.1.group.id_in_subsession',
     'treatment': 'bargaining_tdl_intro.1.player.assigned_treatment',
+    'treatment_main': 'bargaining_tdl_main.1.player.treatment',
     'allocation_slot': 'bargaining_tdl_intro.1.player.allocation_slot',
     'allocation_block': 'bargaining_tdl_intro.1.player.allocation_block',
     'allocation_attempt': 'bargaining_tdl_intro.1.player.allocation_attempt',
@@ -27,13 +32,15 @@ CORE_MAPPING = {
     'right_player': 'bargaining_tdl_main.1.player.id_player_on_the_right',
     'part1_signal_left': 'bargaining_tdl_main.1.player.signal_left',
     'part1_signal_right': 'bargaining_tdl_main.1.player.signal_right',
-    'signal_left_convincingness': (
-        'bargaining_tdl_main.1.player.signal_left_convincingness'
-    ),
-    'signal_right_convincingness': (
-        'bargaining_tdl_main.1.player.signal_right_convincingness'
-    ),
+    # Belief elicitation su PostDecisionConfidence. Sostituiscono
+    # signal_left/right_convincingness, rimossi dai modelli.
+    'guess_left_choice': 'bargaining_tdl_main.1.player.guess_left_choice',
+    'guess_right_choice': 'bargaining_tdl_main.1.player.guess_right_choice',
+    'guess_left_confidence': 'bargaining_tdl_main.1.player.guess_left_confidence',
+    'guess_right_confidence': 'bargaining_tdl_main.1.player.guess_right_confidence',
     'part1_finaldecision': 'bargaining_tdl_main.1.player.decision_choice',
+    'decision_inactive': 'bargaining_tdl_main.1.player.decision_inactive',
+    'signal_inactive': 'bargaining_tdl_main.1.player.signal_inactive',
     'part1_payoff': 'bargaining_tdl_main.1.player.part1_calculated_payoff',
     'group_outcome': 'bargaining_tdl_main.1.group.group_outcome',
     'prolific_id': 'participant.prolific_id',

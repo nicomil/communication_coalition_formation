@@ -11,6 +11,8 @@ class ProcessAllAppsTests(unittest.TestCase):
         headers = [
             'participant.id_in_session',
             'participant.code',
+            'session.code',
+            'session.config.name',
             'participant.inactive_excluded',
             'participant.inactive_excluded_reason',
             'participant.group_dropped',
@@ -31,8 +33,10 @@ class ProcessAllAppsTests(unittest.TestCase):
             'bargaining_tdl_main.1.player.id_player_on_the_right',
             'bargaining_tdl_main.1.player.signal_left',
             'bargaining_tdl_main.1.player.signal_right',
-            'bargaining_tdl_main.1.player.signal_left_convincingness',
-            'bargaining_tdl_main.1.player.signal_right_convincingness',
+            'bargaining_tdl_main.1.player.guess_left_choice',
+            'bargaining_tdl_main.1.player.guess_right_choice',
+            'bargaining_tdl_main.1.player.guess_left_confidence',
+            'bargaining_tdl_main.1.player.guess_right_confidence',
             'bargaining_tdl_main.1.player.decision_choice',
             'bargaining_tdl_main.1.player.part1_calculated_payoff',
             'bargaining_tdl_main.1.group.group_outcome',
@@ -46,6 +50,8 @@ class ProcessAllAppsTests(unittest.TestCase):
             {
                 'participant.id_in_session': '1',
                 'participant.code': 'abc',
+                'session.code': 'sess_abc',
+                'session.config.name': 'bargaining_tdl_private',
                 'participant.inactive_excluded': '0',
                 'participant.inactive_excluded_reason': '',
                 'participant.group_dropped': '0',
@@ -66,8 +72,10 @@ class ProcessAllAppsTests(unittest.TestCase):
                 'bargaining_tdl_main.1.player.id_player_on_the_right': 'R',
                 'bargaining_tdl_main.1.player.signal_left': 'split_you',
                 'bargaining_tdl_main.1.player.signal_right': 'support_none',
-                'bargaining_tdl_main.1.player.signal_left_convincingness': '3',
-                'bargaining_tdl_main.1.player.signal_right_convincingness': '5',
+                'bargaining_tdl_main.1.player.guess_left_choice': 'Left',
+                'bargaining_tdl_main.1.player.guess_right_choice': 'NoOne',
+                'bargaining_tdl_main.1.player.guess_left_confidence': '3',
+                'bargaining_tdl_main.1.player.guess_right_confidence': '5',
                 'bargaining_tdl_main.1.player.decision_choice': 'Left',
                 'bargaining_tdl_main.1.player.part1_calculated_payoff': '6',
                 'bargaining_tdl_main.1.group.group_outcome': 'mutual_12',
@@ -103,7 +111,9 @@ class ProcessAllAppsTests(unittest.TestCase):
             self.assertEqual(core_rows[0]['playerid'], '1')
             self.assertEqual(core_rows[0]['treatment'], 'private_no_dwl')
             self.assertEqual(core_rows[0]['allocation_attempt'], '2')
-            self.assertEqual(core_rows[0]['signal_right_convincingness'], '5')
+            self.assertEqual(core_rows[0]['session_code'], 'sess_abc')
+            self.assertEqual(core_rows[0]['session_config'], 'bargaining_tdl_private')
+            self.assertEqual(core_rows[0]['guess_right_confidence'], '5')
             self.assertEqual(core_rows[0]['group_outcome'], 'mutual_12')
             self.assertEqual(core_rows[0]['survey_sd3_mach_01'], '3')
             self.assertEqual(core_rows[0]['survey_instructions_clarity'], '5')
