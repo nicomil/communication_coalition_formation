@@ -1236,16 +1236,10 @@ class PostDecisionConfidence(Page):
     @staticmethod
     def before_next_page(player, timeout_happened):
         player.time_post_decision_confidence = save_time_value(player.time_on_page)
-        if timeout_happened:
-            player.guess_left_confidence = None
-            player.guess_right_confidence = None
-            # Il survey va somministrato solo a chi ha scelto deliberatamente su
-            # Signals, Decision e PostDecisionConfidence. Un timeout qui vale
-            # come sugli altri due: niente survey, si esce da
-            # InactivityGoodbyeMain con il codice di dropout.
-            # Nota: part1_payoff_eligible resta invariato, perche' Signals e
-            # Decision erano state scelte davvero.
-            player.participant.vars['timeout_excluded'] = True
+        # Questa pagina non ha timeout (rimosso in b7e646a): non esiste
+        # timeout_submission ne' get_timeout_seconds, quindi ci si passa solo
+        # inviando il form. La scelta qui e' sempre deliberata per costruzione
+        # e non serve nessuna esclusione.
 
         logger.debug(
             f"PostDecisionConfidence - time saved: {player.time_post_decision_confidence}"
