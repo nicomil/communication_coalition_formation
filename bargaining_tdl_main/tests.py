@@ -8,6 +8,7 @@ from . import (
     C,
     Chat,
     Decision,
+    ExperimentTerminated,
     InactivityGoodbyeMain,
     PostDecisionConfidence,
     Results,
@@ -45,20 +46,16 @@ class PlayerBot(Bot):
         signal_left, signal_right = signals[player_id]
         if self.case == 'signals_timeout':
             yield Submission(Signals, {}, timeout_happened=True)
-            expect(
-                self.player.field_maybe_none('guess_left_confidence'),
-                None,
+            # Il timeout su Signals ora fa cadere il gruppo: _mark_group_dropped
+            # assegna d'ufficio segnali, decisione e guess all'interrotto, e
+            # participant.vars['timeout_excluded'] lo manda su
+            # ExperimentTerminated invece che a Decision.
+            expect(self.player.participant.vars.get('timeout_excluded'), True)
+            yield Submission(
+                ExperimentTerminated,
+                dict(time_on_page=1.0),
+                check_html=False,
             )
-            expect(
-                self.player.field_maybe_none('guess_right_confidence'),
-                None,
-            )
-            # Il timeout su Signals NON marca più inactive_excluded: il
-            # giocatore deve attraversare DataMappingWaitPage, altrimenti gli
-            # altri due del gruppo restano bloccati sulla WaitPage. Perde solo
-            # l'idoneità al pagamento; il flusso prosegue normale fino a
-            # InactivityGoodbyeMain, che lo intercetta su part1_payoff_eligible.
-            expect(self.player.part1_payoff_eligible, False)
         else:
             yield Signals, dict(
                 signal_left=signal_left,
@@ -67,8 +64,12 @@ class PlayerBot(Bot):
                 time_on_page=1.0,
             )
 
+        # Da qui in poi le pagine dipendono da come è finito il gruppo, non dal
+        # nome del caso: si segue is_displayed, che è la stessa condizione che
+        # usa oTree per servirle.
         decision = decisions_for_case(self.case, player_id)
-        yield Decision, dict(decision_choice=decision, time_on_page=1.5)
+        if Decision.is_displayed(self.player):
+            yield Decision, dict(decision_choice=decision, time_on_page=1.5)
         # Le scale di convincingness e le guess sui partner sono state
         # spostate su PostDecisionConfidence (dopo Decision).
         if PostDecisionConfidence.is_displayed(self.player):

@@ -5,12 +5,8 @@ from . import (  # type: ignore
     SurveyPage2,
     SurveyPage3,
     SurveyPage4,
-    SurveyPage5,
-    SurveyPage6,
-    SurveyPage7,
-    SurveyPage8,
-    SurveyPage9,
     SurveyPage10,
+    SurveyIntro,
     SurveyFeedback,
     SurveyTerminated,
     FinalResults,
@@ -34,9 +30,10 @@ class PlayerBot(Bot):
     def play_round(self):
         if not SurveyPage10.is_displayed(self.player):
             # Partecipante escluso (timeout su Signals oppure gruppo droppato).
-            # Tutte le pagine del survey lo saltano tranne SurveyQuestions, che
-            # non definisce is_displayed: la sequenza si chiude su
-            # SurveyTerminated senza passare da FinalResults.
+            # Tutte le pagine del survey lo saltano tranne SurveyIntro e
+            # SurveyQuestions, che non definiscono is_displayed: la sequenza si
+            # chiude su SurveyTerminated senza passare da FinalResults.
+            yield SurveyIntro, dict(time_on_page=1.0)
             yield SurveyQuestions, DEMOGRAPHICS
             yield Submission(
                 SurveyTerminated,
@@ -46,21 +43,19 @@ class PlayerBot(Bot):
             return
 
         yield SurveyPage10, dict(beauty_contest_guess=1.5, time_on_page=1.0)
-        yield SurveyQuestions, dict(
-            gender=0,
-            birth_year=1990,
-            field_of_study=1,
-            university_years=5,
-            main_situation='paid_work',
-            job_type='employee',
-            time_on_page=2.0,
+        yield SurveyIntro, dict(time_on_page=1.0)
+        yield SurveyQuestions, DEMOGRAPHICS
+        # Le sei scale 0-10, prima su SurveyPage4..SurveyPage9, ora stanno
+        # tutte su SurveyPage4.
+        yield SurveyPage4, dict(
+            willingness_future=5,
+            willingness_risk=5,
+            reciprocity_positive=5,
+            reciprocity_negative=5,
+            willingness_donate=5,
+            trust_general=5,
+            time_on_page=1.0,
         )
-        yield SurveyPage4, dict(willingness_future=5, time_on_page=1.0)
-        yield SurveyPage5, dict(willingness_risk=5, time_on_page=1.0)
-        yield SurveyPage6, dict(reciprocity_positive=5, time_on_page=1.0)
-        yield SurveyPage7, dict(reciprocity_negative=5, time_on_page=1.0)
-        yield SurveyPage8, dict(willingness_donate=5, time_on_page=1.0)
-        yield SurveyPage9, dict(trust_general=5, time_on_page=1.0)
         yield SurveyPage1, {
             **{f'sd3_mach_{index:02d}': 3 for index in range(1, 10)},
             'time_on_page': 2.0,
