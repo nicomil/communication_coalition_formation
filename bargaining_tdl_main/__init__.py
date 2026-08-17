@@ -1239,9 +1239,13 @@ class PostDecisionConfidence(Page):
         if timeout_happened:
             player.guess_left_confidence = None
             player.guess_right_confidence = None
-            # CASO 7: Se il giocatore va in timeout su PostDecisionConfidence, 
-            # questa è una scelta ausiliaria e NON lo escludiamo. 
-            # Il timeout lo spingerà in automatico a Results.
+            # Il survey va somministrato solo a chi ha scelto deliberatamente su
+            # Signals, Decision e PostDecisionConfidence. Un timeout qui vale
+            # come sugli altri due: niente survey, si esce da
+            # InactivityGoodbyeMain con il codice di dropout.
+            # Nota: part1_payoff_eligible resta invariato, perche' Signals e
+            # Decision erano state scelte davvero.
+            player.participant.vars['timeout_excluded'] = True
 
         logger.debug(
             f"PostDecisionConfidence - time saved: {player.time_post_decision_confidence}"

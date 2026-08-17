@@ -29,12 +29,10 @@ class PlayerBot(Bot):
 
     def play_round(self):
         if not SurveyPage10.is_displayed(self.player):
-            # Partecipante escluso (timeout su Signals oppure gruppo droppato).
-            # Tutte le pagine del survey lo saltano tranne SurveyIntro e
-            # SurveyQuestions, che non definiscono is_displayed: la sequenza si
-            # chiude su SurveyTerminated senza passare da FinalResults.
-            yield SurveyIntro, dict(time_on_page=1.0)
-            yield SurveyQuestions, DEMOGRAPHICS
+            # Partecipante escluso: timeout su Signals, Decision o
+            # PostDecisionConfidence, control questions fallite o gruppo caduto.
+            # Il survey spetta solo a chi ha scelto deliberatamente, quindi
+            # l'unica pagina che vede e' SurveyTerminated.
             yield Submission(
                 SurveyTerminated,
                 dict(time_on_page=1.0),

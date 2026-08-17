@@ -87,6 +87,26 @@ def _is_inactive_excluded(player):
 def _is_group_dropped_inactive(player):
     return bool(player.participant.vars.get('group_dropped_inactive', False))
 
+def _is_timeout_excluded(player):
+    return bool(player.participant.vars.get('timeout_excluded', False))
+
+
+def _is_excluded(player):
+    """Il survey spetta solo a chi ha scelto deliberatamente su Signals,
+    Decision e PostDecisionConfidence.
+
+    Chi finisce in uno di questi tre stati ha avuto almeno una scelta assegnata
+    d'ufficio, quindi vede solo SurveyTerminated:
+      - inactive_excluded: timeout sulle control questions dell'intro
+      - group_dropped_inactive: gruppo caduto per disconnessione
+      - timeout_excluded: timeout su Signals, Decision o PostDecisionConfidence
+    """
+    return (
+        _is_inactive_excluded(player)
+        or _is_group_dropped_inactive(player)
+        or _is_timeout_excluded(player)
+    )
+
 
 class Player(BasePlayer):
     # Gender: 0=Male, 1=Female, 2=Other
@@ -287,6 +307,9 @@ class SurveyQuestions(_SurveyTimedPage):
         'time_on_page',
     ]
 
+    @staticmethod
+    def is_displayed(player):
+        return not _is_excluded(player)
 
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -329,7 +352,7 @@ class SurveyPage1(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
+        return not _is_excluded(player)
 
 
 class SurveyPage2(_SurveyTimedPage):
@@ -353,7 +376,7 @@ class SurveyPage2(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
+        return not _is_excluded(player)
 
 
 class SurveyPage3(_SurveyTimedPage):
@@ -377,7 +400,7 @@ class SurveyPage3(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
+        return not _is_excluded(player)
 
 
 class SurveyPage4(_SurveyTimedPage):
@@ -403,7 +426,7 @@ class SurveyPage4(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
+        return not _is_excluded(player)
 
 
 
@@ -427,7 +450,7 @@ class SurveyPage10(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
+        return not _is_excluded(player)
 
 
 class SurveyFeedback(_SurveyTimedPage):
@@ -445,7 +468,7 @@ class SurveyFeedback(_SurveyTimedPage):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
+        return not _is_excluded(player)
 
 
 class SurveyTerminated(Page):
@@ -455,7 +478,7 @@ class SurveyTerminated(Page):
 
     @staticmethod
     def is_displayed(player):
-        return _is_inactive_excluded(player) or _is_group_dropped_inactive(player)
+        return _is_excluded(player)
 
     @staticmethod
     def vars_for_template(player):
@@ -493,7 +516,7 @@ class WaitForPart1Results(Page):
 
     @staticmethod
     def is_displayed(player):
-        if _is_inactive_excluded(player) or _is_group_dropped_inactive(player):
+        if _is_excluded(player):
             return False
         from bargaining_tdl_common import get_main_group_player # type: ignore
         main_player = get_main_group_player(player)
@@ -553,7 +576,7 @@ class FinalResults(Page):
 
     @staticmethod
     def is_displayed(player):
-        return not _is_inactive_excluded(player) and not _is_group_dropped_inactive(player)
+        return not _is_excluded(player)
 
     @staticmethod
     def vars_for_template(player):
@@ -722,6 +745,10 @@ def _calculate_payoffs_if_needed(main_group, force=False):
 class SurveyIntro(Page):
     form_model = 'player'
     form_fields = ['time_on_page']
+
+    @staticmethod
+    def is_displayed(player):
+        return not _is_excluded(player)
 
 
 page_sequence = [
