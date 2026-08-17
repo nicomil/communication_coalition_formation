@@ -962,6 +962,14 @@ class DataMappingWaitPage(WaitPage):
 
     @staticmethod
     def is_displayed(player):
+        # group_dropped_inactive arriva ~102s dopo la disconnessione
+        # (12s di conferma + 90s di finestra di riconnessione), mentre
+        # timeout_excluded arriva solo allo scadere del timer di pagina
+        # dell'assente, cioe' a 300s. Senza il primo dei due i due superstiti
+        # restavano fermi qui per oltre tre minuti in piu', a gruppo gia'
+        # dichiarato caduto e con le scelte casuali gia' scritte.
+        if player.participant.vars.get('group_dropped_inactive'):
+            return False
         return not has_failed_control_questions(player, 'intro') and not player.participant.vars.get('timeout_excluded')
 
     @staticmethod
