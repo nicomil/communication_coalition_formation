@@ -420,5 +420,71 @@ class LLMRubricPureTests(unittest.TestCase):
         self.assertIn('refusal', row['llm_errors'])
 
 
+class SecretsTests(unittest.TestCase):
+    """Caricamento delle chiavi API: deve essere prevedibile e non sorprendere."""
+
+    def setUp(self):
+        from scripts.nlp import secrets
+        self.secrets = secrets
+
+    def test_parses_the_forms_people_actually_write(self):
+        parsed = self.secrets.parse_secrets(
+            '# commento\n'
+            'OPENAI_API_KEY=sk-uno\n'
+            'export ANTHROPIC_API_KEY="sk-ant-due"\n'
+            "OPENAI_BASE_URL='https://esempio/v1'\n"
+            '\n'
+            'riga senza uguale\n'
+        )
+        self.assertEqual(parsed['OPENAI_API_KEY'], 'sk-uno')
+        self.assertEqual(parsed['ANTHROPIC_API_KEY'], 'sk-ant-due')
+        self.assertEqual(parsed['OPENAI_BASE_URL'], 'https://esempio/v1')
+        self.assertNotIn('riga senza uguale', parsed)
+
+    def test_values_containing_equals_survive(self):
+        parsed = self.secrets.parse_secrets('K=abc=def==\n')
+        self.assertEqual(parsed['K'], 'abc=def==')
+
+    def test_environment_wins_over_the_file(self):
+        """Chi gestisce le chiavi a modo suo non deve essere scavalcato."""
+        import os
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / '.secrets.env'
+            path.write_text('TEST_CHIAVE_A=dal_file\nTEST_CHIAVE_B=dal_file\n',
+                            encoding='utf-8')
+            os.environ['TEST_CHIAVE_A'] = 'dall_ambiente'
+            os.environ.pop('TEST_CHIAVE_B', None)
+            try:
+                loaded = self.secrets.load_secrets(path)
+                self.assertEqual(os.environ['TEST_CHIAVE_A'], 'dall_ambiente')
+                self.assertEqual(os.environ['TEST_CHIAVE_B'], 'dal_file')
+                self.assertIn('TEST_CHIAVE_B', loaded)
+                self.assertNotIn('TEST_CHIAVE_A', loaded)
+            finally:
+                os.environ.pop('TEST_CHIAVE_A', None)
+                os.environ.pop('TEST_CHIAVE_B', None)
+
+    def test_missing_file_is_not_an_error(self):
+        self.assertEqual(self.secrets.load_secrets(Path('/percorso/inesistente')), [])
+
+    def test_missing_key_explains_what_to_do(self):
+        import os
+
+        os.environ.pop('OPENAI_API_KEY', None)
+        with self.assertRaises(SystemExit) as ctx:
+            self.secrets.require_key('OPENAI_API_KEY')
+        message = str(ctx.exception)
+        self.assertIn('setup_api_keys.py', message)
+        self.assertIn('TopicGPT', message)
+
+    def test_secrets_file_is_git_ignored(self):
+        """Il repository è pubblico: questo non deve mai poter cambiare."""
+        self.assertIs(
+            self.secrets.is_git_ignored(self.secrets.secrets_path()), True
+        )
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

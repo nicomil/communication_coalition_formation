@@ -14,7 +14,12 @@ Tutto il codice sta in `scripts/nlp/`; il punto di ingresso è
 |---|---|---|---|
 | Misure testuali deterministiche | (sempre attivo) | no | eseguito sul pilota |
 | Rubrica valutata da Claude | `--llm` | sì, Anthropic | pronto, non ancora eseguito |
-| TopicGPT | `--topics` | sì, del backend scelto | pronto, non ancora eseguito |
+| TopicGPT | `--topics` | dipende dal backend | pronto, non ancora eseguito |
+
+Le chiavi si configurano una volta sola con `python scripts/setup_api_keys.py`
+e da lì in poi vengono caricate da sole a ogni esecuzione: vedi
+`@docs/CHIAVI_API.md`. I backend locali di TopicGPT (`ollama`, `vllm`) non
+usano alcuna chiave, e il controllo scatta solo dove serve davvero.
 
 Lo stadio 1 gira con la sola libreria standard di Python. Gli altri due sono
 scritti, testati sulle parti che non toccano la rete, e attendono solo le chiavi
@@ -233,7 +238,7 @@ Batches API a metà prezzo (esito asincrono, id del batch da conservare).
 
 ## 8. Test
 
-`python scripts/test_nlp_pipeline.py` — 40 test, senza rete né credenziali.
+`python scripts/test_nlp_pipeline.py` — 46 test, senza rete né credenziali.
 Coprono la tokenizzazione delle forme contratte, l'euristica sugli avverbi in
 *-ly*, la formula del CDI ricalcolata a mano, la direzione attesa dei compositi,
 la standardizzazione, la conservazione di parole e messaggi attraverso i livelli

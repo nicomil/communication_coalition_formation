@@ -42,7 +42,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.nlp import aggregate as agg  # noqa: E402
-from scripts.nlp import llm_rubric, topicgpt_runner  # noqa: E402
+from scripts.nlp import llm_rubric, secrets, topicgpt_runner  # noqa: E402
+
+# Le chiavi API si configurano una volta con scripts/setup_api_keys.py e da lì
+# in poi vengono caricate da sole: chi esegue la pipeline non deve ricordarsene.
+_LOADED_KEYS = secrets.load_secrets()
 
 
 def read_csv(path: Path) -> list[dict]:
@@ -84,12 +88,8 @@ def _merge_llm(rows, level_rows, level):
 
 
 def run_llm_stage(features, transcripts_by_level, args) -> None:
-    if not llm_rubric.has_credentials() and not args.llm_dry_run:
-        raise SystemExit(
-            'Nessuna credenziale Anthropic trovata.\n'
-            "  esporta ANTHROPIC_API_KEY, oppure esegui 'ant auth login'.\n"
-            'Per ispezionare le richieste senza spendere token: --llm-dry-run'
-        )
+    if not args.llm_dry_run and not llm_rubric.has_credentials():
+        secrets.require_key('ANTHROPIC_API_KEY')
 
     models = [m.strip() for m in args.llm_models.split(',') if m.strip()]
     for level in args.llm_levels:
@@ -133,6 +133,10 @@ def run_llm_stage(features, transcripts_by_level, args) -> None:
 def run_topics_stage(messages, args):
     """Esegue TopicGPT e restituisce le assegnazioni ai vari livelli."""
     repo = Path(args.topicgpt_repo).expanduser()
+    # I backend locali (ollama, vllm) non usano chiavi: si controlla solo dove serve.
+    if not args.topicgpt_dry_run and args.topicgpt_api == 'openai':
+        secrets.require_key('OPENAI_API_KEY')
+
     documents = topicgpt_runner.build_documents(messages, args.topicgpt_unit)
     print(f'  documenti costruiti: {len(documents)} ({args.topicgpt_unit})')
 
@@ -144,15 +148,20 @@ def run_topics_stage(messages, args):
         print(f'  input scritto in {path} (nessuna chiamata effettuata)')
         return None, None, None
 
-    corrected = topicgpt_runner.run_topicgpt(
-        documents=documents,
-        outdir=Path(args.outdir) / 'topicgpt',
-        repo_path=repo,
-        api=args.topicgpt_api,
-        model=args.topicgpt_model,
-        refine=not args.topicgpt_no_refine,
-        verbose=args.verbose,
-    )
+    try:
+        corrected = topicgpt_runner.run_topicgpt(
+            documents=documents,
+            outdir=Path(args.outdir) / 'topicgpt',
+            repo_path=repo,
+            api=args.topicgpt_api,
+            model=args.topicgpt_model,
+            refine=not args.topicgpt_no_refine,
+            verbose=args.verbose,
+        )
+    except topicgpt_runner.TopicGPTUnavailable as exc:
+        # Manca un prerequisito: è una cosa da sistemare, non un errore del
+        # programma. Si mostra l'istruzione, non la traccia dello stack.
+        raise SystemExit(f'\n{exc}\n') from None
     assignments = topicgpt_runner.parse_assignments(corrected)
     print(f'  topic assegnati a {len(assignments)} documenti')
 
