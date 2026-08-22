@@ -16,37 +16,21 @@ Tre stadi indipendenti, attivabili separatamente:
 L'output finale sono i due dataset dell'esperimento arricchiti, pronti per
 Stata, più i file di feature intermedi per i controlli.
 
-Esempi
-------
-    # Solo misure automatiche, subito eseguibile
-    python scripts/run_nlp_pipeline.py \
-        --merged-dir docs/merged --stem all_apps_wide_2026-08-18
-
-    # Con la rubrica LLM
-    python scripts/run_nlp_pipeline.py --merged-dir docs/merged \
-        --stem all_apps_wide_2026-08-18 --llm --llm-replicates 2
-
-    # Con i topic
-    python scripts/run_nlp_pipeline.py --merged-dir docs/merged \
-        --stem all_apps_wide_2026-08-18 \
-        --topics --topicgpt-repo ~/src/topicGPT --topicgpt-model gpt-4o
+Esempi (dal punto di ingresso del progetto)
+------------------------------------------
+    python run.py analyze                          misure automatiche
+    python run.py analyze --llm --llm-replicates 2 + rubrica di validazione
+    python run.py analyze --topics --topicgpt-repo ~/src/topicGPT
 """
 
 from __future__ import annotations
 
-import argparse
 import csv
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from scripts.nlp import aggregate as agg  # noqa: E402
-from scripts.nlp import llm_rubric, secrets, topicgpt_runner  # noqa: E402
-
-# Le chiavi API si configurano una volta con scripts/setup_api_keys.py e da lì
-# in poi vengono caricate da sole: chi esegue la pipeline non deve ricordarsene.
-_LOADED_KEYS = secrets.load_secrets()
+from . import aggregate as agg  # noqa: E402
+from . import config, llm_rubric, topicgpt  # noqa: E402
 
 
 def read_csv(path: Path) -> list[dict]:
@@ -146,21 +130,21 @@ def run_topics_stage(messages, args):
     repo = Path(args.topicgpt_repo).expanduser()
     # I backend locali (ollama, vllm) non usano chiavi: si controlla solo dove serve.
     if not args.topicgpt_dry_run and args.topicgpt_api == 'openai':
-        secrets.require_key('OPENAI_API_KEY')
+        config.require_key('OPENAI_API_KEY')
 
-    documents = topicgpt_runner.build_documents(messages, args.topicgpt_unit)
+    documents = topicgpt.build_documents(messages, args.topicgpt_unit)
     print(f'  documenti costruiti: {len(documents)} ({args.topicgpt_unit})')
 
     if args.topicgpt_dry_run:
         outdir = Path(args.outdir) / 'topicgpt'
         outdir.mkdir(parents=True, exist_ok=True)
         path = outdir / 'topicgpt_input.jsonl'
-        topicgpt_runner.write_jsonl(path, documents)
+        topicgpt.write_jsonl(path, documents)
         print(f'  input scritto in {path} (nessuna chiamata effettuata)')
         return None, None, None
 
     try:
-        corrected = topicgpt_runner.run_topicgpt(
+        corrected = topicgpt.run_topicgpt(
             documents=documents,
             outdir=Path(args.outdir) / 'topicgpt',
             repo_path=repo,
@@ -169,79 +153,45 @@ def run_topics_stage(messages, args):
             refine=not args.topicgpt_no_refine,
             verbose=args.verbose,
         )
-    except topicgpt_runner.TopicGPTUnavailable as exc:
+    except topicgpt.TopicGPTUnavailable as exc:
         # Manca un prerequisito: è una cosa da sistemare, non un errore del
         # programma. Si mostra l'istruzione, non la traccia dello stack.
         raise SystemExit(f'\n{exc}\n') from None
-    assignments = topicgpt_runner.parse_assignments(corrected)
+    assignments = topicgpt.parse_assignments(corrected)
     print(f'  topic assegnati a {len(assignments)} documenti')
 
     unit = args.topicgpt_unit
     by_directed = (
-        topicgpt_runner.topics_by_key(assignments, unit)
+        topicgpt.topics_by_key(assignments, unit)
         if unit == 'dyad_directed' else None
     )
     by_sender = (
-        topicgpt_runner.rollup_topics(assignments, unit, 'sender_group')
+        topicgpt.rollup_topics(assignments, unit, 'sender_group')
         if unit in ('dyad_directed', 'sender_group') else None
     )
-    by_group = topicgpt_runner.rollup_topics(assignments, unit, 'group')
+    by_group = topicgpt.rollup_topics(assignments, unit, 'group')
     return by_directed, by_sender, by_group
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--merged-dir', required=True, type=Path,
-                        help='Cartella prodotta da merge_chat_and_choices.py')
-    parser.add_argument('--stem', required=True,
-                        help='Prefisso dei file (es. all_apps_wide_2026-08-18)')
-    parser.add_argument('--outdir', type=Path, default=None,
-                        help='Cartella di output (default: <merged-dir>/nlp)')
-    parser.add_argument('--verbose', action='store_true')
+def run(args) -> dict:
+    """Passo 2: misure testuali, rubrica e topic sui file prodotti dal merge.
 
-    parser.add_argument('--llm', action='store_true',
-                        help='Esegue la rubrica valutata da Claude')
-    parser.add_argument('--llm-provider', default=None,
-                        choices=list(llm_rubric.PROVIDERS),
-                        help='Fornitore della rubrica. Se omesso, sceglie in base '
-                             'alle credenziali disponibili')
-    parser.add_argument('--llm-models', default=None,
-                        help='Modelli giudice, separati da virgola. Se omesso, usa '
-                             'il modello predefinito del fornitore')
-    parser.add_argument('--llm-replicates', type=int, default=1,
-                        help='Valutazioni indipendenti per unità (affidabilità)')
-    parser.add_argument('--llm-levels', nargs='+', default=['dyad_directed', 'group'],
-                        choices=list(agg.LEVELS))
-    parser.add_argument('--llm-batch', action='store_true',
-                        help='Usa la Batches API (metà prezzo, esito asincrono)')
-    parser.add_argument('--llm-dry-run', action='store_true',
-                        help='Mostra la richiesta senza chiamare l API')
-
-    parser.add_argument('--topics', action='store_true',
-                        help='Esegue TopicGPT (codice ufficiale del paper)')
-    parser.add_argument('--topicgpt-repo', default='./topicGPT',
-                        help='Repository clonato di TopicGPT (per i prompt)')
-    parser.add_argument('--topicgpt-api', default='openai',
-                        choices=['openai', 'azure', 'vertex', 'gemini', 'ollama', 'vllm'])
-    parser.add_argument('--topicgpt-model', default='gpt-4o')
-    parser.add_argument('--topicgpt-unit', default='dyad_directed',
-                        choices=list(topicgpt_runner.UNIT_KEYS))
-    parser.add_argument('--topicgpt-no-refine', action='store_true',
-                        help='Salta la fase di raffinamento dei topic')
-    parser.add_argument('--topicgpt-dry-run', action='store_true',
-                        help='Scrive solo il file di input, senza chiamate')
-
-    args = parser.parse_args(argv)
-    outdir = args.outdir or (args.merged_dir / 'nlp')
+    `args` è lo spazio dei nomi costruito da run.py: si passa così com'è, per
+    non duplicare l'elenco delle opzioni in due punti.
+    """
+    merged_dir = Path(args.merged_dir)
+    outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    args.outdir = outdir
 
-    messages_path = args.merged_dir / f'{args.stem}_messages_long.csv'
-    by_partner_path = args.merged_dir / f'{args.stem}_chat_by_partner.csv'
-    aggregated_path = args.merged_dir / f'{args.stem}_chat_aggregated.csv'
+    messages_path = merged_dir / f'{args.stem}_messages_long.csv'
+    by_partner_path = merged_dir / f'{args.stem}_chat_by_partner.csv'
+    aggregated_path = merged_dir / f'{args.stem}_chat_aggregated.csv'
     for path in (messages_path, by_partner_path, aggregated_path):
         if not path.is_file():
-            raise SystemExit(f'File mancante: {path}\nEsegui prima merge_chat_and_choices.py')
+            raise SystemExit(
+                f'File mancante: {path}\n'
+                f'  Esegui prima il passo di unione:  python run.py merge'
+            )
 
     messages = agg.read_messages(messages_path)
     print(f'Messaggi letti: {len(messages)}')
@@ -257,7 +207,7 @@ def main(argv=None):
     }
 
     if args.llm:
-        print('Rubrica LLM...')
+        print('Rubrica di validazione...')
         run_llm_stage(features, transcripts_by_level, args)
 
     topics_directed = topics_sender = topics_group = None
@@ -265,28 +215,35 @@ def main(argv=None):
         print('TopicGPT...')
         topics_directed, topics_sender, topics_group = run_topics_stage(messages, args)
 
-    agg.write_csv(outdir / f'{args.stem}_messages_nlp.csv', enriched)
+    features_dir = outdir / 'features'
+    features_dir.mkdir(parents=True, exist_ok=True)
+    agg.write_csv(features_dir / f'{args.stem}_messages_nlp.csv', enriched)
     for level, rows in features.items():
-        agg.write_csv(outdir / f'{args.stem}_features_{level}.csv', rows)
+        agg.write_csv(features_dir / f'{args.stem}_features_{level}.csv', rows)
 
     by_partner = read_csv(by_partner_path)
     aggregated = read_csv(aggregated_path)
     agg.merge_into_by_partner(by_partner, features, topics_directed)
     agg.merge_into_aggregated(aggregated, features, topics_sender, topics_group)
 
-    out_partner = outdir / f'{args.stem}_chat_by_partner_nlp.csv'
-    out_aggregated = outdir / f'{args.stem}_chat_aggregated_nlp.csv'
+    datasets_dir = outdir / 'datasets'
+    datasets_dir.mkdir(parents=True, exist_ok=True)
+    out_partner = datasets_dir / f'{args.stem}_chat_by_partner_nlp.csv'
+    out_aggregated = datasets_dir / f'{args.stem}_chat_aggregated_nlp.csv'
     agg.write_csv(out_partner, by_partner)
     agg.write_csv(out_aggregated, aggregated)
 
+    return dict(
+        n_messages=len(messages),
+        levels={level: len(rows) for level, rows in features.items()},
+        datasets=[out_partner, out_aggregated],
+        features_dir=features_dir,
+    )
+
+
+def print_summary(summary: dict) -> None:
     print()
-    print('Dataset arricchiti:')
-    print(f'  {out_partner}')
-    print(f'  {out_aggregated}')
-    print('Feature intermedie:')
-    print(f'  {outdir}/{args.stem}_features_*.csv')
-    return 0
-
-
-if __name__ == '__main__':
-    sys.exit(main())
+    print('Dataset da portare in Stata:')
+    for path in summary['datasets']:
+        print(f'  {path}')
+    print(f"Misure intermedie: {summary['features_dir']}")

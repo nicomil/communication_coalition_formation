@@ -1,7 +1,7 @@
 """
 Aggregazione delle misure testuali e innesto sui dataset dell'esperimento.
 
-Parte da `..._messages_long.csv` (prodotto da `scripts/merge_chat_and_choices.py`)
+Parte da `..._messages_long.csv` (prodotto da `src/merge.py`)
 e produce le misure a quattro livelli:
 
 ``message``       il singolo messaggio (solo conteggi e sentiment)

@@ -1,14 +1,45 @@
 # Analisi del testo delle chat
 
-Guida completa: dall'installazione ai file pronti per Stata, passando per le
-chiavi API e per il metodo con cui le misure sono costruite.
-
-La pipeline estrae dalle conversazioni dell'esperimento i **topic** (con
-TopicGPT, Pham et al. 2024) e le **misure del linguaggio** richieste — volume,
-tono emotivo, sentiment, pensiero analitico, Clout, Authenticity — a livello di
+Progetto autonomo: estrae dalle conversazioni dell'esperimento i **topic** (con
+TopicGPT, Pham et al. 2024) e le **misure del linguaggio** — volume, tono
+emotivo, sentiment, pensiero analitico, Clout, Authenticity — a livello di
 coppia e di gruppo, e le innesta sui dataset delle scelte.
 
----
+Non dipende dal codice dell'esperimento: si può copiare altrove e continua a
+funzionare. Gli unici legami sono i due CSV in `input/`.
+
+```
+text_analysis/
+├── run.py            un solo punto di ingresso
+├── input/            i CSV esportati da oTree  ← metti qui i dati
+├── output/           tutto ciò che viene prodotto
+├── src/              il codice dei passi di analisi
+├── tests/            verifica degli strumenti
+├── .env              le chiavi API (mai sotto controllo di versione)
+└── requirements.txt
+```
+
+## Le due cose da sapere
+
+**I file di input non si passano da riga di comando.** Si mettono in `input/` e
+vengono riconosciuti dal nome. Per questo la procedura si riduce a un comando.
+
+**Tutto quello che serve sta in questa cartella**, chiavi comprese: `input/` e
+`output/` sono esclusi dal controllo di versione perché contengono ID Prolific e
+testi di chat.
+
+```bash
+pip install -r requirements.txt   # una volta sola
+python run.py all                 # unisce i dati ed esegue l'analisi
+```
+
+| Comando | Cosa fa |
+|---|---|
+| `python run.py all` | unione + analisi, il caso normale |
+| `python run.py merge` | solo l'unione di scelte e chat |
+| `python run.py analyze` | solo l'analisi del testo |
+| `python run.py keys` | configura le chiavi API |
+| `python run.py status` | cosa c'è in input, in output e fra le chiavi |
 
 ## Indice
 
@@ -45,8 +76,8 @@ validare le misure e a estrarre i topic.
 fornitore specifico: se si usa già OpenAI per TopicGPT, la stessa chiave copre
 anche quello stadio.
 
-Tutto il codice sta in `scripts/nlp/`; il punto di ingresso è
-`scripts/run_nlp_pipeline.py`.
+Tutto il codice dei passi di analisi sta in `src/`; il punto di ingresso è
+`run.py`.
 
 ---
 
@@ -55,7 +86,7 @@ Tutto il codice sta in `scripts/nlp/`; il punto di ingresso è
 Dalla cartella del progetto, una volta sola:
 
 ```bash
-pip install -r scripts/nlp/requirements.txt
+pip install -r requirements.txt
 ```
 
 Installa il necessario per il sentiment e per i client delle API. Le misure
@@ -88,7 +119,7 @@ senza GPU non si installa, mentre il ramo `main` l'ha già resa opzionale.
 Un solo comando, identico su macOS, Windows e Linux:
 
 ```bash
-python scripts/setup_api_keys.py
+python run.py keys
 ```
 
 Chiede le chiavi una per una. Mentre le incolli **il testo non compare a
@@ -97,7 +128,7 @@ vuoto salta quella chiave o lascia invariata quella già presente.
 
 Al termine lo script fa tre cose da solo:
 
-1. salva le chiavi in `.secrets.env` nella cartella del progetto;
+1. salva le chiavi in `.env` nella cartella del progetto;
 2. verifica che git lo stia davvero ignorando, e se non lo fa si offre di
    sistemare `.gitignore` **prima** di scrivere qualsiasi cosa;
 3. contatta i servizi per confermare che le chiavi funzionino, così un errore
@@ -106,7 +137,7 @@ Al termine lo script fa tre cose da solo:
 Esito corretto:
 
 ```
-Salvato in /.../.secrets.env
+Salvato in /.../.env
 Permessi ristretti al solo proprietario (600).
 
 Verifica delle chiavi:
@@ -121,11 +152,11 @@ Fatto questo non serve altro: la pipeline le carica da sola a ogni esecuzione.
 ### Comandi di controllo
 
 ```bash
-python scripts/setup_api_keys.py --status   # cosa è configurato, senza toccare nulla
-python scripts/setup_api_keys.py --check    # ricontrolla che le chiavi funzionino
+python run.py status        # cosa è configurato, senza toccare nulla
+python run.py keys          # riconfigura o verifica le chiavi
 ```
 
-`--status` non stampa mai le chiavi, solo se ci sono.
+`run.py status` non stampa mai le chiavi, solo se ci sono.
 
 ### Quale fornitore viene usato
 
@@ -141,14 +172,14 @@ Per forzare la scelta: `--llm-provider openai|anthropic|ollama`.
 
 ### Due avvertenze
 
-**`.secrets.env` non va mai messo sotto controllo di versione.** Il repository
+**`.env` non va mai messo sotto controllo di versione.** Il repository
 di questo progetto è pubblico. Lo script lo verifica prima di scrivere, ma vale
 la pena saperlo: non aggiungerlo mai a mano a un commit, e non mandare le
 chiavi via chat o email.
 
 **Una variabile d'ambiente già impostata ha sempre la precedenza sul file**, per
 chi preferisce gestirle a modo proprio. Per rimuovere tutto basta cancellare
-`.secrets.env`: nessuna impostazione di sistema viene toccata.
+`.env`: nessuna impostazione di sistema viene toccata.
 
 ### Un'alternativa gratuita
 
@@ -186,10 +217,7 @@ a posteriori e vanno conservati insieme agli altri.
 ### Passo 2 — Unire scelte e chat
 
 ```bash
-python scripts/merge_chat_and_choices.py \
-    --wide docs/all_apps_wide_2026-08-18.csv \
-    --chat docs/ChatMessages-2026-08-18.csv \
-    --outdir docs/merged
+python run.py merge
 ```
 
 Qui vengono già costruite le variabili dell'esperimento: persuasione, coerenza
@@ -204,23 +232,16 @@ sono stati ricondotti a un partecipante.
 
 ### Passo 3 — Analisi del testo
 
-Il valore da passare a `--stem` è il nome del file wide senza estensione.
-
 **Solo misure automatiche** — nessuna chiave necessaria, pochi secondi:
 
 ```bash
-python scripts/run_nlp_pipeline.py \
-    --merged-dir docs/merged \
-    --stem all_apps_wide_2026-08-18
+python run.py analyze
 ```
 
 **Con la rubrica di validazione:**
 
 ```bash
-python scripts/run_nlp_pipeline.py \
-    --merged-dir docs/merged \
-    --stem all_apps_wide_2026-08-18 \
-    --llm --llm-replicates 2
+python run.py analyze --llm --llm-replicates 2
 ```
 
 `--llm-replicates 2` fa valutare ogni testo due volte in chiamate indipendenti,
@@ -230,10 +251,7 @@ misura.
 **Con i topic:**
 
 ```bash
-python scripts/run_nlp_pipeline.py \
-    --merged-dir docs/merged \
-    --stem all_apps_wide_2026-08-18 \
-    --topics --topicgpt-repo ~/src/topicGPT
+python run.py analyze --topics --topicgpt-repo ~/src/topicGPT
 ```
 
 **Tutto insieme:** si combinano le opzioni dei due comandi precedenti.
@@ -242,7 +260,7 @@ python scripts/run_nlp_pipeline.py \
 
 ## 5. I file prodotti
 
-Tutto sotto `docs/merged/` e `docs/merged/nlp/`.
+Tutto sotto `output/`.
 
 ### Da portare in Stata
 
@@ -440,9 +458,15 @@ cruscotto del fornitore prima di lanciare.
 
 ## 10. Se qualcosa non torna
 
-**«File mancante: ..._messages_long.csv»** — il passo 2 non è stato eseguito, o
-`--stem` non corrisponde al nome dei file. Il prefisso è quello del file wide
-senza estensione.
+**«File mancante: ..._messages_long.csv»** — l'unione non è stata eseguita:
+`python run.py merge`, oppure direttamente `python run.py all`.
+
+**«Nessun file all_apps_wide*.csv in input/»** — l'export non è stato messo in
+`input/`, o ha un nome diverso da quello prodotto da oTree.
+
+**«Più file ChatMessages*.csv in input/»** — `input/` deve contenere un solo
+export per tipo, altrimenti non è chiaro quale analizzare: lascia solo quello
+che ti serve, o indicalo con `--chat <percorso>`.
 
 **«Manca la chiave OPENAI_API_KEY»** — vedi §3. Con `--topicgpt-api ollama` i
 topic girano in locale senza alcuna chiave.
@@ -456,16 +480,17 @@ tre strade: OpenAI, Anthropic o un modello locale.
 la richiesta della rubrica; `--topicgpt-dry-run` scrive solo il file di input di
 TopicGPT. Nessuno dei due contatta alcun servizio.
 
-**Voglio controllare che le chiavi funzionino.**
-`python scripts/setup_api_keys.py --check`
+**Voglio controllare che le chiavi funzionino.** `python run.py keys` le
+riverifica contattando i servizi; `python run.py status` dice solo quali sono
+presenti, senza uscire in rete.
 
 ---
 
 ## 11. Verifica degli strumenti
 
 ```bash
-python scripts/test_merge_chat_and_choices.py
-python scripts/test_nlp_pipeline.py
+python tests/test_merge.py
+python tests/test_analysis.py
 ```
 
 Girano senza rete e senza credenziali. Se entrambi finiscono con `OK`, gli

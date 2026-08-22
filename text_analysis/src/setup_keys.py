@@ -3,14 +3,14 @@ Configura le chiavi API della pipeline NLP.
 
 Un solo comando, identico su macOS, Windows e Linux:
 
-    python scripts/setup_api_keys.py
+    python run.py keys
 
-Chiede le chiavi (l'input resta nascosto), le salva in `.secrets.env` nella
+Chiede le chiavi (l'input resta nascosto), le salva in `.env` nella
 cartella del progetto, verifica che git le ignori davvero e — se lo si chiede —
 prova a contattare i servizi per confermare che funzionino.
 
-    python scripts/setup_api_keys.py --check    verifica quelle già presenti
-    python scripts/setup_api_keys.py --status   dice solo cosa è configurato
+    python run.py keys   (poi --check)    verifica quelle già presenti
+    python run.py status   dice solo cosa è configurato
 
 Il file non va mai messo sotto controllo di versione: il repository è pubblico.
 Lo script si rifiuta di scrivere se git non lo sta ignorando.
@@ -27,9 +27,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from scripts.nlp import secrets  # noqa: E402
+from . import config  # noqa: E402
 
 # Chiavi proposte durante la configurazione, in ordine di importanza.
 PROMPTS = [
@@ -41,19 +39,19 @@ PROMPTS = [
      'sk-ant-...'),
 ]
 
-GITIGNORE_LINE = secrets.SECRETS_FILENAME
+GITIGNORE_LINE = '.env'
 
 
 def ensure_gitignored(path: Path) -> bool:
     """Verifica che git ignori il file; se manca, propone di aggiungere la riga."""
-    ignored = secrets.is_git_ignored(path)
+    ignored = config.is_git_ignored(path)
     if ignored:
         return True
     if ignored is None:
         print('  git non disponibile: non posso verificare che il file sia ignorato.')
         return True
 
-    gitignore = secrets.REPO_ROOT / '.gitignore'
+    gitignore = config.PROJECT_ROOT / '.gitignore'
     print(f'\n  {path.name} non è ignorato da git, e il repository è pubblico.')
     answer = input(f'  Aggiungo "{GITIGNORE_LINE}" a .gitignore? [S/n] ').strip().lower()
     if answer in ('n', 'no'):
@@ -64,14 +62,14 @@ def ensure_gitignored(path: Path) -> bool:
     separator = '' if existing.endswith('\n') or not existing else '\n'
     gitignore.write_text(f'{existing}{separator}{GITIGNORE_LINE}\n', encoding='utf-8')
     print(f'  Aggiunta a {gitignore}')
-    return bool(secrets.is_git_ignored(path))
+    return bool(config.is_git_ignored(path))
 
 
 def write_secrets(path: Path, values: dict) -> None:
     lines = [
         '# Chiavi API della pipeline NLP.',
         '# File locale: non va mai messo sotto controllo di versione.',
-        '# Rigenerabile con: python scripts/setup_api_keys.py',
+        '# Rigenerabile con: python run.py keys',
         '',
     ]
     lines += [f'{key}={value}' for key, value in sorted(values.items()) if value]
@@ -140,9 +138,9 @@ def run_checks(values: dict) -> bool:
 
 
 def print_status() -> None:
-    path = secrets.secrets_path()
-    secrets.load_secrets(path)
-    ignored = secrets.is_git_ignored(path)
+    path = config.ENV_FILE
+    config.load_env(path)
+    ignored = config.is_git_ignored(path)
     ignored_label = {
         True: 'sì',
         False: 'NO — da sistemare, il repository è pubblico',
@@ -152,7 +150,7 @@ def print_status() -> None:
     print(f'  esiste    : {"sì" if path.is_file() else "no"}')
     print(f'  git ignora: {ignored_label}')
     print()
-    for name, purpose, present in secrets.status():
+    for name, purpose, present in config.key_status():
         print(f'  {"presente" if present else "assente ":9s} {name:22s} {purpose}')
 
 
@@ -164,9 +162,9 @@ def main(argv=None):
                         help='mostra cosa è configurato ed esce')
     args = parser.parse_args(argv)
 
-    path = secrets.secrets_path()
+    path = config.ENV_FILE
     existing = (
-        secrets.parse_secrets(path.read_text(encoding='utf-8'))
+        config.parse_env(path.read_text(encoding='utf-8'))
         if path.is_file() else {}
     )
 
@@ -175,7 +173,7 @@ def main(argv=None):
         return 0
 
     if args.check:
-        secrets.load_secrets(path)
+        config.load_env(path)
         return 0 if run_checks(existing) else 1
 
     print('Configurazione delle chiavi API')
@@ -209,8 +207,7 @@ def main(argv=None):
     print()
     if ok:
         print('Tutto pronto. La pipeline caricherà le chiavi da sola:')
-        print('    python scripts/run_nlp_pipeline.py --merged-dir docs/merged \\')
-        print('        --stem <nome> --topics --llm')
+        print('    python run.py all --llm --topics')
     else:
         print('Qualche verifica non è andata a buon fine: controlla i messaggi sopra.')
         print('Le chiavi sono comunque salvate; rilancia con --check dopo averle corrette.')

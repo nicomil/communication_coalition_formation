@@ -1,10 +1,10 @@
-"""Test per la pipeline NLP (scripts/nlp/).
+"""Test per l'analisi del testo (src/).
 
 Non richiedono credenziali, rete, né dipendenze opzionali: la rubrica LLM è
 esercitata sulle sue parti pure (costruzione del prompt e sintesi dei giudizi),
 mentre le chiamate all'API non vengono effettuate.
 
-    python scripts/test_nlp_pipeline.py
+    python tests/test_analysis.py
 """
 
 import sys
@@ -13,8 +13,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from scripts.nlp import aggregate as agg  # noqa: E402
-from scripts.nlp import lexicons, text_metrics, topicgpt_runner  # noqa: E402
+from src import aggregate as agg  # noqa: E402
+from src import lexicons, text_metrics, topicgpt as topicgpt_runner  # noqa: E402
 
 
 class TokenizerTests(unittest.TestCase):
@@ -349,7 +349,7 @@ class LLMRubricPureTests(unittest.TestCase):
     """Parti della rubrica che non toccano la rete."""
 
     def setUp(self):
-        from scripts.nlp import llm_rubric
+        from src import llm_rubric
         self.llm = llm_rubric
 
     def test_units_skip_empty_transcripts(self):
@@ -425,7 +425,7 @@ class ProviderSelectionTests(unittest.TestCase):
 
     def setUp(self):
         import os
-        from scripts.nlp import llm_rubric
+        from src import llm_rubric
         self.llm = llm_rubric
         self.os = os
         self._saved = {
@@ -485,15 +485,15 @@ class ProviderSelectionTests(unittest.TestCase):
             self.assertIn(field, instruction, msg=field)
 
 
-class SecretsTests(unittest.TestCase):
-    """Caricamento delle chiavi API: deve essere prevedibile e non sorprendere."""
+class ConfigTests(unittest.TestCase):
+    """Chiavi API e percorsi: devono essere prevedibili e non sorprendere."""
 
     def setUp(self):
-        from scripts.nlp import secrets
-        self.secrets = secrets
+        from src import config
+        self.secrets = config
 
     def test_parses_the_forms_people_actually_write(self):
-        parsed = self.secrets.parse_secrets(
+        parsed = self.secrets.parse_env(
             '# commento\n'
             'OPENAI_API_KEY=sk-uno\n'
             'export ANTHROPIC_API_KEY="sk-ant-due"\n'
@@ -507,7 +507,7 @@ class SecretsTests(unittest.TestCase):
         self.assertNotIn('riga senza uguale', parsed)
 
     def test_values_containing_equals_survive(self):
-        parsed = self.secrets.parse_secrets('K=abc=def==\n')
+        parsed = self.secrets.parse_env('K=abc=def==\n')
         self.assertEqual(parsed['K'], 'abc=def==')
 
     def test_environment_wins_over_the_file(self):
@@ -516,13 +516,13 @@ class SecretsTests(unittest.TestCase):
         import tempfile
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / '.secrets.env'
+            path = Path(tmpdir) / '.env'
             path.write_text('TEST_CHIAVE_A=dal_file\nTEST_CHIAVE_B=dal_file\n',
                             encoding='utf-8')
             os.environ['TEST_CHIAVE_A'] = 'dall_ambiente'
             os.environ.pop('TEST_CHIAVE_B', None)
             try:
-                loaded = self.secrets.load_secrets(path)
+                loaded = self.secrets.load_env(path)
                 self.assertEqual(os.environ['TEST_CHIAVE_A'], 'dall_ambiente')
                 self.assertEqual(os.environ['TEST_CHIAVE_B'], 'dal_file')
                 self.assertIn('TEST_CHIAVE_B', loaded)
@@ -532,7 +532,7 @@ class SecretsTests(unittest.TestCase):
                 os.environ.pop('TEST_CHIAVE_B', None)
 
     def test_missing_file_is_not_an_error(self):
-        self.assertEqual(self.secrets.load_secrets(Path('/percorso/inesistente')), [])
+        self.assertEqual(self.secrets.load_env(Path('/percorso/inesistente')), [])
 
     def test_missing_key_explains_what_to_do(self):
         import os
@@ -541,13 +541,13 @@ class SecretsTests(unittest.TestCase):
         with self.assertRaises(SystemExit) as ctx:
             self.secrets.require_key('OPENAI_API_KEY')
         message = str(ctx.exception)
-        self.assertIn('setup_api_keys.py', message)
+        self.assertIn('run.py keys', message)
         self.assertIn('TopicGPT', message)
 
     def test_secrets_file_is_git_ignored(self):
-        """Il repository è pubblico: questo non deve mai poter cambiare."""
+        """Le chiavi non devono mai poter finire sotto controllo di versione."""
         self.assertIs(
-            self.secrets.is_git_ignored(self.secrets.secrets_path()), True
+            self.secrets.is_git_ignored(self.secrets.ENV_FILE), True
         )
 
 

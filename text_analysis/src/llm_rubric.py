@@ -1,6 +1,6 @@
 """
 Seconda misura, indipendente, dei costrutti in stile LIWC: una rubrica valutata
-da Claude.
+da un modello linguistico.
 
 Serve a validare le misure dizionario-based di `text_metrics`. Le due strade
 sono metodologicamente diverse — una conta function words, l'altra legge il
@@ -17,15 +17,16 @@ sono anche le unità richieste dall'analisi.
 
 Affidabilità
 ------------
-Con `--replicates 2` la stessa trascrizione viene valutata più volte in
+Con `--llm-replicates 2` la stessa trascrizione viene valutata più volte in
 chiamate indipendenti: la dispersione fra repliche è la stima test-retest
 dell'errore di misura, e finisce nel dataset come `*_sd`. Si possono anche
-indicare più modelli giudici (`--judges`), ottenendo un accordo fra valutatori
-diversi anziché fra repliche dello stesso.
+indicare più modelli giudici (`--llm-models`), ottenendo un accordo fra
+valutatori diversi anziché fra repliche dello stesso.
 
 Costo
 -----
-Per grandi volumi conviene `--batch`, che usa la Batches API a metà prezzo. Sul
+Per grandi volumi conviene `--llm-batch`, che usa la Batches API a metà prezzo (solo
+con il fornitore Anthropic). Sul
 pilota (25 gruppi, 311 messaggi) le chiamate sono poche centinaia e la modalità
 sincrona basta.
 """
@@ -128,8 +129,8 @@ def rubric_model():
         from pydantic import BaseModel, Field
     except ImportError as exc:  # pragma: no cover - dipende dall'ambiente
         raise RuntimeError(
-            'La rubrica LLM richiede pydantic e anthropic.\n'
-            '  pip install -r scripts/nlp/requirements.txt'
+            'La rubrica richiede pydantic e il client del fornitore scelto.\n'
+            '  pip install -r requirements.txt'
         ) from exc
 
     class RubricScores(BaseModel):
@@ -266,15 +267,29 @@ def available_providers() -> list[str]:
     return usable
 
 
-def _ollama_is_running() -> bool:
+def ollama_models() -> list[str]:
+    """Modelli effettivamente installati in Ollama; lista vuota se non risponde."""
+    import json
     import urllib.error
     import urllib.request
 
     try:
-        with urllib.request.urlopen('http://localhost:11434/api/tags', timeout=2):
-            return True
-    except (urllib.error.URLError, OSError, TimeoutError):
-        return False
+        with urllib.request.urlopen('http://localhost:11434/api/tags', timeout=2) as r:
+            payload = json.loads(r.read().decode('utf-8'))
+    except (urllib.error.URLError, OSError, TimeoutError, ValueError):
+        return []
+    return [m.get('name', '') for m in payload.get('models') or []]
+
+
+def _ollama_is_running() -> bool:
+    """Ollama è utilizzabile solo se ha almeno un modello installato.
+
+    Il server risponde anche a installazione vuota. Considerarlo disponibile in
+    quel caso porta a un fallimento lento e incomprensibile: ogni valutazione
+    fallisce e viene ritentata, e su centinaia di unità la pipeline sembra
+    bloccata invece che mal configurata.
+    """
+    return bool(ollama_models())
 
 
 def resolve_provider(preferred: str | None = None) -> str:
@@ -286,7 +301,7 @@ def resolve_provider(preferred: str | None = None) -> str:
         if env_key and not os.environ.get(env_key, '').strip():
             raise SystemExit(
                 f"\nIl fornitore '{preferred}' richiede {env_key}, che non è "
-                f'impostata.\n  python scripts/setup_api_keys.py\n'
+                f'impostata.\n  python run.py keys\n'
             )
         return preferred
 
@@ -299,12 +314,34 @@ def resolve_provider(preferred: str | None = None) -> str:
         '  - imposta OPENAI_API_KEY (la stessa chiave che usa TopicGPT), oppure\n'
         '  - imposta ANTHROPIC_API_KEY, oppure\n'
         '  - avvia un modello in locale: ollama pull llama3\n\n'
-        '  python scripts/setup_api_keys.py\n'
+        '  python run.py keys\n'
     )
 
 
 def default_model_for(provider: str) -> str:
     return PROVIDERS[provider]['default_model']
+
+
+def check_models_available(provider: str, models) -> None:
+    """Verifica prima di partire che i modelli richiesti esistano.
+
+    Si controlla solo dove è possibile e istantaneo, cioè in locale: scoprire a
+    metà di centinaia di chiamate che il modello non c'è è il modo peggiore di
+    accorgersene.
+    """
+    if provider != 'ollama':
+        return
+    installed = ollama_models()
+    # Ollama accetta sia "llama3" sia "llama3:latest": si confronta il nome base.
+    base = {name.split(':')[0] for name in installed}
+    missing = [m for m in models if m.split(':')[0] not in base]
+    if missing:
+        elenco = ', '.join(installed) if installed else 'nessuno'
+        raise SystemExit(
+            f"\nModelli non installati in Ollama: {', '.join(missing)}\n"
+            f'  installati: {elenco}\n'
+            f"  scaricali con:  ollama pull {missing[0]}\n"
+        )
 
 
 def make_client(provider: str):
@@ -421,6 +458,7 @@ def score_units(units, models=None, replicates=1, progress=None, provider=None):
     """
     provider = resolve_provider(provider)
     models = list(models) if models else [default_model_for(provider)]
+    check_models_available(provider, models)
 
     client = make_client(provider)
     rows = []

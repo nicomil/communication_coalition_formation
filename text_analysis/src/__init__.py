@@ -5,10 +5,10 @@ Moduli:
   volume e sentiment. Nessuna dipendenza esterna obbligatoria.
 - ``llm_rubric``: seconda misura degli stessi costrutti tramite rubrica
   valutata da Claude, per validazione convergente.
-- ``topicgpt_runner``: adattatore per il codice ufficiale di TopicGPT
+- ``topicgpt``: adattatore per il codice ufficiale di TopicGPT
   (Pham et al., 2024).
 - ``aggregate``: aggregazione a coppia ordinata, coppia, partecipante e gruppo,
   e innesto sui dataset dell'esperimento.
 
-Il punto di ingresso è ``scripts/run_nlp_pipeline.py``.
+Il punto di ingresso è ``run.py`` nella radice del progetto.
 """

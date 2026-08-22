@@ -15,6 +15,4 @@ merge.ps1
 backups/
 
 # Mai sotto controllo di versione: il repository e' pubblico.
-.secrets.env
 .envrc
-docs/merged/

@@ -1,4 +1,4 @@
-"""Test per scripts/merge_chat_and_choices.py.
+"""Test per src/merge.py.
 
 Girano su dati sintetici scritti su file temporanei: non serve ne' il database
 ne' un export reale. Il controllo piu' forte e' la proprieta' di coerenza con
@@ -7,7 +7,7 @@ la funzione di payoff del gioco: se la mappatura fra ``decision_choice``
 payoff ricalcolati dal profilo di scelte non coinciderebbero con quelli
 esportati da oTree.
 
-    python scripts/test_merge_chat_and_choices.py
+    python tests/test_merge.py
 """
 
 import contextlib
@@ -20,15 +20,77 @@ import tempfile
 import unittest
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT))
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from bargaining_tdl_common.utils import custom_calculate_payoff_vector  # noqa: E402
+
+def custom_calculate_payoff_vector(decisions, no_deadweight_loss=False):
+    """Regola di payoff del gioco, riprodotta qui.
+
+    Il progetto di analisi è autonomo e non deve dipendere dal codice
+    dell'esperimento per poter girare. La regola è però la stessa, e
+    `PayoffRuleMatchesExperimentTests` verifica che le due implementazioni
+    coincidano quando il codice dell'esperimento è raggiungibile: così la copia
+    non può divergere in silenzio.
+
+    Topologia: P1.left=P3, P1.right=P2; P2.left=P1, P2.right=P3;
+    P3.left=P2, P3.right=P1.
+    """
+    c1, c2, c3 = decisions
+
+    # Coalizione minima vincente: sostegno strettamente reciproco.
+    if c1 == 'Right' and c2 == 'Left':
+        return (3, 3, 0), 'mutual_12'
+    if c2 == 'Right' and c3 == 'Left':
+        return (0, 3, 3), 'mutual_23'
+    if c3 == 'Right' and c1 == 'Left':
+        return (3, 0, 3), 'mutual_31'
+
+    if no_deadweight_loss:
+        # Due sostengono lo stesso terzo, che a sua volta non sostiene nessuno.
+        if c1 == 'NoOne' and c2 == 'Left' and c3 == 'Right':
+            return (6, 0, 0), 'no_dwl_star_1'
+        if c2 == 'NoOne' and c1 == 'Right' and c3 == 'Left':
+            return (0, 6, 0), 'no_dwl_star_2'
+        if c3 == 'NoOne' and c1 == 'Left' and c2 == 'Right':
+            return (0, 0, 6), 'no_dwl_star_3'
+
+    return (0, 0, 0), 'disagreement'
+
+
+def _experiment_payoff_rule():
+    """Implementazione dell'esperimento, se raggiungibile da qui.
+
+    L'import trascina la configurazione di oTree, che pretende di girare dalla
+    cartella dell'esperimento e può fallire per ragioni che non riguardano
+    questo progetto: qualunque problema si traduce in "non disponibile", e il
+    confronto viene saltato anziché segnalare un falso errore.
+    """
+    import os
+
+    experiment_root = PROJECT_ROOT.parent
+    if not (experiment_root / 'bargaining_tdl_common').is_dir():
+        return None
+
+    previous_cwd = os.getcwd()
+    sys.path.insert(0, str(experiment_root))
+    try:
+        os.chdir(experiment_root)
+        from bargaining_tdl_common.utils import (
+            custom_calculate_payoff_vector as reference,
+        )
+        return reference
+    except Exception:  # noqa: BLE001 - dipende dall'ambiente, non dal codice
+        return None
+    finally:
+        os.chdir(previous_cwd)
+        if sys.path and sys.path[0] == str(experiment_root):
+            sys.path.pop(0)
 
 
 def _load_module():
-    path = Path(__file__).with_name('merge_chat_and_choices.py')
-    spec = importlib.util.spec_from_file_location('merge_chat_and_choices', path)
+    path = Path(__file__).resolve().parent.parent / 'src' / 'merge.py'
+    spec = importlib.util.spec_from_file_location('merge', path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -109,14 +171,32 @@ def run_merge(wide_rows, chat_rows, tmpdir):
 
     # Il riepilogo su stdout renderebbe illeggibile l'output dei test.
     with contextlib.redirect_stdout(io.StringIO()):
-        mod.main(['--wide', str(wide_path), '--chat', str(chat_path),
-                  '--outdir', str(outdir), '--stem', 't'])
+        mod.run(wide_path, chat_path, outdir, 't')
 
     def read(name):
         with (outdir / f't_{name}.csv').open(encoding='utf-8-sig', newline='') as handle:
             return list(csv.DictReader(handle))
 
     return read('messages_long'), read('chat_by_partner'), read('chat_aggregated')
+
+
+class PayoffRuleMatchesExperimentTests(unittest.TestCase):
+    """La copia locale della regola di payoff non deve divergere dall'originale."""
+
+    def test_identical_on_all_27_profiles(self):
+        reference = _experiment_payoff_rule()
+        if reference is None:
+            self.skipTest(
+                'codice dell esperimento non raggiungibile: progetto usato in '
+                'modo autonomo'
+            )
+        for decisions in itertools.product(mod.VALID_DECISIONS, repeat=3):
+            for no_dwl in (False, True):
+                self.assertEqual(
+                    custom_calculate_payoff_vector(decisions, no_dwl),
+                    reference(decisions, no_dwl),
+                    msg=f'profilo {decisions}, no_dwl={no_dwl}',
+                )
 
 
 class TopologyTests(unittest.TestCase):

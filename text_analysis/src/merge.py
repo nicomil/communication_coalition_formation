@@ -26,11 +26,8 @@ triade viene quindi ricostruita da ``participant.part1_group_id`` quando
 presente (export recenti) e, in subordine, dal prefisso del canale di chat,
 che contiene lo stesso identificativo.
 
-Uso:
-    python scripts/merge_chat_and_choices.py \
-        --wide docs/all_apps_wide.csv \
-        --chat docs/ChatMessages.csv \
-        --outdir docs/merged
+Uso (dal punto di ingresso del progetto):
+    python run.py merge
 """
 
 from __future__ import annotations
@@ -684,58 +681,63 @@ def write_csv(path: Path, rows):
             writer.writerow(row)
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--wide', required=True, type=Path)
-    parser.add_argument('--chat', required=True, type=Path)
-    parser.add_argument('--outdir', required=True, type=Path)
-    parser.add_argument('--stem', default=None,
-                        help='Prefisso dei file di output (default: nome del CSV wide)')
-    args = parser.parse_args(argv)
+def run(wide_path: Path, chat_path: Path, outdir: Path, stem: str) -> dict:
+    """Passo 1: unisce scelte e chat e costruisce le variabili dell'esperimento.
 
-    wide_cols, wide_rows = load_wide(args.wide)
-    chat_rows = load_chat(args.chat)
+    Restituisce un riepilogo con i percorsi prodotti e i numeri da controllare.
+    """
+    wide_cols, wide_rows = load_wide(wide_path)
+    chat_rows = load_chat(chat_path)
     wide_by_code = {r['participant.code']: r for r in wide_rows}
 
     uid_by_code, groups, warnings = build_groups(wide_rows, chat_rows)
     messages, anomalies = build_messages(chat_rows, wide_by_code, uid_by_code)
 
-    args.outdir.mkdir(parents=True, exist_ok=True)
-    stem = args.stem or args.wide.stem
+    outdir.mkdir(parents=True, exist_ok=True)
+    paths = dict(
+        messages_long=outdir / f'{stem}_messages_long.csv',
+        chat_by_partner=outdir / f'{stem}_chat_by_partner.csv',
+        chat_aggregated=outdir / f'{stem}_chat_aggregated.csv',
+    )
 
-    long_path = args.outdir / f'{stem}_messages_long.csv'
-    partner_path = args.outdir / f'{stem}_chat_by_partner.csv'
-    aggregated_path = args.outdir / f'{stem}_chat_aggregated.csv'
-
-    write_csv(long_path, messages)
+    write_csv(paths['messages_long'], messages)
     write_csv(
-        partner_path,
+        paths['chat_by_partner'],
         build_by_partner(wide_rows, wide_cols, groups, uid_by_code, messages),
     )
     write_csv(
-        aggregated_path,
+        paths['chat_aggregated'],
         build_aggregated(wide_rows, wide_cols, groups, uid_by_code, messages),
     )
 
-    grouped = len(uid_by_code)
-    print(f'Partecipanti in input     : {len(wide_rows)}')
-    print(f'  di cui raggruppati      : {grouped}')
-    print(f'  mai raggruppati         : {len(wide_rows) - grouped}')
-    print(f'Triadi ricostruite        : {len(groups)}')
-    print(f'Triadi valide             : '
-          f'{sum(group_validity(m)["group_valid"] for m in groups.values())}')
-    print(f'Messaggi in input         : {len(chat_rows)}')
-    print(f'Messaggi risolti          : {len(messages)}')
+    return dict(
+        paths=paths,
+        n_participants=len(wide_rows),
+        n_grouped=len(uid_by_code),
+        n_groups=len(groups),
+        n_valid_groups=sum(
+            group_validity(m)['group_valid'] for m in groups.values()
+        ),
+        n_messages_in=len(chat_rows),
+        n_messages_resolved=len(messages),
+        warnings=warnings + anomalies,
+    )
+
+
+def print_summary(summary: dict) -> None:
+    print(f"Partecipanti in input     : {summary['n_participants']}")
+    print(f"  di cui raggruppati      : {summary['n_grouped']}")
+    print(f"  mai raggruppati         : "
+          f"{summary['n_participants'] - summary['n_grouped']}")
+    print(f"Triadi ricostruite        : {summary['n_groups']}")
+    print(f"Triadi valide             : {summary['n_valid_groups']}")
+    print(f"Messaggi in input         : {summary['n_messages_in']}")
+    print(f"Messaggi risolti          : {summary['n_messages_resolved']}")
+    if summary['n_messages_resolved'] != summary['n_messages_in']:
+        print('  ATTENZIONE: non tutti i messaggi sono stati ricondotti a un '
+              'partecipante; vedi gli avvisi qui sotto.')
     print()
-    print(f'  {long_path}')
-    print(f'  {partner_path}')
-    print(f'  {aggregated_path}')
-
-    for warning in warnings + anomalies:
+    for path in summary['paths'].values():
+        print(f'  {path}')
+    for warning in summary['warnings']:
         print(f'ATTENZIONE: {warning}', file=sys.stderr)
-
-    return 0
-
-
-if __name__ == '__main__':
-    sys.exit(main())
