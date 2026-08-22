@@ -1,7 +1,8 @@
 # Configurare le chiavi API
 
-La pipeline di analisi del testo usa due servizi esterni. Questa guida spiega
-come inserire le chiavi una volta sola. Funziona identica su macOS, Windows e
+La pipeline di analisi del testo può usare servizi esterni. Questa guida spiega
+come inserire le chiavi una volta sola; la procedura completa di analisi è in
+`@docs/RUNBOOK_ANALISI_TESTO.md`. Funziona identica su macOS, Windows e
 Linux, e non richiede di modificare impostazioni di sistema.
 
 | Chiave | A cosa serve | Obbligatoria? |

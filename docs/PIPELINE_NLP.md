@@ -8,6 +8,10 @@ dataset delle scelte, pronte per Stata.
 Tutto il codice sta in `scripts/nlp/`; il punto di ingresso è
 `scripts/run_nlp_pipeline.py`.
 
+Questo documento spiega **come sono costruite** le misure. Per la procedura
+operativa passo per passo — dall'export di oTree ai file da aprire in Stata —
+vedi `@docs/RUNBOOK_ANALISI_TESTO.md`.
+
 ## 1. Tre stadi indipendenti
 
 | Stadio | Opzione | Serve una credenziale? | Stato |
