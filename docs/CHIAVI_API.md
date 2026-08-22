@@ -6,11 +6,23 @@ Linux, e non richiede di modificare impostazioni di sistema.
 
 | Chiave | A cosa serve | Obbligatoria? |
 |---|---|---|
-| `OPENAI_API_KEY` | TopicGPT, il backend usato nel paper di Pham et al. | Solo per estrarre i topic con OpenAI |
-| `ANTHROPIC_API_KEY` | La rubrica che convalida le misure testuali | Solo per quel controllo |
+| `OPENAI_API_KEY` | TopicGPT **e**, se vuoi, la rubrica di validazione | Solo per estrarre i topic con OpenAI |
+| `ANTHROPIC_API_KEY` | La rubrica di validazione, in alternativa a OpenAI | **No, facoltativa** |
 
 Le misure testuali di base — volume, sentiment, pensiero analitico, Clout,
 Authenticity — **non richiedono alcuna chiave** e girano già così com'è.
+
+**Una sola chiave basta.** La rubrica di validazione non è legata a un
+fornitore: se hai già `OPENAI_API_KEY` per TopicGPT, quella stessa chiave copre
+anche la rubrica e non serve altro. La pipeline sceglie da sola il fornitore in
+base a ciò che trova, e lo dichiara a schermo prima di partire:
+
+```
+Rubrica LLM...
+  fornitore: OpenAI
+```
+
+Per forzare una scelta diversa: `--llm-provider openai|anthropic|ollama`.
 
 ## La procedura
 

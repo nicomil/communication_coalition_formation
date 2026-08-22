@@ -88,10 +88,15 @@ def _merge_llm(rows, level_rows, level):
 
 
 def run_llm_stage(features, transcripts_by_level, args) -> None:
-    if not args.llm_dry_run and not llm_rubric.has_credentials():
-        secrets.require_key('ANTHROPIC_API_KEY')
+    if args.llm_dry_run:
+        provider = args.llm_provider or 'anthropic'
+    else:
+        provider = llm_rubric.resolve_provider(args.llm_provider)
+        print(f'  fornitore: {llm_rubric.PROVIDERS[provider]["label"]}')
 
-    models = [m.strip() for m in args.llm_models.split(',') if m.strip()]
+    models = [m.strip() for m in (args.llm_models or '').split(',') if m.strip()]
+    if not models:
+        models = [llm_rubric.default_model_for(provider)]
     for level in args.llm_levels:
         units = llm_rubric.build_units(
             features[level], level, transcripts_by_level[level]
@@ -108,6 +113,12 @@ def run_llm_stage(features, transcripts_by_level, args) -> None:
         total_calls = len(units) * len(models) * args.llm_replicates
         print(f'  {level}: {len(units)} unità, {total_calls} chiamate')
 
+        if args.llm_batch and provider != 'anthropic':
+            raise SystemExit(
+                "--llm-batch e' disponibile solo con il fornitore anthropic; "
+                'con gli altri backend usa la modalita\' sincrona.'
+            )
+
         if args.llm_batch:
             batch_id = llm_rubric.submit_batch(
                 units, models[0], args.llm_replicates
@@ -121,7 +132,7 @@ def run_llm_stage(features, transcripts_by_level, args) -> None:
 
             scored = llm_rubric.score_units(
                 units, models=models, replicates=args.llm_replicates,
-                progress=progress,
+                progress=progress, provider=provider,
             )
 
         _merge_llm(scored, features[level], level)
@@ -190,8 +201,13 @@ def main(argv=None):
 
     parser.add_argument('--llm', action='store_true',
                         help='Esegue la rubrica valutata da Claude')
-    parser.add_argument('--llm-models', default=llm_rubric.DEFAULT_MODEL,
-                        help='Modelli giudice, separati da virgola')
+    parser.add_argument('--llm-provider', default=None,
+                        choices=list(llm_rubric.PROVIDERS),
+                        help='Fornitore della rubrica. Se omesso, sceglie in base '
+                             'alle credenziali disponibili')
+    parser.add_argument('--llm-models', default=None,
+                        help='Modelli giudice, separati da virgola. Se omesso, usa '
+                             'il modello predefinito del fornitore')
     parser.add_argument('--llm-replicates', type=int, default=1,
                         help='Valutazioni indipendenti per unità (affidabilità)')
     parser.add_argument('--llm-levels', nargs='+', default=['dyad_directed', 'group'],

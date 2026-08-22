@@ -30,7 +30,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 # messaggio d'errore sia lo script di configurazione.
 KNOWN_KEYS = {
     'OPENAI_API_KEY': 'TopicGPT (backend usato dal paper)',
-    'ANTHROPIC_API_KEY': 'rubrica di validazione delle misure testuali',
+    'ANTHROPIC_API_KEY': 'rubrica di validazione (alternativa a OpenAI, facoltativa)',
     'OPENAI_BASE_URL': 'endpoint alternativo compatibile OpenAI (facoltativo)',
 }
 

@@ -39,7 +39,37 @@ import statistics
 import time
 from dataclasses import dataclass
 
-DEFAULT_MODEL = 'claude-opus-5'
+# La rubrica non dipende da un fornitore specifico: quello che serve è un modello
+# che segua istruzioni e restituisca JSON. Sono quindi supportati tre backend, e
+# quello da usare si sceglie in base alle credenziali disponibili.
+#
+# `openai` serve anche a chi non vuole una seconda chiave: se si usa già OpenAI
+# per TopicGPT, la stessa chiave copre anche questo stadio. `ollama` gira in
+# locale e non richiede alcuna credenziale.
+PROVIDERS = {
+    'anthropic': dict(
+        default_model='claude-opus-5',
+        env_key='ANTHROPIC_API_KEY',
+        label='Anthropic',
+    ),
+    'openai': dict(
+        default_model='gpt-4o',
+        env_key='OPENAI_API_KEY',
+        label='OpenAI',
+    ),
+    'ollama': dict(
+        default_model='llama3',
+        env_key=None,  # locale: nessuna chiave
+        label='Ollama (locale)',
+    ),
+}
+
+# Ordine di preferenza quando il fornitore non è indicato esplicitamente.
+PROVIDER_PRIORITY = ('anthropic', 'openai', 'ollama')
+
+OLLAMA_BASE_URL = 'http://localhost:11434/v1'
+
+DEFAULT_MODEL = PROVIDERS['anthropic']['default_model']
 
 SYSTEM_PROMPT = """You are a research assistant coding transcripts for a \
 behavioural economics experiment. Three participants play a coalition-formation \
@@ -207,8 +237,101 @@ def _empty_scores() -> dict:
     return scores
 
 
-def score_unit(client, unit: RubricUnit, model: str = DEFAULT_MODEL) -> dict:
+def _scores_from_parsed(parsed, model: str) -> dict:
+    result = {field: getattr(parsed, field) for field in SCALE_FIELDS}
+    result.update({field: int(getattr(parsed, field)) for field in FLAG_FIELDS})
+    result['rationale'] = parsed.rationale
+    result['error'] = ''
+    result['model'] = model
+    return result
+
+
+# --- Fornitori ------------------------------------------------------------
+
+
+def available_providers() -> list[str]:
+    """Fornitori utilizzabili con le credenziali presenti nell'ambiente.
+
+    Ollama è elencato solo se risponde davvero: dichiararlo disponibile perché
+    "tanto è locale" porterebbe a fallire a metà esecuzione.
+    """
+    usable = []
+    for name in PROVIDER_PRIORITY:
+        env_key = PROVIDERS[name]['env_key']
+        if env_key is None:
+            if _ollama_is_running():
+                usable.append(name)
+        elif os.environ.get(env_key, '').strip():
+            usable.append(name)
+    return usable
+
+
+def _ollama_is_running() -> bool:
+    import urllib.error
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen('http://localhost:11434/api/tags', timeout=2):
+            return True
+    except (urllib.error.URLError, OSError, TimeoutError):
+        return False
+
+
+def resolve_provider(preferred: str | None = None) -> str:
+    """Sceglie il fornitore, o spiega come renderne disponibile uno."""
+    if preferred:
+        if preferred not in PROVIDERS:
+            raise SystemExit(f'Fornitore sconosciuto: {preferred}')
+        env_key = PROVIDERS[preferred]['env_key']
+        if env_key and not os.environ.get(env_key, '').strip():
+            raise SystemExit(
+                f"\nIl fornitore '{preferred}' richiede {env_key}, che non è "
+                f'impostata.\n  python scripts/setup_api_keys.py\n'
+            )
+        return preferred
+
+    usable = available_providers()
+    if usable:
+        return usable[0]
+
+    raise SystemExit(
+        '\nLa rubrica di validazione richiede un modello linguistico. Opzioni:\n'
+        '  - imposta OPENAI_API_KEY (la stessa chiave che usa TopicGPT), oppure\n'
+        '  - imposta ANTHROPIC_API_KEY, oppure\n'
+        '  - avvia un modello in locale: ollama pull llama3\n\n'
+        '  python scripts/setup_api_keys.py\n'
+    )
+
+
+def default_model_for(provider: str) -> str:
+    return PROVIDERS[provider]['default_model']
+
+
+def make_client(provider: str):
+    if provider == 'anthropic':
+        import anthropic
+        return anthropic.Anthropic()
+
+    from openai import OpenAI
+    if provider == 'ollama':
+        # La chiave è richiesta dalla libreria ma ignorata dal server locale.
+        return OpenAI(base_url=OLLAMA_BASE_URL, api_key='ollama')
+    return OpenAI(api_key=os.environ['OPENAI_API_KEY'],
+                  base_url=os.environ.get('OPENAI_BASE_URL') or None)
+
+
+# --- Valutazione ----------------------------------------------------------
+
+
+def score_unit(client, unit: RubricUnit, model: str = DEFAULT_MODEL,
+               provider: str = 'anthropic') -> dict:
     """Valuta una trascrizione. Restituisce i punteggi o l'errore incontrato."""
+    if provider == 'anthropic':
+        return _score_anthropic(client, unit, model)
+    return _score_openai_compatible(client, unit, model)
+
+
+def _score_anthropic(client, unit: RubricUnit, model: str, attempt: int = 0) -> dict:
     import anthropic
 
     try:
@@ -219,41 +342,87 @@ def score_unit(client, unit: RubricUnit, model: str = DEFAULT_MODEL) -> dict:
     except anthropic.NotFoundError as exc:
         raise RuntimeError(f'modello non disponibile: {model}') from exc
     except anthropic.RateLimitError as exc:
+        if attempt >= 4:
+            return dict(_empty_scores(), error='rate_limit')
         retry_after = int(exc.response.headers.get('retry-after', '30'))
         time.sleep(retry_after)
-        return score_unit(client, unit, model)
+        return _score_anthropic(client, unit, model, attempt + 1)
     except anthropic.APIStatusError as exc:
-        if exc.status_code >= 500:
-            time.sleep(5)
-            return score_unit(client, unit, model)
+        if exc.status_code >= 500 and attempt < 4:
+            time.sleep(5 * (attempt + 1))
+            return _score_anthropic(client, unit, model, attempt + 1)
         return dict(_empty_scores(), error=f'api_status_{exc.status_code}')
     except anthropic.APIConnectionError:
-        time.sleep(5)
-        return score_unit(client, unit, model)
+        if attempt >= 4:
+            return dict(_empty_scores(), error='connection')
+        time.sleep(5 * (attempt + 1))
+        return _score_anthropic(client, unit, model, attempt + 1)
 
     if response.stop_reason == 'refusal':
         category = getattr(response.stop_details, 'category', None)
         return dict(_empty_scores(), error=f'refusal:{category}')
 
-    parsed = response.parsed_output
-    result = {field: getattr(parsed, field) for field in SCALE_FIELDS}
-    result.update({field: int(getattr(parsed, field)) for field in FLAG_FIELDS})
-    result['rationale'] = parsed.rationale
-    result['error'] = ''
-    result['model'] = model
-    return result
+    return _scores_from_parsed(response.parsed_output, model)
 
 
-def score_units(units, models=(DEFAULT_MODEL,), replicates=1, progress=None):
+def _json_instruction() -> str:
+    """Schema descritto nel prompt.
+
+    Si usa la modalità JSON generica anziché lo schema vincolato: quest'ultima
+    non è supportata allo stesso modo da tutti gli endpoint compatibili — in
+    particolare da Ollama — e la validazione avviene comunque in locale con
+    pydantic, che è il controllo che conta.
+    """
+    fields = ', '.join(f'"{f}": integer 0-100' for f in SCALE_FIELDS)
+    flags = ', '.join(f'"{f}": true/false' for f in FLAG_FIELDS)
+    return (
+        '\n\nRespond with a single JSON object and nothing else, with exactly '
+        f'these keys: {fields}, {flags}, "rationale": string of at most 25 words.'
+    )
+
+
+def _score_openai_compatible(client, unit: RubricUnit, model: str,
+                             attempt: int = 0) -> dict:
+    """Percorso per OpenAI e per qualunque endpoint compatibile, Ollama incluso."""
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {'role': 'system', 'content': SYSTEM_PROMPT + _json_instruction()},
+                {'role': 'user', 'content': _user_message(unit)},
+            ],
+            response_format={'type': 'json_object'},
+        )
+    except Exception as exc:  # noqa: BLE001 - le eccezioni variano per endpoint
+        if attempt >= 4:
+            return dict(_empty_scores(), error=f'api_error:{type(exc).__name__}')
+        time.sleep(5 * (attempt + 1))
+        return _score_openai_compatible(client, unit, model, attempt + 1)
+
+    text = (response.choices[0].message.content or '').strip()
+    try:
+        parsed = rubric_model().model_validate_json(text)
+    except Exception:  # noqa: BLE001 - risposta non conforme allo schema
+        # Una risposta malformata è spesso transitoria: si riprova, e solo dopo
+        # si registra l'errore, così il dato mancante resta tracciato.
+        if attempt < 2:
+            return _score_openai_compatible(client, unit, model, attempt + 1)
+        return dict(_empty_scores(), error='unparseable')
+
+    return _scores_from_parsed(parsed, model)
+
+
+def score_units(units, models=None, replicates=1, progress=None, provider=None):
     """Valuta tutte le unità, con repliche e/o più giudici.
 
     Restituisce una riga per unità: media fra tutte le valutazioni, deviazione
     standard come stima dell'errore di misura, e i punteggi grezzi di ciascuna
     valutazione per gli usi di controllo.
     """
-    import anthropic
+    provider = resolve_provider(provider)
+    models = list(models) if models else [default_model_for(provider)]
 
-    client = anthropic.Anthropic()
+    client = make_client(provider)
     rows = []
     total = len(units) * len(models) * replicates
     done = 0
@@ -262,7 +431,7 @@ def score_units(units, models=(DEFAULT_MODEL,), replicates=1, progress=None):
         judgements = []
         for model in models:
             for _ in range(replicates):
-                judgements.append(score_unit(client, unit, model))
+                judgements.append(score_unit(client, unit, model, provider))
                 done += 1
                 if progress:
                     progress(done, total)
@@ -301,6 +470,9 @@ def _summarize(unit: RubricUnit, judgements) -> dict:
 
 def submit_batch(units, model: str = DEFAULT_MODEL, replicates: int = 1):
     """Invia le valutazioni alla Batches API (metà prezzo, esito asincrono).
+
+    Disponibile solo con il fornitore Anthropic. Con gli altri backend si usa
+    la modalità sincrona, che sul volume di questo studio resta praticabile.
 
     Restituisce l'id del batch: va conservato, perché i risultati si ritirano
     con `collect_batch` anche in una sessione successiva.
@@ -373,11 +545,8 @@ def collect_batch(batch_id: str, units, poll_seconds: int = 60, progress=None):
 
 
 def has_credentials() -> bool:
-    """True se esiste una credenziale utilizzabile per l'API."""
-    if os.getenv('ANTHROPIC_API_KEY') or os.getenv('ANTHROPIC_AUTH_TOKEN'):
-        return True
-    config = os.path.expanduser('~/.config/anthropic')
-    return os.path.isdir(config) and bool(os.listdir(config))
+    """True se almeno un fornitore è utilizzabile."""
+    return bool(available_providers())
 
 
 def dry_run_payload(units, model: str = DEFAULT_MODEL) -> str:

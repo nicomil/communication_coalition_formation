@@ -33,8 +33,12 @@ from scripts.nlp import secrets  # noqa: E402
 
 # Chiavi proposte durante la configurazione, in ordine di importanza.
 PROMPTS = [
-    ('OPENAI_API_KEY', 'OpenAI — serve a TopicGPT', 'sk-...'),
-    ('ANTHROPIC_API_KEY', 'Anthropic — serve alla rubrica di validazione', 'sk-ant-...'),
+    ('OPENAI_API_KEY',
+     'OpenAI — serve a TopicGPT e, se vuoi, anche alla rubrica di validazione',
+     'sk-...'),
+    ('ANTHROPIC_API_KEY',
+     'Anthropic — FACOLTATIVA: solo se preferisci Claude come giudice della rubrica',
+     'sk-ant-...'),
 ]
 
 GITIGNORE_LINE = secrets.SECRETS_FILENAME

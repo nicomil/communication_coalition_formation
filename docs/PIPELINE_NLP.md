@@ -13,7 +13,7 @@ Tutto il codice sta in `scripts/nlp/`; il punto di ingresso è
 | Stadio | Opzione | Serve una credenziale? | Stato |
 |---|---|---|---|
 | Misure testuali deterministiche | (sempre attivo) | no | eseguito sul pilota |
-| Rubrica valutata da Claude | `--llm` | sì, Anthropic | pronto, non ancora eseguito |
+| Rubrica di validazione | `--llm` | una qualsiasi fra OpenAI, Anthropic o un modello locale | pronto, non ancora eseguito |
 | TopicGPT | `--topics` | dipende dal backend | pronto, non ancora eseguito |
 
 Le chiavi si configurano una volta sola con `python scripts/setup_api_keys.py`
@@ -81,8 +81,12 @@ Clout`. Nella pre-registrazione, che è rimasta generica, vanno dichiarati come
 *LIWC-style measures computed from published formulas*.
 
 **La validazione convergente.** Lo stadio 2 fa valutare le stesse trascrizioni a
-Claude con una rubrica esplicita (`scripts/nlp/llm_rubric.py`), su scala 0-100
-per gli stessi quattro costrutti. Le due strade sono metodologicamente
+un modello linguistico con una rubrica esplicita (`scripts/nlp/llm_rubric.py`),
+su scala 0-100 per gli stessi quattro costrutti. Il fornitore è
+intercambiabile — OpenAI, Anthropic o un modello locale via Ollama — perché
+quello che serve è un modello che segua istruzioni e restituisca JSON, non un
+servizio specifico: chi usa già OpenAI per TopicGPT non ha bisogno di una
+seconda chiave. Le due strade sono metodologicamente
 indipendenti — una conta function words, l'altra legge il testo — quindi la
 correlazione fra `clout_100` e `llm_clout` è un'evidenza di validità
 convergente. Se le due misure divergono, va riportato: è un risultato, non un
@@ -238,7 +242,7 @@ Batches API a metà prezzo (esito asincrono, id del batch da conservare).
 
 ## 8. Test
 
-`python scripts/test_nlp_pipeline.py` — 46 test, senza rete né credenziali.
+`python scripts/test_nlp_pipeline.py` — 53 test, senza rete né credenziali.
 Coprono la tokenizzazione delle forme contratte, l'euristica sugli avverbi in
 *-ly*, la formula del CDI ricalcolata a mano, la direzione attesa dei compositi,
 la standardizzazione, la conservazione di parole e messaggi attraverso i livelli

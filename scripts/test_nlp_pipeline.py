@@ -420,6 +420,71 @@ class LLMRubricPureTests(unittest.TestCase):
         self.assertIn('refusal', row['llm_errors'])
 
 
+class ProviderSelectionTests(unittest.TestCase):
+    """La rubrica deve poter girare senza una chiave Anthropic."""
+
+    def setUp(self):
+        import os
+        from scripts.nlp import llm_rubric
+        self.llm = llm_rubric
+        self.os = os
+        self._saved = {
+            k: os.environ.pop(k, None)
+            for k in ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY')
+        }
+        # Ollama dipende da cosa gira sulla macchina: lo si neutralizza, così
+        # il test misura la logica di scelta e non l'ambiente.
+        self._real_probe = llm_rubric._ollama_is_running
+        llm_rubric._ollama_is_running = lambda: False
+
+    def tearDown(self):
+        self.llm._ollama_is_running = self._real_probe
+        for key, value in self._saved.items():
+            if value is None:
+                self.os.environ.pop(key, None)
+            else:
+                self.os.environ[key] = value
+
+    def test_openai_key_alone_is_enough(self):
+        self.os.environ['OPENAI_API_KEY'] = 'sk-finta'
+        self.assertEqual(self.llm.resolve_provider(None), 'openai')
+        self.assertTrue(self.llm.has_credentials())
+
+    def test_anthropic_preferred_when_both_present(self):
+        self.os.environ['OPENAI_API_KEY'] = 'sk-finta'
+        self.os.environ['ANTHROPIC_API_KEY'] = 'sk-ant-finta'
+        self.assertEqual(self.llm.resolve_provider(None), 'anthropic')
+
+    def test_local_backend_needs_no_key(self):
+        self.llm._ollama_is_running = lambda: True
+        self.assertEqual(self.llm.resolve_provider(None), 'ollama')
+        self.assertIsNone(self.llm.PROVIDERS['ollama']['env_key'])
+
+    def test_no_provider_lists_every_option(self):
+        with self.assertRaises(SystemExit) as ctx:
+            self.llm.resolve_provider(None)
+        message = str(ctx.exception)
+        self.assertIn('OPENAI_API_KEY', message)
+        self.assertIn('ANTHROPIC_API_KEY', message)
+        self.assertIn('ollama', message)
+
+    def test_explicit_provider_without_its_key_is_refused(self):
+        self.os.environ['OPENAI_API_KEY'] = 'sk-finta'
+        with self.assertRaises(SystemExit) as ctx:
+            self.llm.resolve_provider('anthropic')
+        self.assertIn('ANTHROPIC_API_KEY', str(ctx.exception))
+
+    def test_each_provider_has_a_default_model(self):
+        for name in self.llm.PROVIDERS:
+            self.assertTrue(self.llm.default_model_for(name), msg=name)
+
+    def test_json_instruction_names_every_field(self):
+        """Il percorso compatibile OpenAI descrive lo schema nel prompt."""
+        instruction = self.llm._json_instruction()
+        for field in self.llm.SCALE_FIELDS + self.llm.FLAG_FIELDS:
+            self.assertIn(field, instruction, msg=field)
+
+
 class SecretsTests(unittest.TestCase):
     """Caricamento delle chiavi API: deve essere prevedibile e non sorprendere."""
 
