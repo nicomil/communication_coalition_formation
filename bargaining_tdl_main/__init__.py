@@ -760,6 +760,11 @@ class GroupingAfterControlQuestions(WaitPage):
             p.participant.part1_payoff_eligible = True
             p.participant.vars['group_dropped'] = False
             p.participant.vars['part1_payoff_eligible'] = True
+            # ID stabile della triade: coincide con il prefisso usato nei canali
+            # chat, quindi permette di riunire scelte e messaggi in fase di
+            # analisi. Va scritto qui e non solo al calcolo dei payoff, altrimenti
+            # i gruppi che si interrompono a meta' resterebbero senza ID.
+            p.participant.vars['part1_group_id'] = group.id
         triad_pids = [p.participant.id for p in group.get_players()]
         intro_groups = group.session.vars.setdefault('intro_groups', [])
         if triad_pids not in intro_groups:

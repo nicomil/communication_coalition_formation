@@ -1,0 +1,21 @@
+# Dipendenze della pipeline NLP.
+#
+# Lo stadio delle misure testuali deterministiche (text_metrics, aggregate)
+# gira con la sola libreria standard: nulla qui sotto e' necessario per
+# eseguirlo. Le voci servono agli stadi opzionali.
+
+# Sentiment validato e open source. Senza, text_metrics ripiega sui dizionari
+# di semi e lo segnala nella colonna sentiment_backend.
+vaderSentiment>=3.3.2
+
+# Rubrica valutata da Claude (scripts/nlp/llm_rubric.py).
+anthropic>=0.40
+pydantic>=2.0
+
+# TopicGPT (Pham et al., 2024) non si installa da qui: i file di prompt fanno
+# parte del metodo e stanno nel repository, non nel pacchetto pubblicato.
+#   git clone https://github.com/chtmp223/topicGPT.git
+#   pip install ./topicGPT
+# Installare dal repository e non da PyPI: nella release 0.2.7 vLLM e' importato
+# al primo livello e non e' installabile su macOS senza GPU, mentre sul ramo
+# main e' gia' diventato un extra opzionale.

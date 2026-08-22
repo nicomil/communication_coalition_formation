@@ -605,7 +605,7 @@ class Welcome(Page):
     def vars_for_template(player):
         return dict(
             require_prolific_id=_require_prolific_id(player),
-            participation_fee=cu(player.session.config.get('participation_fee', 1.50)),
+            participation_fee=cu(player.session.config.get('participation_fee', 1.00)),
             prolific_pid_initial=(
                 (player.participant.label or '').strip()
                 or (player.field_maybe_none('prolific_pid_url') or '').strip()

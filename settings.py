@@ -89,7 +89,7 @@ SESSION_CONFIGS = [
 # e.g. self.session.config['participation_fee']
 
 SESSION_CONFIG_DEFAULTS = dict(
-    real_world_currency_per_point=1.00, participation_fee=1.50, doc="",
+    real_world_currency_per_point=1.00, participation_fee=1.00, doc="",
     control_questions_max_attempts=5,  # Numero massimo di tentativi per le control questions
     skip_intro_control_questions=False,  # Temporarily disable intro control questions
     use_test_timers=False,  # Set all page timers to 60s for testing
@@ -113,6 +113,7 @@ PARTICIPANT_FIELDS = [
     'is_replacement',
     'allocation_failure_reason',
     'group_outcome',
+    'part1_group_id',
 ]
 SESSION_FIELDS = [
     'randomization_seed',

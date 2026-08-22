@@ -592,7 +592,7 @@ class FinalResults(Page):
         part1_group_id = player.participant.vars.get('part1_group_id')
         part1_payoff_eligible = bool(player.participant.vars.get('part1_payoff_eligible', True))
             
-        base_fee = cu(player.session.config.get('participation_fee', 1.50))
+        base_fee = cu(player.session.config.get('participation_fee', 1.00))
         beauty_contest_bonus = cu(player.beauty_contest_guess or 0)
         part1_payoff_val = player.participant.vars.get('part1_payoff', cu(0))
         if not part1_payoff_eligible:
