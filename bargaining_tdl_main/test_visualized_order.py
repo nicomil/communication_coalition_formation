@@ -10,15 +10,45 @@ class _Participant:
 
 
 class _Player:
+    """Imita un Player oTree, compreso il comportamento dei campi nulli.
+
+    I due campi partono a None come nel database, e leggerli direttamente
+    solleva TypeError esattamente come fa oTree: senza questo il test passava
+    mentre la produzione andava in errore 500 sulla wait page di
+    raggruppamento.
+    """
+
     def __init__(self, player_id, code, group):
         self.id_in_group = player_id
         self.participant = _Participant(code)
         self.group = group
-        self.id_player_visualized_on_the_left = ''
-        self.id_player_visualized_on_the_right = ''
+        self._fields = {
+            'id_player_visualized_on_the_left': None,
+            'id_player_visualized_on_the_right': None,
+        }
 
-    def save(self):
-        pass
+    def __getattr__(self, name):
+        if name in ('id_player_visualized_on_the_left',
+                    'id_player_visualized_on_the_right'):
+            value = self._fields[name]
+            if value is None:
+                raise TypeError(
+                    f'player.{name} is None. Accessing a null field is '
+                    f'generally considered an error. Or, if this is '
+                    f'intentional, use field_maybe_none()'
+                )
+            return value
+        raise AttributeError(name)
+
+    def __setattr__(self, name, value):
+        if name in ('id_player_visualized_on_the_left',
+                    'id_player_visualized_on_the_right'):
+            self._fields[name] = value
+            return
+        super().__setattr__(name, value)
+
+    def field_maybe_none(self, name):
+        return self._fields[name]
 
 
 class _Group:

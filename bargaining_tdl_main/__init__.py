@@ -477,7 +477,6 @@ def _decision_option_order(player: Player):
         'decision_option_3',
     )
 
-
     order = [player.field_maybe_none(field) or '' for field in fields]
     if sorted(order) == sorted(VALID_DECISIONS):
         return order
@@ -487,15 +486,20 @@ def _decision_option_order(player: Player):
     random.shuffle(order)
     for field, value in zip(fields, order):
         setattr(player, field, value)
-    # Persist before returning the context: this is the order that the
-    # participant is about to see, and it must survive refreshes.
-    player.save()
+    # In oTree 6 i modelli sono SQLAlchemy: l'assegnazione entra nella
+    # sessione e viene scritta a fine richiesta. Non esiste un .save(), e
+    # chiamarlo solleva AttributeError.
     return order
 
 
 def _ensure_visualized_order(player: Player):
     """Assign and persist a random visual order for this player's two partners."""
-    if player.id_player_visualized_on_the_left and player.id_player_visualized_on_the_right:
+    # I campi partono a None, e oTree solleva TypeError se un campo nullo viene
+    # letto direttamente: qui si legge per sapere se l'ordine e' gia' stato
+    # assegnato, quindi il valore nullo e' il caso normale, non un errore.
+    already_left = player.field_maybe_none('id_player_visualized_on_the_left')
+    already_right = player.field_maybe_none('id_player_visualized_on_the_right')
+    if already_left and already_right:
         return
 
     my_id = player.id_in_group
@@ -504,7 +508,6 @@ def _ensure_visualized_order(player: Player):
     group_players = {p.id_in_group: p for p in player.group.get_players()}
     player.id_player_visualized_on_the_left = group_players[partner_ids[0]].participant.code
     player.id_player_visualized_on_the_right = group_players[partner_ids[1]].participant.code
-    player.save()
 
 
 def _visualized_partner_context(player):
@@ -1148,6 +1151,9 @@ class Decision(Page):
         third_signal_from_left = ""
         third_signal_from_right = ""
         if reveal_third_party:
+            # L'id del gruppo era una variabile locale del metodo prima che la
+            # logica dell'ordine visivo fosse estratta: va riletto qui.
+            group_id = player.group.id
             third_a, third_b = sorted((left_id, right_id))
             channel_third = f"{group_id}_{third_a}_{third_b}"
             # ChatMessage.channel è salvato con lo stesso prefisso che oTree
@@ -1298,6 +1304,9 @@ class PostDecisionConfidence(Page):
         third_signal_from_left = ""
         third_signal_from_right = ""
         if reveal_third_party:
+            # L'id del gruppo era una variabile locale del metodo prima che la
+            # logica dell'ordine visivo fosse estratta: va riletto qui.
+            group_id = player.group.id
             third_a, third_b = sorted((left_id, right_id))
             channel_third = f"{group_id}_{third_a}_{third_b}"
             prefixed_channel_third = f"{player.session.id}-{C.NAME_IN_URL}-{channel_third}"
