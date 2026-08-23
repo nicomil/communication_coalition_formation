@@ -20,119 +20,40 @@ _load_dotenv()
 _BARGAINING_APP_SEQUENCE = [
     'bargaining_tdl_intro', 'bargaining_tdl_main', 'bargaining_tdl_survey',
 ]
-# --- CODICI PROLIFIC — PILOT (solo test) ---
-# Restano solo per le config di collaudo in fondo a SESSION_CONFIGS: non sono i
-# codici della raccolta dati.
+# --- CODICI PROLIFIC PILOT ---
+# Sostituisci i link qui sotto con quelli generati su Prolific per ciascuno dei 3 studi.
+# Questi verranno usati automaticamente quando il tuo co-autore farà il git push.
+
+# 1. Studio A (Public TDL)
 PUBLIC_COMPLETION  = "https://app.prolific.com/submissions/complete?cc=CTKDYE8E"
 PUBLIC_DROPOUT_CQ  = "https://app.prolific.com/submissions/complete?cc=C7WZD8AX"
 PUBLIC_DROPOUT_INE = "https://app.prolific.com/submissions/complete?cc=CHWGZZMH"
 
+# 2. Studio B (Private TDL)
 PRIVATE_COMPLETION  = "https://app.prolific.com/submissions/complete?cc=C1G2IEC2"
 PRIVATE_DROPOUT_CQ  = "https://app.prolific.com/submissions/complete?cc=C13STBXG"
 PRIVATE_DROPOUT_INE = "https://app.prolific.com/submissions/complete?cc=CSXVWB27"
 
+# 3. Studio C (Private No DWL)
 NO_DWL_COMPLETION  = "https://app.prolific.com/submissions/complete?cc=CU9DDEAQ"
 NO_DWL_DROPOUT_CQ  = "https://app.prolific.com/submissions/complete?cc=CMPNPYY3"
 NO_DWL_DROPOUT_INE = "https://app.prolific.com/submissions/complete?cc=CFORQW3N"
+# -----------------------------
 
-# --- CODICI PROLIFIC — RACCOLTA DATI ---
-# Fonte: docs/PROLIFIC_CODES_COLLECTION_SCHEDULE.md e
-# "docs/Schedule sessions - Sheet2.csv".
-#
-# I codici sono specifici per giorno e fascia oraria e non vanno riutilizzati in
-# un altro slot. Per questo ogni slot ha la propria session config: chi apre la
-# sessione sceglie lo slot dall'elenco, non i codici, e sbagliarli richiede di
-# scegliere la riga sbagliata.
-#
-# bargaining_tdl_common/test_prolific_codes.py rilegge i due documenti e
-# fallisce se questo blocco diverge da loro.
-
-PROLIFIC_COMPLETE_URL = "https://app.prolific.com/submissions/complete?cc={}"
-
-
-def _prolific_link(code):
-    return PROLIFIC_COMPLETE_URL.format(code)
-
-
-TREATMENT_LABELS = {
-    'private': 'Baseline',
-    'public': 'Public',
-    'private_no_dwl': 'Slacker',
-}
-
-# completion = esperimento completato
-# dropout_cq = escluso per control questions sbagliate
-# dropout_timeout = escluso per inattivita' fino al timeout
-COLLECTION_SLOTS = [
-    dict(key='baseline_d1', day=1, weekday='Mon', slot='15:30-17:30',
-         study='Study BaselineD1', treatment='private', participants=174,
-         completion='C19QG34V', dropout_cq='CYZ535HK', dropout_timeout='C1NX1SC7'),
-    dict(key='public_d1', day=1, weekday='Mon', slot='17:45-19:00',
-         study='Study PublicD1', treatment='public', participants=174,
-         completion='C1NLKVJO', dropout_cq='C1GZP9YZ', dropout_timeout='C12QTGB5'),
-    dict(key='slacker_d1', day=1, weekday='Mon', slot='19:15-20:30',
-         study='Study SlackerD1', treatment='private_no_dwl', participants=171,
-         completion='CS0SK0FT', dropout_cq='CBPGAP2T', dropout_timeout='CVCH885O'),
-
-    dict(key='public_d2', day=2, weekday='Tue', slot='15:30-17:30',
-         study='Study PublicD2', treatment='public', participants=174,
-         completion='C187VMJZ', dropout_cq='C178PR0K', dropout_timeout='COYX7OAP'),
-    dict(key='slacker_d2', day=2, weekday='Tue', slot='17:45-19:00',
-         study='Study SlackerD2', treatment='private_no_dwl', participants=174,
-         completion='C1LRIGON', dropout_cq='C1A5YEEH', dropout_timeout='C16OVXXD'),
-    dict(key='baseline_d2', day=2, weekday='Tue', slot='19:15-20:30',
-         study='Study BaselineD2', treatment='private', participants=171,
-         completion='C1OO523E', dropout_cq='CJA3HCA8', dropout_timeout='C1B3RJS2'),
-
-    dict(key='slacker_d3', day=3, weekday='Wed', slot='15:30-17:30',
-         study='Study SlackerD3', treatment='private_no_dwl', participants=174,
-         completion='CTS7WY83', dropout_cq='C18TF8C6', dropout_timeout='CQJD948X'),
-    dict(key='baseline_d3', day=3, weekday='Wed', slot='17:45-19:00',
-         study='Study BaselineD3', treatment='private', participants=174,
-         completion='C6CWP51H', dropout_cq='CRGEJSNX', dropout_timeout='CW12WXEV'),
-    dict(key='public_d3', day=3, weekday='Wed', slot='19:15-20:30',
-         study='Study PublicD3', treatment='public', participants=171,
-         completion='CMV2DGMZ', dropout_cq='CG5BL66Z', dropout_timeout='C18NC41T'),
-]
-
-
-def _collection_config(slot):
-    """Una session config per slot, con i suoi tre codici gia' dentro."""
-    label = TREATMENT_LABELS[slot['treatment']]
-    return dict(
-        name=f"bargaining_tdl_{slot['key']}",
-        display_name=(
-            f"Day {slot['day']} ({slot['weekday']}) {slot['slot']} — "
-            f"{label} — {slot['study']}"
-        ),
-        app_sequence=_BARGAINING_APP_SEQUENCE,
-        # Numero previsto per lo slot: precompila il campo alla creazione della
-        # sessione.
-        num_demo_participants=slot['participants'],
-        completionlink=_prolific_link(slot['completion']),
-        dropoutlink_cq=_prolific_link(slot['dropout_cq']),
-        dropoutlink_inactive=_prolific_link(slot['dropout_timeout']),
-        active_treatments=[slot['treatment']],
-    )
-
-
-# Raccolta dati: una config per slot, nell'ordine del calendario. Sono le
-# prime dell'elenco perche' sono quelle da usare.
-SESSION_CONFIGS = [_collection_config(slot) for slot in COLLECTION_SLOTS] + [
-    # --- Solo collaudo: codici del pilot, non della raccolta dati. ---
-    # Il trattamento qui e' misto o i codici sono vecchi: aprirle per una
-    # sessione vera manderebbe i partecipanti al codice sbagliato.
+SESSION_CONFIGS = [
+    # Produzione RCT: tre trattamenti, randomizzati in blocchi permutati 3:3:3.
     dict(
         name='bargaining_tdl',
-        display_name="[TEST] Bargaining Game — 3-arm RCT (codici pilot)",
+        display_name="Bargaining Game — 3-arm RCT",
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=18,
         completionlink=PUBLIC_COMPLETION,
         active_treatments=['private', 'public', 'private_no_dwl'],
     ),
+    # Trattamenti isolati per test e pilot.
     dict(
         name='bargaining_tdl_public',
-        display_name="[TEST] Public TDL only (codici pilot)",
+        display_name="Bargaining Game — Public TDL only",
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=9,
         completionlink=PUBLIC_COMPLETION,
@@ -142,7 +63,7 @@ SESSION_CONFIGS = [_collection_config(slot) for slot in COLLECTION_SLOTS] + [
     ),
     dict(
         name='bargaining_tdl_private',
-        display_name="[TEST] Private TDL only (codici pilot)",
+        display_name="Bargaining Game — Private TDL only",
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=9,
         completionlink=PRIVATE_COMPLETION,
@@ -152,7 +73,7 @@ SESSION_CONFIGS = [_collection_config(slot) for slot in COLLECTION_SLOTS] + [
     ),
     dict(
         name='bargaining_tdl_private_no_dwl',
-        display_name="[TEST] Private No-DWL only (codici pilot)",
+        display_name="Bargaining Game — Private No-DWL only",
         app_sequence=_BARGAINING_APP_SEQUENCE,
         num_demo_participants=9,
         completionlink=NO_DWL_COMPLETION,
