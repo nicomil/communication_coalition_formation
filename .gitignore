@@ -16,3 +16,7 @@ backups/
 
 # Mai sotto controllo di versione: il repository e' pubblico.
 .envrc
+
+# Export scaricati da Heroku: contengono ID Prolific e testi di chat, e il
+# repository e' pubblico. Restano in locale.
+docs/heroku_exports/
