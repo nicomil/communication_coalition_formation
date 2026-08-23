@@ -167,6 +167,25 @@ class Player(BasePlayer):
         widget=widgets.RadioSelect,
         label="Select your choice:"
     )
+    # Ordine in cui le tre opzioni sono state mostrate in Decision. Viene
+    # assegnato una sola volta al primo rendering e poi riutilizzato anche in
+    # caso di refresh o riconnessione, per rendere l'ordine osservato
+    # ricostruibile dall'export.
+    decision_option_1 = models.StringField(
+        choices=[('Left', 'Left'), ('Right', 'Right'), ('NoOne', 'NoOne')],
+        initial='',
+        blank=True,
+    )
+    decision_option_2 = models.StringField(
+        choices=[('Left', 'Left'), ('Right', 'Right'), ('NoOne', 'NoOne')],
+        initial='',
+        blank=True,
+    )
+    decision_option_3 = models.StringField(
+        choices=[('Left', 'Left'), ('Right', 'Right'), ('NoOne', 'NoOne')],
+        initial='',
+        blank=True,
+    )
 
     # Mapped Fields (Populated from participant.vars)
     received_signal_left = models.StringField(initial="")
@@ -443,6 +462,28 @@ def _seconds_since_last_request(player: Player):
     if not ts:
         return 0.0
     return max(0.0, time.time() - ts)
+
+
+def _decision_option_order(player: Player):
+    """Return and persist the one random order shown on the Decision page."""
+    fields = (
+        'decision_option_1',
+        'decision_option_2',
+        'decision_option_3',
+    )
+    order = [player.field_maybe_none(field) or '' for field in fields]
+    if sorted(order) == sorted(VALID_DECISIONS):
+        return order
+
+    import random
+    order = list(VALID_DECISIONS)
+    random.shuffle(order)
+    for field, value in zip(fields, order):
+        setattr(player, field, value)
+    # Persist before returning the context: this is the order that the
+    # participant is about to see, and it must survive refreshes.
+    player.save()
+    return order
 
 
 def custom_export(players):
@@ -1077,28 +1118,27 @@ class Decision(Page):
                 colors['left_partner_color'],
                 colors['my_color'],
             )
+        option_labels = {
+            'Left': f"I will support {colors['left_partner_color']}",
+            'Right': f"I will support {colors['right_partner_color']}",
+            'NoOne': "I will support no one",
+        }
+        option_ids = {
+            'Left': 'dc_left',
+            'Right': 'dc_right',
+            'NoOne': 'dc_no_one',
+        }
+        order = _decision_option_order(player)
+
         options = [
             {
-                'value': 'Left',
-                'id': 'dc_left',
-                'label': f"I will support {colors['left_partner_color']}",
-                'details': ''
-            },
-            {
-                'value': 'Right',
-                'id': 'dc_right',
-                'label': f"I will support {colors['right_partner_color']}",
-                'details': ''
-            },
-            {
-                'value': 'NoOne',
-                'id': 'dc_no_one',
-                'label': "I will support no one",
-                'details': ''
-            },
+                'value': value,
+                'id': option_ids[value],
+                'label': option_labels[value],
+                'details': '',
+            }
+            for value in order
         ]
-        import random
-        random.shuffle(options)
         current_choice = player.field_maybe_none('decision_choice') or ''
         for opt in options:
             opt['checked'] = (opt['value'] == current_choice)
