@@ -30,6 +30,8 @@ CORE_MAPPING = {
     'part1_payoff_eligible': 'participant.part1_payoff_eligible',
     'left_player': 'bargaining_tdl_main.1.player.id_player_on_the_left',
     'right_player': 'bargaining_tdl_main.1.player.id_player_on_the_right',
+    'visualized_player_on_the_left': 'bargaining_tdl_main.1.player.id_player_visualized_on_the_left',
+    'visualized_player_on_the_right': 'bargaining_tdl_main.1.player.id_player_visualized_on_the_right',
     'part1_signal_left': 'bargaining_tdl_main.1.player.signal_left',
     'part1_signal_right': 'bargaining_tdl_main.1.player.signal_right',
     # Belief elicitation su PostDecisionConfidence. Sostituiscono

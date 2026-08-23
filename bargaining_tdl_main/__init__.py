@@ -10,6 +10,7 @@ from otree.api import (  # type: ignore
     WaitPage,
 )
 import time
+import random
 from bargaining_tdl_common import (  # type: ignore
     save_time_value,
     get_page_timeout_seconds,
@@ -195,6 +196,10 @@ class Player(BasePlayer):
     # Internal meaning: topological first/second partner in the fixed ring topology.
     id_player_on_the_left = models.StringField(blank=True)  # partner code in internal 'left' coordinate
     id_player_on_the_right = models.StringField(blank=True)  # partner code in internal 'right' coordinate
+    # Per-player randomized visual order. This is deliberately separate from
+    # the topological left/right fields above, which define game semantics.
+    id_player_visualized_on_the_left = models.StringField(blank=True)
+    id_player_visualized_on_the_right = models.StringField(blank=True)
     
     # Time tracking fields (in seconds)
     time_experiment_terminated = models.FloatField(initial=0)
@@ -471,6 +476,8 @@ def _decision_option_order(player: Player):
         'decision_option_2',
         'decision_option_3',
     )
+
+
     order = [player.field_maybe_none(field) or '' for field in fields]
     if sorted(order) == sorted(VALID_DECISIONS):
         return order
@@ -484,6 +491,42 @@ def _decision_option_order(player: Player):
     # participant is about to see, and it must survive refreshes.
     player.save()
     return order
+
+
+def _ensure_visualized_order(player: Player):
+    """Assign and persist a random visual order for this player's two partners."""
+    if player.id_player_visualized_on_the_left and player.id_player_visualized_on_the_right:
+        return
+
+    my_id = player.id_in_group
+    partner_ids = [get_left_partner_id(my_id), get_right_partner_id(my_id)]
+    random.SystemRandom().shuffle(partner_ids)
+    group_players = {p.id_in_group: p for p in player.group.get_players()}
+    player.id_player_visualized_on_the_left = group_players[partner_ids[0]].participant.code
+    player.id_player_visualized_on_the_right = group_players[partner_ids[1]].participant.code
+    player.save()
+
+
+def _visualized_partner_context(player):
+    """Return visual partner IDs/colors/channels, preserving topological semantics."""
+    _ensure_visualized_order(player)
+    by_code = {p.participant.code: p.id_in_group for p in player.group.get_players()}
+    visual_left_id = by_code[player.id_player_visualized_on_the_left]
+    visual_right_id = by_code[player.id_player_visualized_on_the_right]
+    my_id = player.id_in_group
+    group_id = player.group.id
+    return dict(
+        visual_left_id=visual_left_id,
+        visual_right_id=visual_right_id,
+        visual_left_color=COLOR_MAPPING[visual_left_id],
+        visual_right_color=COLOR_MAPPING[visual_right_id],
+        visual_left_channel=f"{group_id}_{min(my_id, visual_left_id)}_{max(my_id, visual_left_id)}",
+        visual_right_channel=f"{group_id}_{min(my_id, visual_right_id)}_{max(my_id, visual_right_id)}",
+        visual_left_is_topological_left=(visual_left_id == get_left_partner_id(my_id)),
+        visual_right_is_topological_left=(visual_right_id == get_left_partner_id(my_id)),
+        visual_left_nickname=('LeftPartner' if visual_left_id == get_left_partner_id(my_id) else 'RightPartner'),
+        visual_right_nickname=('LeftPartner' if visual_right_id == get_left_partner_id(my_id) else 'RightPartner'),
+    )
 
 
 def custom_export(players):
@@ -619,8 +662,9 @@ def _evaluate_dropout(group: Group):
 def _chat_status_payload(player: Player):
     statuses = _chat_left_state(player.group)
     my_id = player.id_in_group
-    left_id = get_left_partner_id(my_id)
-    right_id = get_right_partner_id(my_id)
+    visual = _visualized_partner_context(player)
+    left_id = visual['visual_left_id']
+    right_id = visual['visual_right_id']
     left_count = sum(1 for has_left in statuses.values() if has_left)
     now = time.time()
     interrupted_id = player.group.interrupted_player_id
@@ -797,6 +841,7 @@ class GroupingAfterControlQuestions(WaitPage):
             p.chat_interrupted = False
             p.participant_left_ts = 0
             p.part1_payoff_eligible = True
+            _ensure_visualized_order(p)
             p.participant.group_dropped = False
             p.participant.part1_payoff_eligible = True
             p.participant.vars['group_dropped'] = False
@@ -825,19 +870,15 @@ class Chat(Page):
 
     @staticmethod
     def vars_for_template(player: Player):
-        my_id = player.id_in_group
-        partners = TOPOLOGY[my_id]
-        left_id = partners['left']
-        right_id = partners['right']
-            
-        group_id = player.group.id
-        channel_left = f"{group_id}_{min(my_id, left_id)}_{max(my_id, left_id)}"
-        channel_right = f"{group_id}_{min(my_id, right_id)}_{max(my_id, right_id)}"
-        
+        visual = _visualized_partner_context(player)
         colors = _color_context(player)
         return dict(
-            channel_left=channel_left,
-            channel_right=channel_right,
+            channel_left=visual['visual_left_channel'],
+            channel_right=visual['visual_right_channel'],
+            visual_left_color=visual['visual_left_color'],
+            visual_right_color=visual['visual_right_color'],
+            visual_left_nickname=visual['visual_left_nickname'],
+            visual_right_nickname=visual['visual_right_nickname'],
             chat_timeout_seconds=get_page_timeout_seconds(player, Chat._CHAT_TIMEOUT),
             reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
             reveal_third_party_chat=bool(treatment_flag(player, 'reveal_third_party_chat', False)),
@@ -937,9 +978,15 @@ class Signals(Page):
 
     @staticmethod
     def vars_for_template(player: Player):
+        visual = _visualized_partner_context(player)
         colors = _color_context(player)
         reason = player.participant.vars.get('chat_advanced_reason', 'normal')
         return dict(
+            visual_left_color=visual['visual_left_color'],
+            visual_right_color=visual['visual_right_color'],
+            visual_left_nickname=visual['visual_left_nickname'],
+            visual_right_nickname=visual['visual_right_nickname'],
+            visual_left_is_topological_left=visual['visual_left_is_topological_left'],
             chat_timeout=(reason == 'timeout'),
             chat_partners_left=(reason in ('group_dropped', 'partners_left')),
             reconnect_window_seconds=C.CHAT_RECONNECT_WINDOW_SECONDS,
@@ -1069,9 +1116,7 @@ class Decision(Page):
         left_id = partners['left']
         right_id = partners['right']
             
-        group_id = player.group.id
-        channel_left = f"{group_id}_{min(my_id, left_id)}_{max(my_id, left_id)}"
-        channel_right = f"{group_id}_{min(my_id, right_id)}_{max(my_id, right_id)}"
+        visual = _visualized_partner_context(player)
         
         colors = _color_context(player)
         
@@ -1089,6 +1134,12 @@ class Decision(Page):
             colors['right_partner_color'],
             colors['left_partner_color'],
             sender_inactive=right_inactive,
+        )
+        visual_left_received_display = (
+            received_left_display if visual['visual_left_is_topological_left'] else received_right_display
+        )
+        visual_right_received_display = (
+            received_right_display if visual['visual_left_is_topological_left'] else received_left_display
         )
         # ===== Trattamento 'public': rivelazione della coppia di terzi =====
         # Canale tra i due partner (di cui il viewer NON fa parte).
@@ -1144,10 +1195,16 @@ class Decision(Page):
             opt['checked'] = (opt['value'] == current_choice)
 
         return dict(
-            channel_left=channel_left,
-            channel_right=channel_right,
+            channel_left=visual['visual_left_channel'],
+            channel_right=visual['visual_right_channel'],
+            visual_left_color=visual['visual_left_color'],
+            visual_right_color=visual['visual_right_color'],
+            visual_left_nickname=visual['visual_left_nickname'],
+            visual_right_nickname=visual['visual_right_nickname'],
             received_signal_left_display=received_left_display,
             received_signal_right_display=received_right_display,
+            visual_left_received_display=visual_left_received_display,
+            visual_right_received_display=visual_right_received_display,
             reveal_third_party_chat=reveal_third_party,
             third_chat_rows=third_chat_rows,
             third_signal_from_left=third_signal_from_left,
@@ -1211,9 +1268,7 @@ class PostDecisionConfidence(Page):
         left_id = partners['left']
         right_id = partners['right']
 
-        group_id = player.group.id
-        channel_left = f"{group_id}_{min(my_id, left_id)}_{max(my_id, left_id)}"
-        channel_right = f"{group_id}_{min(my_id, right_id)}_{max(my_id, right_id)}"
+        visual = _visualized_partner_context(player)
 
         colors = _color_context(player)
 
@@ -1230,6 +1285,12 @@ class PostDecisionConfidence(Page):
             colors['right_partner_color'],
             colors['left_partner_color'],
             sender_inactive=right_inactive,
+        )
+        visual_left_received_display = (
+            received_left_display if visual['visual_left_is_topological_left'] else received_right_display
+        )
+        visual_right_received_display = (
+            received_right_display if visual['visual_left_is_topological_left'] else received_left_display
         )
 
         reveal_third_party = bool(treatment_flag(player, 'reveal_third_party_chat', False))
@@ -1270,10 +1331,17 @@ class PostDecisionConfidence(Page):
         ]
 
         return dict(
-            channel_left=channel_left,
-            channel_right=channel_right,
+            channel_left=visual['visual_left_channel'],
+            channel_right=visual['visual_right_channel'],
+            visual_left_color=visual['visual_left_color'],
+            visual_right_color=visual['visual_right_color'],
+            visual_left_nickname=visual['visual_left_nickname'],
+            visual_right_nickname=visual['visual_right_nickname'],
+            visual_left_is_topological_left=visual['visual_left_is_topological_left'],
             received_signal_left_display=received_left_display,
             received_signal_right_display=received_right_display,
+            visual_left_received_display=visual_left_received_display,
+            visual_right_received_display=visual_right_received_display,
             reveal_third_party_chat=reveal_third_party,
             third_chat_rows=third_chat_rows,
             third_signal_from_left=third_signal_from_left,

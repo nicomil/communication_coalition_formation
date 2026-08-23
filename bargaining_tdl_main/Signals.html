@@ -156,7 +156,7 @@ non tocca l'altro. #}
 {% endif %}
 
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-6" style="order: {% if visual_left_is_topological_left %}1{% else %}2{% endif %};">
         <div class="card">
             <div class="card-header">
                 <strong>{{ left_partner_color }}</strong> Participant
@@ -191,7 +191,7 @@ non tocca l'altro. #}
             </div>
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-6" style="order: {% if visual_left_is_topological_left %}2{% else %}1{% endif %};">
         <div class="card">
             <div class="card-header">
                 <strong>{{ right_partner_color }}</strong> Participant

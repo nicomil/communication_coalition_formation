@@ -232,15 +232,15 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    From <strong>{{ left_partner_color }}</strong> Participant
+                    From <strong>{{ visual_left_color }}</strong> Participant
                 </div>
                 <div class="card-body px-5 py-4">
                     <div class="signal-box">
-                        Final Message: {{ received_signal_left_display }}
+                        Final Message: {{ visual_left_received_display }}
                     </div>
                     <h6>Chat Log (Read-Only):</h6>
                     <div class="message-box read-only-chat">
-                        {{ chat channel=channel_left nickname="RightPartner" }}
+                        {{ chat channel=channel_left nickname=visual_left_nickname }}
                     </div>
                 </div>
             </div>
@@ -248,15 +248,15 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    From <strong>{{ right_partner_color }}</strong> Participant
+                    From <strong>{{ visual_right_color }}</strong> Participant
                 </div>
                 <div class="card-body px-5 py-4">
                     <div class="signal-box">
-                        Final Message: {{ received_signal_right_display }}
+                        Final Message: {{ visual_right_received_display }}
                     </div>
                     <h6>Chat Log (Read-Only):</h6>
                     <div class="message-box read-only-chat">
-                        {{ chat channel=channel_right nickname="LeftPartner" }}
+                        {{ chat channel=channel_right nickname=visual_right_nickname }}
                     </div>
                 </div>
             </div>

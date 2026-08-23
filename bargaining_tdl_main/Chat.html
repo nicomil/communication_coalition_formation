@@ -110,7 +110,7 @@
 </p>
 <div class="container-columns">
     <div class="column {% if not left_partner_active %}chat-disabled{% endif %}" data-chat-column="left">
-        <h4>{{ left_partner_color }} Participant</h4>
+        <h4>{{ visual_left_color }} Participant</h4>
         <div class="participant-left-badge" data-left-badge {% if left_partner_active %}style="display:none;" {% endif
             %}>
             This Participant has already left the chat. Sending messages is disabled.
@@ -118,10 +118,10 @@
         <div class="section-title">Your Messages</div>
         <p class="message-hint"><em>Press enter on the keyboard, or the Send
                 button on the chat area, to send your message.</em></p>
-        {{ chat channel=channel_left nickname="RightPartner" }}
+        {{ chat channel=channel_left nickname=visual_left_nickname }}
     </div>
     <div class="column {% if not right_partner_active %}chat-disabled{% endif %}" data-chat-column="right">
-        <h4>{{ right_partner_color }} Participant</h4>
+        <h4>{{ visual_right_color }} Participant</h4>
         <div class="participant-left-badge" data-left-badge {% if right_partner_active %}style="display:none;" {% endif
             %}>
             This Participant has already left the chat. Sending messages is disabled.
@@ -129,7 +129,7 @@
         <div class="section-title">Your Messages</div>
         <p class="message-hint"><em>Press enter on the keyboard, or the Send
                 button on the chat area, to send your message.</em></p>
-        {{ chat channel=channel_right nickname="LeftPartner" }}
+        {{ chat channel=channel_right nickname=visual_right_nickname }}
     </div>
 </div>
 

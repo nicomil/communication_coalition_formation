@@ -28,7 +28,8 @@ stabili, più ogni campo survey con prefisso `survey_`.
 | Colonna | Significato |
 |---|---|
 | `groupid` | triade main |
-| `left_player`, `right_player` | mapping partner |
+| `left_player`, `right_player` | partner topologico sinistro/destrо; non indicano la posizione grafica |
+| `visualized_player_on_the_left`, `visualized_player_on_the_right` | participant visualizzato nella colonna sinistra/destra; ordine casuale persistente per player |
 | `part1_signal_left`, `part1_signal_right` | messaggi finali |
 | `signal_left_convincingness` | rating 1–5 del messaggio al partner sinistro |
 | `signal_right_convincingness` | rating 1–5 del messaggio al partner destro |
