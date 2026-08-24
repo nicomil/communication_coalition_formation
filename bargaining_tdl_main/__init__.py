@@ -527,8 +527,20 @@ def _visualized_partner_context(player):
         visual_right_channel=f"{group_id}_{min(my_id, visual_right_id)}_{max(my_id, visual_right_id)}",
         visual_left_is_topological_left=(visual_left_id == get_left_partner_id(my_id)),
         visual_right_is_topological_left=(visual_right_id == get_left_partner_id(my_id)),
-        visual_left_nickname=('LeftPartner' if visual_left_id == get_left_partner_id(my_id) else 'RightPartner'),
-        visual_right_nickname=('LeftPartner' if visual_right_id == get_left_partner_id(my_id) else 'RightPartner'),
+        # Il nickname non dice chi c'e' in quella colonna: dice come appaio io
+        # a chi legge. Nell'anello, se X e' il mio partner sinistro allora io
+        # sono il partner destro di X, quindi nella chat con lui mi annuncio
+        # come 'RightPartner'. _chat_customization.html risolve la stringa con
+        # i colori topologici del destinatario: invertirla gli fa comparire il
+        # colore del terzo giocatore.
+        visual_left_nickname=(
+            'RightPartner' if visual_left_id == get_left_partner_id(my_id)
+            else 'LeftPartner'
+        ),
+        visual_right_nickname=(
+            'RightPartner' if visual_right_id == get_left_partner_id(my_id)
+            else 'LeftPartner'
+        ),
     )
 
 
