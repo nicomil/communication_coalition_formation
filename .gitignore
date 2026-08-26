@@ -20,3 +20,6 @@ backups/
 # Export scaricati da Heroku: contengono ID Prolific e testi di chat, e il
 # repository e' pubblico. Restano in locale.
 docs/heroku_exports/
+
+# Export della raccolta dati: ID Prolific e testi di chat, repository pubblico.
+collected_data/
