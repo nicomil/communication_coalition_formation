@@ -25,19 +25,19 @@ _BARGAINING_APP_SEQUENCE = [
 # Questi verranno usati automaticamente quando il tuo co-autore farà il git push.
 
 # 1. Studio A (Public TDL)
-PUBLIC_COMPLETION  = "https://app.prolific.com/submissions/complete?cc=C187VMJZ"
-PUBLIC_DROPOUT_CQ  = "https://app.prolific.com/submissions/complete?cc=C178PR0K"
-PUBLIC_DROPOUT_INE = "https://app.prolific.com/submissions/complete?cc=COYX7OAP"
+PUBLIC_COMPLETION  = "https://app.prolific.com/submissions/complete?cc=CMV2DGMZ"
+PUBLIC_DROPOUT_CQ  = "https://app.prolific.com/submissions/complete?cc=CG5BL66Z"
+PUBLIC_DROPOUT_INE = "https://app.prolific.com/submissions/complete?cc=C18NC41T"
 
 # 2. Studio B (Private TDL)
-PRIVATE_COMPLETION  = "https://app.prolific.com/submissions/complete?cc=C1OO523E"
-PRIVATE_DROPOUT_CQ  = "https://app.prolific.com/submissions/complete?cc=CJA3HCA8"
-PRIVATE_DROPOUT_INE = "https://app.prolific.com/submissions/complete?cc=C1B3RJS2"
+PRIVATE_COMPLETION  = "https://app.prolific.com/submissions/complete?cc=C6CWP51H"
+PRIVATE_DROPOUT_CQ  = "https://app.prolific.com/submissions/complete?cc=CRGEJSNX"
+PRIVATE_DROPOUT_INE = "https://app.prolific.com/submissions/complete?cc=CW12WXEV"
 
 # 3. Studio C (Private No DWL)
-NO_DWL_COMPLETION  = "https://app.prolific.com/submissions/complete?cc=C1LRIGON"
-NO_DWL_DROPOUT_CQ  = "https://app.prolific.com/submissions/complete?cc=C1A5YEEH"
-NO_DWL_DROPOUT_INE = "https://app.prolific.com/submissions/complete?cc=C16OVXXD"
+NO_DWL_COMPLETION  = "https://app.prolific.com/submissions/complete?cc=CTS7WY83"
+NO_DWL_DROPOUT_CQ  = "https://app.prolific.com/submissions/complete?cc=C18TF8C6"
+NO_DWL_DROPOUT_INE = "https://app.prolific.com/submissions/complete?cc=CQJD948X"
 # -----------------------------
 
 SESSION_CONFIGS = [
