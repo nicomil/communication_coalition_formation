@@ -1,0 +1,122 @@
+--> significa rinomina, drop che devi rimuovere la colonna
+
+participant.id_in_session --> id_in_session
+participant.code --> code
+participant.label --> label
+participant._index_in_pages --> index_pages
+participant.payoff --> payoff
+participant.inactive_excluded drop
+participant.inactive_excluded_reason drop
+participant.group_dropped --> group_dropped
+participant.part1_payoff_eligible --> payoff_eligible
+participant.part1_group_id --> group_id
+bargaining_tdl_intro.1.player.time_welcome drop
+bargaining_tdl_intro.1.player.time_instructions_part1 drop
+bargaining_tdl_intro.1.player.time_control_questions drop
+bargaining_tdl_main.1.player.id_in_group --> id_in_group
+bargaining_tdl_main.1.player.payoff --> payoff fare check se è uguale a participant.payoff --> payoff
+
+bargaining_tdl_main.1.player.player_color --> player_color
+bargaining_tdl_main.1.player.treatment --> treatment
+bargaining_tdl_main.1.player.part1_calculated_payoff drop
+bargaining_tdl_main.1.player.signal_left --> send.signal_left
+bargaining_tdl_main.1.player.signal_right --> send.signal_right
+bargaining_tdl_main.1.player.first_intention_selected drop
+bargaining_tdl_main.1.player.guess_left_confidence --> guess_left_confidence
+bargaining_tdl_main.1.player.guess_right_confidence --> guess_right_confidence
+bargaining_tdl_main.1.player.time_welcome drop
+bargaining_tdl_main.1.player.time_chat --> time_chat
+bargaining_tdl_main.1.player.time_signals --> time_signals
+bargaining_tdl_main.1.player.decision_choice --> final_decision
+bargaining_tdl_main.1.player.decision_option_1 --> decision_option_1
+bargaining_tdl_main.1.player.decision_option_2 --> decision_option_2
+bargaining_tdl_main.1.player.decision_option_3 --> decision_option_3
+bargaining_tdl_main.1.player.received_signal_left --> received_signal_left
+bargaining_tdl_main.1.player.received_signal_right --> received_signal_right
+bargaining_tdl_main.1.player.id_player_on_the_left --> player_on_the_left
+bargaining_tdl_main.1.player.id_player_on_the_right --> player_on_the_right
+bargaining_tdl_main.1.player.id_player_visualized_on_the_left --> player_visual_left
+bargaining_tdl_main.1.player.id_player_visualized_on_the_right --> player_visual_right
+bargaining_tdl_main.1.player.time_decision --> time_decision
+bargaining_tdl_main.1.player.time_post_decision_confidence --> time_guess
+bargaining_tdl_main.1.player.chat_interrupted --> chat_interrupted
+
+bargaining_tdl_main.1.player.part1_payoff_eligible drop
+bargaining_tdl_main.1.player.decision_inactive --> decision_inactive
+bargaining_tdl_main.1.player.signal_inactive --> signal_inactive
+bargaining_tdl_main.1.player.received_signal_left_inactive --> rcvd_sig_left_inactive
+bargaining_tdl_main.1.player.received_signal_right_inactive --> rcvd_sig_right_inactive
+bargaining_tdl_main.1.player.guess_left_choice --> guess_left
+bargaining_tdl_main.1.player.guess_right_choice --> guess_right
+bargaining_tdl_main.1.group.grp_coordinate --> grp_coordinate
+bargaining_tdl_main.1.group.id_in_subsession drop
+bargaining_tdl_main.1.group.group_outcome --> group_outcome
+bargaining_tdl_main.1.group.chat_left_p1 drop
+bargaining_tdl_main.1.group.chat_left_p2 drop
+bargaining_tdl_main.1.group.chat_left_p3 drop
+bargaining_tdl_main.1.group.group_dropped --> grp_drop
+bargaining_tdl_survey.1.player.gender --> gender
+bargaining_tdl_survey.1.player.birth_year --> birth_year
+bargaining_tdl_survey.1.player.field_of_study --> field_study
+bargaining_tdl_survey.1.player.university_years --> uni_years
+bargaining_tdl_survey.1.player.main_situation --> status
+bargaining_tdl_survey.1.player.job_type --> job
+bargaining_tdl_survey.1.player.sd3_mach_01 --> mach_01
+bargaining_tdl_survey.1.player.sd3_mach_02 --> mach_02
+bargaining_tdl_survey.1.player.sd3_mach_03 --> mach_03
+bargaining_tdl_survey.1.player.sd3_mach_04 --> mach_04
+bargaining_tdl_survey.1.player.sd3_mach_05 --> mach_05
+bargaining_tdl_survey.1.player.sd3_mach_06 --> mach_06
+bargaining_tdl_survey.1.player.sd3_mach_07 --> mach_07
+bargaining_tdl_survey.1.player.sd3_mach_08 --> mach_08
+bargaining_tdl_survey.1.player.sd3_mach_09 --> mach_09
+bargaining_tdl_survey.1.player.sd3_narc_01 --> narc_01
+bargaining_tdl_survey.1.player.sd3_narc_02 --> narc_02
+bargaining_tdl_survey.1.player.sd3_narc_03 --> narc_03
+bargaining_tdl_survey.1.player.sd3_narc_04 --> narc_04
+bargaining_tdl_survey.1.player.sd3_narc_05 --> narc_05
+bargaining_tdl_survey.1.player.sd3_narc_06 --> narc_06
+bargaining_tdl_survey.1.player.sd3_narc_07 --> narc_07
+bargaining_tdl_survey.1.player.sd3_narc_08 --> narc_08
+bargaining_tdl_survey.1.player.sd3_narc_09 --> narc_09
+bargaining_tdl_survey.1.player.sd3_psych_01 --> psych_01
+bargaining_tdl_survey.1.player.sd3_psych_02 --> psych_02
+bargaining_tdl_survey.1.player.sd3_psych_03 --> psych_03
+bargaining_tdl_survey.1.player.sd3_psych_04 --> psych_04
+bargaining_tdl_survey.1.player.sd3_psych_05 --> psych_05
+bargaining_tdl_survey.1.player.sd3_psych_06 --> psych_06
+bargaining_tdl_survey.1.player.sd3_psych_07 --> psych_07
+bargaining_tdl_survey.1.player.sd3_psych_08 --> psych_08
+bargaining_tdl_survey.1.player.sd3_psych_09 --> psych_09
+bargaining_tdl_survey.1.player.willingness_future --> patience
+bargaining_tdl_survey.1.player.willingness_risk --> risk
+bargaining_tdl_survey.1.player.reciprocity_positive --> reciprocity_positive
+bargaining_tdl_survey.1.player.reciprocity_negative --> reciprocity_negative
+bargaining_tdl_survey.1.player.willingness_donate --> altruism
+bargaining_tdl_survey.1.player.trust_general --> trust
+bargaining_tdl_survey.1.player.beauty_contest_guess --> level_k
+bargaining_tdl_survey.1.player.instructions_clarity drop
+bargaining_tdl_survey.1.player.general_comment drop
+bargaining_tdl_survey.1.player.time_survey_questions drop
+bargaining_tdl_survey.1.player.time_survey_sd3_mach drop
+bargaining_tdl_survey.1.player.time_survey_sd3_narc drop
+bargaining_tdl_survey.1.player.time_survey_sd3_psych drop
+bargaining_tdl_survey.1.player.time_survey_page4 --> time_falk
+bargaining_tdl_survey.1.player.time_survey_page10 --> time_levelk
+bargaining_tdl_survey.1.player.time_survey_feedback drop
+chat_side --> topology_side
+chat_first_timestamp drop
+chat_last_timestamp drop
+
+la chat vorrei fosse scritta così: 
+
+[{"from_id":3,"from_color":"Purple","to_id":1,"to_color":"Yellow","body":"hey",},{"from_id":1,"from_color":"Yellow","to_id":3,"to_color":"Purple",body":"yes"},{"from_id":3,"from_color":"Purple","to_id":1,"to_color":"Yellow","body":"shall we support each other?"},{"from_id":1,"from_color":"Yellow","to_id":3,"to_color":"Purple","body":"ok lets do it make sure thz"},{"from_id":1,"from_color":"Yellow","to_id":3,"to_color":"Purple","body":"i told orange im gona spt u "}]
+
+e il timestamp puoi convertirlo in un formato più comprensibile?
+
+
+
+
+
+
+

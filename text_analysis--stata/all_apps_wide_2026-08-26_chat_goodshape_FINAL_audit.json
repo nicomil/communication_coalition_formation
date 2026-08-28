@@ -1,0 +1,43 @@
+{
+  "inputs": {
+    "spec": "C:\\Users\\Donat\\communication_coalition_formation\\text_analysis--stata\\goodshape_data.txt",
+    "aggregated": "C:\\Users\\Donat\\communication_coalition_formation\\text_analysis--stata\\.final_build_20260827\\aggregated_pre_goodshape.csv",
+    "by_partner": "C:\\Users\\Donat\\communication_coalition_formation\\text_analysis--stata\\.final_build_20260827\\by_partner_pre_goodshape.csv"
+  },
+  "outputs": {
+    "aggregated": "C:\\Users\\Donat\\communication_coalition_formation\\text_analysis--stata\\all_apps_wide_2026-08-26_chat_aggregated_goodshape_FINAL.csv",
+    "by_partner": "C:\\Users\\Donat\\communication_coalition_formation\\text_analysis--stata\\all_apps_wide_2026-08-26_chat_by_partner_goodshape_FINAL.csv"
+  },
+  "rules": {
+    "renamed_columns": 82,
+    "dropped_columns": 24,
+    "message_fields": [
+      "from_id",
+      "from_color",
+      "to_id",
+      "to_color",
+      "body",
+      "timestamp_utc"
+    ],
+    "timestamp_format": "YYYY-MM-DD HH:MM:SS.ffffff UTC"
+  },
+  "source_checks": {
+    "payoff_rows_compared": 9270,
+    "payoff_differences": 0,
+    "nonempty_outcome_conflicts": 0
+  },
+  "aggregated_validation": {
+    "status": "PASS",
+    "failures": [],
+    "rows": 3090,
+    "columns": 104,
+    "transcript_message_occurrences": 24261
+  },
+  "by_partner_validation": {
+    "status": "PASS",
+    "failures": [],
+    "rows": 6180,
+    "columns": 108,
+    "transcript_message_occurrences": 16174
+  }
+}

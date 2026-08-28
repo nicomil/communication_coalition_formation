@@ -1,0 +1,28 @@
+{
+  "inputs": {
+    "wide": "C:\\Users\\Donat\\communication_coalition_formation\\text_analysis--stata\\all_apps_wide_2026-08-26 (3).csv",
+    "chat": "C:\\Users\\Donat\\communication_coalition_formation\\text_analysis--stata\\ChatMessages-2026-08-26 (3).csv"
+  },
+  "outputs": {
+    "aggregated": "C:\\Users\\Donat\\communication_coalition_formation\\text_analysis--stata\\.final_build_20260827\\aggregated_pre_goodshape.csv",
+    "by_partner": "C:\\Users\\Donat\\communication_coalition_formation\\text_analysis--stata\\.final_build_20260827\\by_partner_pre_goodshape.csv"
+  },
+  "metrics": {
+    "chat_rows": 8087,
+    "chat_rows_resolved": 8087,
+    "wide_rows": 3090,
+    "aggregated_rows": 3090,
+    "by_partner_rows": 6180,
+    "expected_by_partner_rows": 6180,
+    "messages": 8087,
+    "groups_with_messages": 508,
+    "dyads_with_messages": 1296
+  },
+  "validation": {
+    "status": "PASS",
+    "failures": [],
+    "base_columns_requested": 104,
+    "aggregated_columns": 128,
+    "by_partner_columns": 132
+  }
+}
