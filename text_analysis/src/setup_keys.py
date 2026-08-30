@@ -204,7 +204,8 @@ def main(argv=None):
     print()
     if ok:
         print('All set. The pipeline will load the keys by itself:')
-        print('    python run.py all --llm --topics')
+        print('    python run.py all --llm')
+        print('    python run.py topics --topicgpt-repo <path>')
     else:
         print('Some checks did not pass: see the messages above.')
         print('The keys are saved anyway; re-run with --check once fixed.')

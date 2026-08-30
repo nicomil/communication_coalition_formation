@@ -7,6 +7,7 @@ ratings), while no API call is ever made.
     python tests/test_analysis.py
 """
 
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -15,6 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src import aggregate as agg  # noqa: E402
 from src import lexicons, text_metrics, topicgpt as topicgpt_runner  # noqa: E402
+from src import topicgpt_from_by_partner  # noqa: E402
+from src import directional_text_scores  # noqa: E402
 
 
 class TokenizerTests(unittest.TestCase):
@@ -356,6 +359,118 @@ class TopicGPTAdapterTests(unittest.TestCase):
         with self.assertRaises(topicgpt_runner.TopicGPTUnavailable) as ctx:
             topicgpt_runner.check_installation(Path('/path/that/does/not/exist'))
         self.assertIn('topicgpt', str(ctx.exception).lower())
+
+
+class DirectionalTopicGPTInputTests(unittest.TestCase):
+    @staticmethod
+    def _rows():
+        rows = []
+        for focal in ('1', '2', '3'):
+            for partner in ('1', '2', '3'):
+                if focal == partner:
+                    continue
+                messages = []
+                if (focal, partner) in {('1', '2'), ('2', '1')}:
+                    messages = [{
+                        'from_id': int(focal), 'to_id': int(partner),
+                        'from_color': 'Yellow', 'to_color': 'Orange',
+                        'body': f'message from {focal}',
+                    }]
+                rows.append({
+                    'session.code': 's1', 'group_id': '7',
+                    'treatment': 'private', 'code': f'p{focal}',
+                    'focal_player_id': focal, 'partner_id': partner,
+                    'focal_player_color': 'Yellow', 'partner_color': 'Orange',
+                    'chat_transcript': json.dumps(messages),
+                    'number_of_messages': str(len(messages)),
+                    'number_of_words': str(sum(
+                        len(message['body'].split()) for message in messages
+                    )),
+                })
+        return rows
+
+    def test_same_directional_documents_drive_induction_and_assignment(self):
+        documents, report = topicgpt_from_by_partner.build_documents(self._rows())
+        self.assertEqual(len(documents), 2)
+        self.assertEqual({d['unit'] for d in documents}, {'dyad_directed'})
+        self.assertEqual(report['induction_unit'], 'dyad_directed')
+        self.assertEqual(report['assignment_unit'], 'dyad_directed')
+        self.assertEqual(report['populated_groups_with_six_rows'], 1)
+        self.assertEqual(report['source_directional_messages'], 2)
+        self.assertEqual(report['topicgpt_document_messages'], 2)
+        self.assertIn('Yellow to Orange: message from 1', documents[0]['text'])
+
+    def test_reverse_message_is_rejected(self):
+        rows = self._rows()
+        rows[0]['chat_transcript'] = json.dumps([{
+            'from_id': 2, 'to_id': 1, 'body': 'wrong direction',
+        }])
+        rows[0]['number_of_messages'] = '1'
+        rows[0]['number_of_words'] = '2'
+        with self.assertRaisesRegex(ValueError, 'Non-directional message'):
+            topicgpt_from_by_partner.build_documents(rows)
+
+    def test_assignments_rejoin_without_dropping_empty_rows(self):
+        rows = self._rows()
+        headers = list(rows[0])
+        documents, _ = topicgpt_from_by_partner.build_documents(rows)
+        assignments = {
+            str(document['id']): {
+                'topics': 'Coalition Proposal',
+                'topic_primary': 'Coalition Proposal',
+                'n_topics': 1,
+            }
+            for document in documents
+        }
+        output_headers, output_rows = topicgpt_from_by_partner.merge_assignments(
+            headers, rows, assignments
+        )
+        self.assertEqual(len(output_rows), 6)
+        self.assertIn('nlp_sent_topics', output_headers)
+        self.assertEqual(
+            sum(row['nlp_sent_topics'] == 'Coalition Proposal' for row in output_rows),
+            2,
+        )
+        self.assertEqual(
+            sum(row['nlp_sent_topics'] == '' for row in output_rows), 4
+        )
+
+
+class DirectionalTextScoreTests(unittest.TestCase):
+    @staticmethod
+    def _row(messages):
+        return {
+            'focal_player_id': '1',
+            'partner_id': '2',
+            'chat_transcript': json.dumps(messages),
+            'number_of_words': str(sum(
+                len(text_metrics.tokenize(message.get('body', '')))
+                for message in messages
+            )),
+        }
+
+    def test_empty_text_has_only_blank_scores(self):
+        scores, report = directional_text_scores.score_rows([self._row([])])
+        self.assertEqual(report['nonempty_texts'], 0)
+        self.assertTrue(all(value == '' for value in scores[0].values()))
+
+    def test_scored_values_are_blank_or_one_to_four(self):
+        rows = [
+            self._row([{'from_id': 1, 'to_id': 2, 'body': 'I love and support you'}]),
+            self._row([{'from_id': 1, 'to_id': 2, 'body': 'I hate and distrust you'}]),
+            self._row([{'from_id': 1, 'to_id': 2, 'body': 'hello'}]),
+        ]
+        scores, _ = directional_text_scores.score_rows(rows)
+        for score in scores:
+            for column in directional_text_scores.ORDINAL_COLUMNS:
+                self.assertIn(score[column], ('', 1, 2, 3, 4))
+        self.assertGreater(scores[0]['sentiment'], scores[1]['sentiment'])
+        self.assertEqual(scores[2]['sentiment'], '')
+
+    def test_reverse_direction_is_rejected(self):
+        row = self._row([{'from_id': 2, 'to_id': 1, 'body': 'hello'}])
+        with self.assertRaisesRegex(ValueError, 'Non-directional transcript'):
+            directional_text_scores.score_rows([row])
 
 
 class LLMRubricPureTests(unittest.TestCase):

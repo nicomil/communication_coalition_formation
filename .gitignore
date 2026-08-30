@@ -23,3 +23,10 @@ docs/heroku_exports/
 
 # Export della raccolta dati: ID Prolific e testi di chat, repository pubblico.
 collected_data/
+
+# Environments and temp files
+.venv*/
+.codex_tmp*/
+*.stswp
+text_analysis--stata/scratch_*
+

@@ -119,7 +119,7 @@ if !_rc {
     display as text "Topics found: `n_topics'"
 }
 else {
-    display as text "No topic columns: run the pipeline with --topics to get them."
+    display as text "No topic columns: run python run.py topics to get them."
     local n_topics = 0
 }
 

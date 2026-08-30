@@ -48,18 +48,12 @@ OPTION_HELP = {
     'llm': 'Has a language model score the same conversations against an '
            'explicit rubric, to validate the measures computed from the '
            'dictionaries. Consumes paid calls.',
-    'topics': "Extracts the conversations' themes with TopicGPT: it first "
-              'induces them from the texts, then assigns them to the finer '
-              'units. Consumes paid calls.',
+    'topics': "Extracts themes with TopicGPT from the final focal-to-partner "
+              'texts. The same directed texts drive induction and assignment. '
+              'Consumes paid calls.',
     'replicates': 'How many times each text is scored. With more than one you '
                   'get the spread across ratings, that is an estimate of '
                   'measurement error. The cost grows in proportion.',
-    'induction': 'The unit on which to discover which themes exist. It needs '
-                 'text of some length: on short texts the model recognises '
-                 'nothing.',
-    'assignment': 'The unit the already discovered themes are attributed to. It '
-                  'can be finer than the induction unit: recognising is easier '
-                  'than discovering.',
 }
 
 
@@ -72,9 +66,9 @@ PRESETS = [
          description='Adds the rubric that validates the indices by having a '
                      'model score them.',
          cost='paid'),
-    dict(id='full', name='Full analysis',
-         description="Also adds the conversations' themes with TopicGPT. This "
-                     'is the run that produces everything.',
+    dict(id='topics', name='Directional topics',
+         description='Runs TopicGPT only on the final focal-to-partner CSV; '
+                     'the raw oTree exports are not read.',
          cost='paid'),
 ]
 
@@ -133,10 +127,8 @@ def estimate_panel(form=None) -> str:
             calls += n
             parts.append(f'rubric {n}')
 
-    if form.get('topics'):
-        unit = (form.get('topicgpt_unit') or ['group'])[0]
-        assign = (form.get('topicgpt_assign_unit') or ['dyad_directed'])[0]
-        n = counts.get(unit, 0) + counts.get(assign, 0)
+    if form.get('topics') or (form.get('command') or [''])[0] == 'topics':
+        n = 2 * counts.get('dyad_directed', 0)
         if n:
             calls += n
             parts.append(f'topics ~{n}')
@@ -235,6 +227,7 @@ def form_panel() -> str:
           <option value="all">Everything — merges the data and analyses it</option>
           <option value="merge">Merge only — prepares the data, does not analyse it</option>
           <option value="analyze">Analysis only — reuses the data already merged</option>
+          <option value="topics">TopicGPT — final directional CSV only</option>
         </select>
       </label>
 
@@ -263,19 +256,15 @@ def form_panel() -> str:
         <label class="inline head">
           <input type="checkbox" name="topics" value="1"> Conversation themes
         </label>
-        <p class="why">TopicGPT first <b>discovers</b> which themes exist by
-          reading the longest texts, then <b>attributes</b> them to the finer
-          units.</p>
+        <p class="why">TopicGPT <b>discovers</b> and <b>attributes</b> themes on
+          the same focal-to-partner texts: A→B and A→C, six per complete triad.
+          It does not read the raw oTree exports.</p>
         <div class="row">
           <label class="field"><span>Model</span>
             <select name="topicgpt_model">{_options(MODELS_TOPIC, 'gpt-4o')}</select></label>
         </div>
-        <label class="field">
-          <span>Discovers the themes by reading {_help(OPTION_HELP['induction'])}</span>
-          <select name="topicgpt_unit">{_level_options('group')}</select></label>
-        <label class="field">
-          <span>Attributes them to {_help(OPTION_HELP['assignment'])}</span>
-          <select name="topicgpt_assign_unit">{_level_options('dyad_directed')}</select></label>
+        <p class="why"><b>Fixed unit:</b> directed pair for both induction and
+          assignment.</p>
       </div>
     </details>
   </fieldset>

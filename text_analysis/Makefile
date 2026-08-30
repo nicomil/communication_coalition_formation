@@ -130,12 +130,12 @@ analyze: $(DEPS) ## Automatic measures only, on the data already merged
 llm: $(DEPS) ## Measures + validation rubric  [KEY]
 	@$(PY) run.py analyze --llm --llm-replicates 2 $(ARGS)
 
-topics: $(DEPS) ## Measures + topics with TopicGPT  [KEY]
-	@$(PY) run.py analyze --topics --topicgpt-repo "$(TOPICGPT_REPO)" $(ARGS)
+topics: $(DEPS) ## TopicGPT from the final directional CSV  [KEY]
+	@$(PY) run.py topics --topicgpt-repo "$(TOPICGPT_REPO)" $(ARGS)
 
-full: $(DEPS) ## Like all, plus rubric and topics  [KEY, slow]
-	@$(PY) run.py all --llm --llm-replicates 2 \
-	    --topics --topicgpt-repo "$(TOPICGPT_REPO)" $(ARGS)
+full: $(DEPS) ## Automatic measures + rubric, then directional TopicGPT  [KEY, slow]
+	@$(PY) run.py all --llm --llm-replicates 2 $(ARGS)
+	@$(PY) run.py topics --topicgpt-repo "$(TOPICGPT_REPO)" $(ARGS)
 
 ## --- Cleaning --------------------------------------------------------------
 

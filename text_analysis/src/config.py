@@ -36,6 +36,13 @@ FEATURES_DIR = OUTPUT_DIR / 'features'
 TOPICS_DIR = OUTPUT_DIR / 'topicgpt'
 DATASETS_DIR = OUTPUT_DIR / 'datasets'
 
+# TopicGPT starts from the final directional analytical CSV, not from the two
+# oTree raw exports used by the deterministic merge pipeline.
+DEFAULT_TOPICGPT_BY_PARTNER = (
+    PROJECT_ROOT.parent / 'text_analysis--stata' /
+    'all_apps_wide_2026-08-26_chat_by_partner_goodshape_FINAL.csv'
+)
+
 # How the two oTree exports are recognised among the files in input/.
 INPUT_PATTERNS = {
     'wide': 'all_apps_wide*.csv',

@@ -1,0 +1,82 @@
+Session: yv2jggqe
+Filter: participant._current_page_name == FinalResults
+Total = Part1 payoff + Beauty Contest guess; show-up fee excluded.
+Eligible participants: 18
+Random seed: 20260820:yv2jggqe
+
+ELIGIBLE PARTICIPANTS
+58ac91c38bf22a00015b91b3,4.80(Part1 3.00+BeautyContest 1.80)+ 11-20 3 bonus
+5c3272172f0f3500010284c0,4.90(Part1 3.00+BeautyContest 1.90)
+5f4a7a00dc1bde60ab8f7ac5,4.90(Part1 3.00+BeautyContest 1.90)
+5f504fd2cc049d1cbf29c40d,2.00(Part1 0.00+BeautyContest 2.00)
+6166c0eb123b6e8b34628249,4.90(Part1 3.00+BeautyContest 1.90)
+6296cc20de63a753209d7d02,4.80(Part1 3.00+BeautyContest 1.80)
+65d306f8b16eb5011ccb2025,4.80(Part1 3.00+BeautyContest 1.80)
+6995d8ad91e057a634c6438c,1.90(Part1 0.00+BeautyContest 1.90)
+69b32bdf1b7617a66b7b7f2a,4.90(Part1 3.00+BeautyContest 1.90)
+69f4a4a6ae47a729b6e55356,4.50(Part1 3.00+BeautyContest 1.50)
+69f919a2b9a34ba9c800761b,1.50(Part1 0.00+BeautyContest 1.50)
+69fdfdd06a8b86bc46481957,1.60(Part1 0.00+BeautyContest 1.60)
+6a0b6ce480c9cee5dff976df,1.90(Part1 0.00+BeautyContest 1.90)
+6a17326cb6cfc54663afb83b,2.00(Part1 0.00+BeautyContest 2.00)
+6a1852511b3e320f7f658165,4.90(Part1 3.00+BeautyContest 1.90)
+6a1904814a3d3379f01c8d88,4.50(Part1 3.00+BeautyContest 1.50)
+6a1c25431e9643bb4d5a87b2,4.80(Part1 3.00+BeautyContest 1.80)
+6a2038d16bc1270a5e53f0a4,4.90(Part1 3.00+BeautyContest 1.90)
+
+RANDOM GROUPS
+1. PAIR
+   69b32bdf1b7617a66b7b7f2a,4.90(Part1 3.00+BeautyContest 1.90)
+   69f919a2b9a34ba9c800761b,1.50(Part1 0.00+BeautyContest 1.50)
+
+2. PAIR
+   6a1852511b3e320f7f658165,4.90(Part1 3.00+BeautyContest 1.90)
+   6a0b6ce480c9cee5dff976df,1.90(Part1 0.00+BeautyContest 1.90)
+
+3. PAIR
+   65d306f8b16eb5011ccb2025,4.80(Part1 3.00+BeautyContest 1.80)
+   6a1904814a3d3379f01c8d88,4.50(Part1 3.00+BeautyContest 1.50)
+
+4. PAIR
+   69f4a4a6ae47a729b6e55356,4.50(Part1 3.00+BeautyContest 1.50)
+   5c3272172f0f3500010284c0,4.90(Part1 3.00+BeautyContest 1.90)
+
+5. PAIR
+   6995d8ad91e057a634c6438c,1.90(Part1 0.00+BeautyContest 1.90)
+   58ac91c38bf22a00015b91b3,4.80(Part1 3.00+BeautyContest 1.80)
+
+6. PAIR
+   6a1c25431e9643bb4d5a87b2,4.80(Part1 3.00+BeautyContest 1.80)
+   6a17326cb6cfc54663afb83b,2.00(Part1 0.00+BeautyContest 2.00)
+
+7. PAIR
+   6166c0eb123b6e8b34628249,4.90(Part1 3.00+BeautyContest 1.90)
+   69fdfdd06a8b86bc46481957,1.60(Part1 0.00+BeautyContest 1.60)
+
+8. PAIR
+   6296cc20de63a753209d7d02,4.80(Part1 3.00+BeautyContest 1.80)
+   5f504fd2cc049d1cbf29c40d,2.00(Part1 0.00+BeautyContest 2.00)
+
+9. PAIR
+   5f4a7a00dc1bde60ab8f7ac5,4.90(Part1 3.00+BeautyContest 1.90)
+   6a2038d16bc1270a5e53f0a4,4.90(Part1 3.00+BeautyContest 1.90)
+
+58ac91c38bf22a00015b91b3,6.70
+5c3272172f0f3500010284c0,3.80
+5f4a7a00dc1bde60ab8f7ac5,3.80
+5f504fd2cc049d1cbf29c40d,0.90
+6166c0eb123b6e8b34628249,3.80
+6296cc20de63a753209d7d02,3.70
+65d306f8b16eb5011ccb2025,3.70
+6995d8ad91e057a634c6438c,0.80
+69b32bdf1b7617a66b7b7f2a,3.80
+69f4a4a6ae47a729b6e55356,3.40
+69f919a2b9a34ba9c800761b,0.40
+69fdfdd06a8b86bc46481957,0.50
+6a0b6ce480c9cee5dff976df,0.80
+6a17326cb6cfc54663afb83b,0.90
+6a1852511b3e320f7f658165,3.80
+6a1904814a3d3379f01c8d88,3.40
+6a1c25431e9643bb4d5a87b2,3.70
+6a2038d16bc1270a5e53f0a4,3.80
+

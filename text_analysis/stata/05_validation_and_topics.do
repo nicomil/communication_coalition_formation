@@ -3,7 +3,7 @@
 *
 * Both sections run only if the corresponding stage was run in the pipeline:
 *   llm_*  columns come from `--llm`      (the validation rubric)
-*   nlp_*_topics from `--topics`          (TopicGPT)
+*   nlp_*_topics from `python run.py topics` (TopicGPT)
 *
 * If the columns are not there the section is skipped with a message, so this
 * file can be run after any pipeline run without editing it.
@@ -85,7 +85,7 @@ keep if in_sample
 
 capture confirm variable nlp_sent_topics
 if _rc {
-    display as text _n "No topic columns: run the pipeline with --topics first."
+    display as text _n "No topic columns: run python run.py topics first."
 }
 else {
     display _n as text "{hline 78}"

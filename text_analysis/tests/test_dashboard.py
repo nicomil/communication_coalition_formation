@@ -94,9 +94,12 @@ class CommandBuildingTests(unittest.TestCase):
         self.assertEqual(argv[argv.index('--llm-models') + 1], 'gpt-4o')
 
     def test_topics_carry_the_repository_path(self):
-        argv = build_command({'command': ['all'], 'topics': ['1']})
+        argv = build_command({'command': ['topics']})
+        self.assertEqual(argv[2], 'topics')
         self.assertIn('--topicgpt-repo', argv)
         self.assertIn('--topicgpt-model', argv)
+        self.assertNotIn('--topics', argv)
+        self.assertNotIn('--topicgpt-unit', argv)
 
 
 class ArchiveViewTests(unittest.TestCase):

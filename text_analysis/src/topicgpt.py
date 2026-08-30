@@ -22,11 +22,10 @@ anyway because **the prompt files are not inside the package**: they live in
 
 Unit of analysis
 ----------------
-TopicGPT induces topics from documents, and a chat turn of a few words is not a
-document. Topics are therefore induced on the group's whole conversation and
-assigned to the **directed pair** — everything i wrote to j — which is the unit
-where persuasion happens. The topics are then aggregated to participant and
-group level.
+TopicGPT is run on **directed-pair documents**: everything participant i wrote
+to participant j is one document. Each subject contributes up to two documents
+and a complete triad contributes six. Topic induction and topic assignment use
+the same directed documents.
 
 Backend
 -------

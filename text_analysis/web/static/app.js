@@ -19,9 +19,9 @@
 // visible and editable for anyone who needs to depart from them.
 (function () {
   var PRESETS = {
-    base:       { llm: false, topics: false },
-    validation: { llm: true,  topics: false },
-    full:       { llm: true,  topics: true }
+    base:       { command: 'all',    llm: false, topics: false },
+    validation: { command: 'all',    llm: true,  topics: false },
+    topics:     { command: 'topics', llm: false, topics: true }
   };
 
   var form = document.getElementById('launch');
@@ -31,6 +31,8 @@
     var preset = PRESETS[name];
     if (!preset) { return; }
     Object.keys(preset).forEach(function (field) {
+      var select = form.querySelector('select[name="' + field + '"]');
+      if (select) { select.value = preset[field]; return; }
       var box = form.querySelector('input[name="' + field + '"]');
       if (box) { box.checked = preset[field]; }
     });

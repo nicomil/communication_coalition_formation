@@ -61,8 +61,8 @@ equivalent:
 | `make all` | `python run.py all` | merge + automatic measures, a few seconds | **no** |
 | `make merge` / `make analyze` | `python run.py merge` / `python run.py analyze` | the two steps separately | no |
 | `make llm` | `python run.py analyze --llm --llm-replicates 2` | measures + validation rubric | yes |
-| `make topics` | `python run.py analyze --topics --topicgpt-repo <path>` | measures + topics with TopicGPT | yes |
-| `make full` | `python run.py all --llm --llm-replicates 2 --topics --topicgpt-repo <path>` | like `all`, plus rubric and topics | yes |
+| `make topics` | `python run.py topics --topicgpt-repo <path>` | topics from the final directional CSV | yes |
+| `make full` | two commands: `all --llm`, then `topics` | automatic measures, rubric, and directional topics | yes |
 | `make dashboard` | `python run.py dashboard` | opens the dashboard in the browser | — |
 | `make report` | `python run.py report` | regenerates the readable summary and opens it | — |
 | `make runs` | `python run.py runs` | lists the archived runs | — |
@@ -111,7 +111,7 @@ Three independent stages, each switchable on its own.
 |---|---|---|
 | Deterministic text measures | (always on) | **no** |
 | Validation rubric | `--llm` | one of OpenAI, Anthropic or a local model |
-| TopicGPT | `--topics` | depends on the backend |
+| TopicGPT | `python run.py topics` | depends on the backend |
 
 The first stage runs on Python's standard library alone: it can be executed
 straight away, with nothing to obtain first. The other two serve, respectively,
@@ -330,13 +330,19 @@ spread between the two lands in the dataset as an estimate of measurement error.
 **With the topics:**
 
 ```bash
-python run.py analyze --topics --topicgpt-repo ~/src/topicGPT
+python run.py topics --topicgpt-repo ~/src/topicGPT
 ```
 
 On Windows the repository path is a Windows one, so
-`python run.py analyze --topics --topicgpt-repo $HOME\src\topicGPT`.
+`python run.py topics --topicgpt-repo $HOME\src\topicGPT`.
 
-**All together:** combine the options of the two commands above.
+This command does not read either raw oTree export. Its sole input is
+`../text_analysis--stata/all_apps_wide_2026-08-26_chat_by_partner_goodshape_FINAL.csv`.
+Use `--by-partner-input <path>` only to process a different, equivalently shaped
+directional dataset.
+
+**All together:** run the rubric command and the TopicGPT command separately,
+or use `make full`.
 
 ---
 
@@ -611,17 +617,25 @@ expected format, invokes the official functions in the order the paper
 prescribes — generation of the first-level topics, refinement, assignment,
 correction — and recomposes the output onto the experiment's keys.
 
-**Unit of analysis: two, not one.** The topics are **induced** on the whole
-triad's conversation (`--topicgpt-unit group`), which has enough text for the
-model to recognise something, and are **assigned** to the directed pairs
-(`--topicgpt-assign-unit dyad_directed`), which are the unit where persuasion
-plays out. They are then aggregated to participant and group by taking the union
-of the topics of the component units.
+**Unit of analysis: directed text throughout.** For each subject A, one document
+contains all and only the messages A sent to B and another contains all and only
+the messages A sent to C. A complete triad therefore has six directional rows.
+The same set of directional documents is used both to **induce** the topic list
+(and select it if it is too large, retaining examples) and to **assign** those
+topics. No group-conversation document is created.
 
-The separation is not a detail: inducing directly on the directed pairs makes
-the model answer "None" on every document, because the paper's prompt explicitly
-instructs it to do so when the document contains no recognisable topic, and a
-two-line exchange contains none.
+The adapter reads only the final by-partner CSV. Before writing TopicGPT's input,
+it verifies the direction of every message, recomputes the message and word
+counts, requires two rows per subject and six rows per identified triad, checks
+document-ID uniqueness, and proves conservation of all messages. Empty
+directions are not sent to the model but remain in the topic-enriched CSV with
+blank topic fields.
+
+The canonical model input is
+`output/topicgpt_by_partner/topicgpt_input.jsonl`. Each non-empty CSV row maps to
+exactly one JSONL document, keyed by session, group, focal player, and partner.
+Run `python run.py topics --topicgpt-dry-run` to regenerate and validate it
+without contacting any API.
 
 **The seed is a research choice.** TopicGPT starts from a list of initial
 topics, which in the official repository concerns the paper's demonstration
@@ -661,11 +675,12 @@ at a compatible gateway through `OPENAI_BASE_URL`.
 
 ## 9. Costs and volumes
 
-On the final dataset (~1,557 participants, ~519 triads) the directed pairs will
-be about 3,100 and the groups 519.
+On the current final directional dataset there are 6,180 rows, 514 identified
+triads, 8,087 messages and 2,365 non-empty directional texts. The validated
+manifest records these exact counts and the input file's SHA-256 hash.
 
-**TopicGPT** queries the model once per document, in two phases: in the order of
-6,500 calls on short texts.
+**TopicGPT** uses those same 2,365 documents in topic induction and assignment;
+the exact number of API calls also depends on refinement and correction.
 
 **The rubric** with two replicates comes to about 7,200 calls. Two devices keep
 the count down: the system prompt, identical on every call, is marked for the

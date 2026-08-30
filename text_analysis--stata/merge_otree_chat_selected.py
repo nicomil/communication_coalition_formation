@@ -2,7 +2,8 @@
 
 The script writes:
 1. one row per input participant, with the full group conversation;
-2. two rows per input participant (left/right partner), with dyadic conversation.
+2. two rows per input participant (left/right partner), with only the messages
+   sent by the focal participant to that partner.
 
 Only the Python standard library is required.  Validation is strict by default:
 no output is committed unless every chat row can be assigned unambiguously.
@@ -148,7 +149,8 @@ PARTNER_COLUMNS = [
     "chat_side", "partner_id", "partner_color", "chat_group_key",
     "chat_status", "chat_channel", "chat_message_count",
     "chat_message_count_focal_sent", "chat_message_count_partner_sent",
-    "chat_first_timestamp", "chat_last_timestamp", "chat_transcript",
+    "chat_first_timestamp", "chat_last_timestamp", "number_of_words",
+    "number_of_messages", "chat_transcript",
 ]
 
 TOPOLOGY = {1: {"left": 3, "right": 2}, 2: {"left": 1, "right": 3}, 3: {"left": 2, "right": 1}}
@@ -269,6 +271,11 @@ def transcript(messages: list[Message]) -> str:
     return json.dumps([message_record(m) for m in messages], ensure_ascii=False, separators=(",", ":"))
 
 
+def message_word_count(messages: list[Message]) -> int:
+    """Count Unicode whitespace-delimited tokens across message bodies."""
+    return sum(len(message.body.split()) for message in messages)
+
+
 def target_from_choice(choice: str, focal_id: int) -> tuple[str, str]:
     if choice == "NoOne":
         return "NoOne", "NoOne"
@@ -364,6 +371,10 @@ def build_outputs(wide_rows: list[dict[str, str]], messages: list[Message]) -> t
             partner_id = TOPOLOGY[focal][side] if focal in TOPOLOGY else None
             pair = tuple(sorted((focal, partner_id))) if partner_id is not None else None
             dyad = by_dyad.get((session, group, pair[0], pair[1]), []) if pair else []
+            focal_to_partner = [
+                message for message in dyad
+                if message.sender_id == focal and message.receiver_id == partner_id
+            ]
             partner = dict(base)
             partner.update({
                 "chat_side": side,
@@ -377,7 +388,9 @@ def build_outputs(wide_rows: list[dict[str, str]], messages: list[Message]) -> t
                 "chat_message_count_partner_sent": str(sum(m.sender_id == partner_id for m in dyad)),
                 "chat_first_timestamp": dyad[0].timestamp if dyad else "",
                 "chat_last_timestamp": dyad[-1].timestamp if dyad else "",
-                "chat_transcript": transcript(dyad),
+                "number_of_words": str(message_word_count(focal_to_partner)),
+                "number_of_messages": str(len(focal_to_partner)),
+                "chat_transcript": transcript(focal_to_partner),
             })
             by_partner.append(partner)
 
@@ -484,9 +497,13 @@ def validate(
             partner = parse_int(row.get("partner_id", ""))
             pair = tuple(sorted((focal, partner))) if focal is not None and partner is not None else None
             expected_messages = expected_dyad.get((session, group, pair[0], pair[1]), []) if pair else []
-            expected_payload = [message_record(message) for message in expected_messages]
+            focal_to_partner = [
+                message for message in expected_messages
+                if message.sender_id == focal and message.receiver_id == partner
+            ]
+            expected_payload = [message_record(message) for message in focal_to_partner]
             if payload != expected_payload:
-                failures.append("by-partner transcript differs from resolved source messages")
+                failures.append("by-partner transcript is not focal-to-partner only")
                 break
             expected_counts = (
                 len(expected_messages),
@@ -500,6 +517,12 @@ def validate(
             )
             if actual_counts != expected_counts:
                 failures.append("invalid by-partner chat counts")
+                break
+            if int(row["number_of_messages"]) != len(focal_to_partner):
+                failures.append("invalid focal-to-partner number_of_messages")
+                break
+            if int(row["number_of_words"]) != message_word_count(focal_to_partner):
+                failures.append("invalid focal-to-partner number_of_words")
                 break
         except (ValueError, TypeError, json.JSONDecodeError):
             failures.append("invalid by-partner transcript JSON")

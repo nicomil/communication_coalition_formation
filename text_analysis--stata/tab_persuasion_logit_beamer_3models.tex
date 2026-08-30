@@ -1,0 +1,41 @@
+\renewcommand{\arraystretch}{0.85}
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{lccc}
+\toprule
+                &\multicolumn{1}{c}{(1)}         &\multicolumn{1}{c}{(2)}         &\multicolumn{1}{c}{(3)}         \\
+\midrule
+persuasion\_ij   &                  &                  &                  \\
+Coalition Proposal&    1.101\sym{***}&    0.680\sym{***}&    0.734\sym{***}\\
+                &  (0.110)         &  (0.200)         &  (0.212)         \\
+Commitment      &    1.119\sym{***}&    0.476\sym{***}&    0.536\sym{***}\\
+                &  (0.123)         &  (0.178)         &  (0.182)         \\
+Payoff Reasoning&    0.206         &   -0.113         &   -0.229         \\
+                &  (0.198)         &  (0.283)         &  (0.295)         \\
+$\ln(\text{Words} + 1)$&                  &    0.002         &   -0.040         \\
+                &                  &  (0.217)         &  (0.221)         \\
+No. of Messages &                  &    0.098\sym{**} &    0.105\sym{**} \\
+                &                  &  (0.044)         &  (0.043)         \\
+Sentiment (std) &                  &   -0.115         &   -0.141         \\
+                &                  &  (0.119)         &  (0.122)         \\
+Emotional Tone (std)&                  &    0.510\sym{***}&    0.519\sym{***}\\
+                &                  &  (0.135)         &  (0.139)         \\
+Authenticity (std)&                  &   -0.276\sym{**} &   -0.250\sym{**} \\
+                &                  &  (0.108)         &  (0.106)         \\
+Analytical Thinking (std)&                  &   -0.194\sym{*}  &   -0.181\sym{*}  \\
+                &                  &  (0.105)         &  (0.110)         \\
+Clout (std)     &                  &    0.029         &    0.046         \\
+                &                  &  (0.105)         &  (0.113)         \\
+Public Treatment&                  &   -0.010         &    0.020         \\
+                &                  &  (0.198)         &  (0.207)         \\
+Slacker Treatment&                  &   -0.803\sym{***}&   -0.852\sym{***}\\
+                &                  &  (0.192)         &  (0.202)         \\
+Session Fixed Effects &      Yes         &      Yes         &      Yes         \\
+Sender Traits   &       No         &       No         &      Yes         \\
+Receiver Traits &       No         &       No         &      Yes         \\
+\midrule
+Observations    &    1,729         &      805         &      803         \\
+Pseudo $R^2$    &    0.078         &    0.076         &    0.110         \\
+Log pseudolikelihood&-1083.134         & -449.923         & -432.632         \\
+Clusters        &      481         &      388         &      388         \\
+\bottomrule
+\end{tabular}

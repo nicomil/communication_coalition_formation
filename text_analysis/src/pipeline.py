@@ -2,7 +2,7 @@
 Runs the text-analysis pipeline over the experiment's messages and enriches the
 datasets.
 
-Three independent stages, each switchable on its own:
+Two stages operate on the raw-derived merged data:
 
 1. **Text measures** (always on, no credential required) — volume, sentiment
    and the LIWC-style indices (analytic, clout, authenticity, tone), computed
@@ -10,8 +10,9 @@ Three independent stages, each switchable on its own:
 2. **Validation rubric** (``--llm``) — a second measurement of the same
    constructs, scored by a language model, for convergent validation. Needs a
    credential from any one supported provider.
-3. **TopicGPT** (``--topics``) — the official code of Pham et al. (2024). Needs
-   the cloned repository and the credential of the chosen backend.
+
+TopicGPT is a separate pipeline: ``python run.py topics`` reads the final
+directional by-partner CSV, not the raw oTree exports.
 
 The final output is the experiment's two datasets, enriched and ready for
 Stata, plus the intermediate feature files for checking.
@@ -20,7 +21,7 @@ Examples (from the project entry point)
 ---------------------------------------
     python run.py analyze                          automatic measures
     python run.py analyze --llm --llm-replicates 2 + validation rubric
-    python run.py analyze --topics --topicgpt-repo ~/src/topicGPT
+    python run.py topics --topicgpt-repo ~/src/topicGPT
 """
 
 from __future__ import annotations

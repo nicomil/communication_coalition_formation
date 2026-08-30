@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #ffffff;
+        display: inline-block;
+        padding: 6px;
+    }
+    table {
+        border-collapse: collapse;
+        font-size: 13.5px;
+        line-height: 1.15;
+        color: #111827;
+        background: #ffffff;
+    }
+    th {
+        background-color: #007A33;
+        color: #ffffff;
+        font-weight: 700;
+        padding: 8px 16px;
+        text-align: center;
+        border: none;
+    }
+    th.left {
+        text-align: left;
+        padding-left: 12px;
+    }
+    td {
+        padding: 3px 16px;
+        text-align: center;
+        border: none;
+    }
+    td.left {
+        text-align: left;
+        font-weight: 500;
+        color: #1f2937;
+        padding-left: 12px;
+        white-space: nowrap;
+    }
+    tr.se td {
+        padding-top: 0px;
+        padding-bottom: 4px;
+        color: #6b7280;
+        font-size: 12px;
+    }
+    tr.summary {
+        background-color: #f9fafb;
+    }
+    tr.summary td {
+        padding-top: 3.5px;
+        padding-bottom: 3.5px;
+    }
+    tr.summary td.left {
+        font-weight: 600;
+    }
+    tr.summary-border td {
+        border-top: 1px solid #d1d5db;
+    }
+    tr.bottom-border td {
+        border-bottom: 1.5px solid #007A33;
+    }
+    .note {
+        padding-top: 8px;
+        font-size: 11px;
+        color: #6b7280;
+        font-style: italic;
+        text-align: left;
+        padding-left: 12px;
+    }
+</style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th class="left">Regressors</th>
+                <th>(1)</th>
+                <th>(2)</th>
+                <th>(3)</th>
+                <th>(4)</th>
+                <th>(5)</th>
+                <th>(6)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class=""><td class="left">Coalition Proposal</td><td>0.240***</td><td>0.126***</td><td>0.136***</td><td>0.128***</td><td>0.134***</td><td>0.132***</td></tr>
+<tr class="se"><td class="left"></td><td>(0.021)</td><td>(0.030)</td><td>(0.037)</td><td>(0.037)</td><td>(0.037)</td><td>(0.037)</td></tr>
+<tr class=""><td class="left">Commitment</td><td>0.244***</td><td>0.158***</td><td>0.082**</td><td>0.090***</td><td>0.097***</td><td>0.097***</td></tr>
+<tr class="se"><td class="left"></td><td>(0.024)</td><td>(0.028)</td><td>(0.034)</td><td>(0.033)</td><td>(0.034)</td><td>(0.032)</td></tr>
+<tr class=""><td class="left">Payoff Reasoning</td><td>0.045</td><td>-0.071</td><td>-0.043</td><td>-0.021</td><td>-0.029</td><td>-0.041</td></tr>
+<tr class="se"><td class="left"></td><td>(0.043)</td><td>(0.047)</td><td>(0.052)</td><td>(0.053)</td><td>(0.053)</td><td>(0.053)</td></tr>
+<tr class=""><td class="left">ln(Words + 1)</td><td></td><td>0.045***</td><td>0.014</td><td>0.000</td><td>-0.006</td><td>-0.007</td></tr>
+<tr class="se"><td class="left"></td><td></td><td>(0.016)</td><td>(0.041)</td><td>(0.041)</td><td>(0.040)</td><td>(0.040)</td></tr>
+<tr class=""><td class="left">No. of Messages</td><td></td><td>0.017**</td><td>0.017**</td><td>0.019**</td><td>0.019**</td><td>0.019**</td></tr>
+<tr class="se"><td class="left"></td><td></td><td>(0.007)</td><td>(0.009)</td><td>(0.008)</td><td>(0.008)</td><td>(0.008)</td></tr>
+<tr class=""><td class="left">Sentiment (std)</td><td></td><td></td><td>-0.030</td><td>-0.022</td><td>-0.024</td><td>-0.025</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td>(0.023)</td><td>(0.022)</td><td>(0.022)</td><td>(0.022)</td></tr>
+<tr class=""><td class="left">Emotional Tone (std)</td><td></td><td></td><td>0.097***</td><td>0.096***</td><td>0.095***</td><td>0.094***</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td>(0.025)</td><td>(0.025)</td><td>(0.025)</td><td>(0.024)</td></tr>
+<tr class=""><td class="left">Authenticity (std)</td><td></td><td></td><td>-0.041**</td><td>-0.052**</td><td>-0.050***</td><td>-0.045**</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td>(0.020)</td><td>(0.020)</td><td>(0.019)</td><td>(0.019)</td></tr>
+<tr class=""><td class="left">Analytical Thinking (std)</td><td></td><td></td><td>-0.028</td><td>-0.037*</td><td>-0.033*</td><td>-0.033*</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td>(0.020)</td><td>(0.020)</td><td>(0.020)</td><td>(0.020)</td></tr>
+<tr class=""><td class="left">Clout (std)</td><td></td><td></td><td>0.005</td><td>0.005</td><td>0.011</td><td>0.008</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td>(0.020)</td><td>(0.020)</td><td>(0.020)</td><td>(0.020)</td></tr>
+<tr class=""><td class="left">Public Treatment</td><td></td><td></td><td></td><td>-0.002</td><td>0.004</td><td>0.004</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td></td><td>(0.037)</td><td>(0.037)</td><td>(0.037)</td></tr>
+<tr class=""><td class="left">Slacker Treatment</td><td></td><td></td><td></td><td>-0.151***</td><td>-0.157***</td><td>-0.154***</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td></td><td>(0.036)</td><td>(0.036)</td><td>(0.035)</td></tr>
+<tr class="summary summary-border "><td class="left">Session Fixed Effects</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+<tr class="summary  "><td class="left">Sender Traits</td><td>No</td><td>No</td><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+<tr class="summary  "><td class="left">Receiver Traits</td><td>No</td><td>No</td><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+<tr class="summary  "><td class="left">Observations</td><td>1,729</td><td>1,729</td><td>805</td><td>805</td><td>804</td><td>803</td></tr>
+<tr class="summary  bottom-border"><td class="left">Clusters (Groups)</td><td>481</td><td>481</td><td>388</td><td>388</td><td>388</td><td>388</td></tr>
+        </tbody>
+    </table>
+    <div class="note">Average Marginal Effects (dy/dx) with group-clustered standard errors in parentheses. * p&lt;0.10, ** p&lt;0.05, *** p&lt;0.01</div>
+</body>
+</html>

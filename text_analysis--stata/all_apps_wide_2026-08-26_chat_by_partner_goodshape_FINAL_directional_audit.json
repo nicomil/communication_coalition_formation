@@ -1,0 +1,13 @@
+{
+  "rows": 6180,
+  "columns_before": 108,
+  "columns_after": 110,
+  "source_transcript_occurrences": 16174,
+  "unique_directional_messages": 8087,
+  "output_transcript_occurrences": 8087,
+  "empty_directional_rows": 3815,
+  "word_definition": "Unicode whitespace-delimited tokens in message body",
+  "coverage_status": "PASS",
+  "input": "C:\\Users\\Donat\\communication_coalition_formation\\text_analysis--stata\\all_apps_wide_2026-08-26_chat_by_partner_goodshape_FINAL_BIDIRECTIONAL_BACKUP.csv",
+  "output": "C:\\Users\\Donat\\communication_coalition_formation\\text_analysis--stata\\all_apps_wide_2026-08-26_chat_by_partner_goodshape_FINAL.csv"
+}

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #ffffff;
+        display: inline-block;
+        padding: 6px;
+    }
+    table {
+        border-collapse: collapse;
+        font-size: 13.5px;
+        line-height: 1.15;
+        color: #111827;
+        background: #ffffff;
+    }
+    th {
+        background-color: #007A33;
+        color: #ffffff;
+        font-weight: 700;
+        padding: 8px 16px;
+        text-align: center;
+        border: none;
+    }
+    th.left {
+        text-align: left;
+        padding-left: 12px;
+    }
+    td {
+        padding: 3px 16px;
+        text-align: center;
+        border: none;
+    }
+    td.left {
+        text-align: left;
+        font-weight: 500;
+        color: #1f2937;
+        padding-left: 12px;
+        white-space: nowrap;
+    }
+    tr.se td {
+        padding-top: 0px;
+        padding-bottom: 4px;
+        color: #6b7280;
+        font-size: 12px;
+    }
+    tr.summary {
+        background-color: #f9fafb;
+    }
+    tr.summary td {
+        padding-top: 3.5px;
+        padding-bottom: 3.5px;
+    }
+    tr.summary td.left {
+        font-weight: 600;
+    }
+    tr.summary-border td {
+        border-top: 1px solid #d1d5db;
+    }
+    tr.bottom-border td {
+        border-bottom: 1.5px solid #007A33;
+    }
+    .note {
+        padding-top: 8px;
+        font-size: 11px;
+        color: #6b7280;
+        font-style: italic;
+        text-align: left;
+        padding-left: 12px;
+    }
+</style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th class="left">Regressors</th>
+                <th>(1)</th>
+                <th>(2)</th>
+                <th>(3)</th>
+                <th>(4)</th>
+                <th>(5)</th>
+                <th>(6)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class=""><td class="left">Coalition Proposal</td><td>1.101***</td><td>0.597***</td><td>0.701***</td><td>0.680***</td><td>0.721***</td><td>0.734***</td></tr>
+<tr class="se"><td class="left"></td><td>(0.110)</td><td>(0.144)</td><td>(0.196)</td><td>(0.200)</td><td>(0.206)</td><td>(0.212)</td></tr>
+<tr class=""><td class="left">Commitment</td><td>1.119***</td><td>0.746***</td><td>0.421**</td><td>0.476***</td><td>0.524***</td><td>0.536***</td></tr>
+<tr class="se"><td class="left"></td><td>(0.123)</td><td>(0.137)</td><td>(0.177)</td><td>(0.178)</td><td>(0.183)</td><td>(0.182)</td></tr>
+<tr class=""><td class="left">Payoff Reasoning</td><td>0.206</td><td>-0.337</td><td>-0.223</td><td>-0.113</td><td>-0.156</td><td>-0.229</td></tr>
+<tr class="se"><td class="left"></td><td>(0.198)</td><td>(0.224)</td><td>(0.270)</td><td>(0.283)</td><td>(0.286)</td><td>(0.295)</td></tr>
+<tr class=""><td class="left">ln(Words + 1)</td><td></td><td>0.211***</td><td>0.074</td><td>0.002</td><td>-0.030</td><td>-0.040</td></tr>
+<tr class="se"><td class="left"></td><td></td><td>(0.077)</td><td>(0.211)</td><td>(0.217)</td><td>(0.218)</td><td>(0.221)</td></tr>
+<tr class=""><td class="left">No. of Messages</td><td></td><td>0.080**</td><td>0.090**</td><td>0.098**</td><td>0.101**</td><td>0.105**</td></tr>
+<tr class="se"><td class="left"></td><td></td><td>(0.032)</td><td>(0.045)</td><td>(0.044)</td><td>(0.043)</td><td>(0.043)</td></tr>
+<tr class=""><td class="left">Sentiment (std)</td><td></td><td></td><td>-0.157</td><td>-0.115</td><td>-0.127</td><td>-0.141</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td>(0.118)</td><td>(0.119)</td><td>(0.118)</td><td>(0.122)</td></tr>
+<tr class=""><td class="left">Emotional Tone (std)</td><td></td><td></td><td>0.501***</td><td>0.510***</td><td>0.514***</td><td>0.519***</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td>(0.133)</td><td>(0.135)</td><td>(0.137)</td><td>(0.139)</td></tr>
+<tr class=""><td class="left">Authenticity (std)</td><td></td><td></td><td>-0.213**</td><td>-0.276**</td><td>-0.271***</td><td>-0.250**</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td>(0.106)</td><td>(0.108)</td><td>(0.105)</td><td>(0.106)</td></tr>
+<tr class=""><td class="left">Analytical Thinking (std)</td><td></td><td></td><td>-0.146</td><td>-0.194*</td><td>-0.178*</td><td>-0.181*</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td>(0.103)</td><td>(0.105)</td><td>(0.107)</td><td>(0.110)</td></tr>
+<tr class=""><td class="left">Clout (std)</td><td></td><td></td><td>0.028</td><td>0.029</td><td>0.057</td><td>0.046</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td>(0.105)</td><td>(0.105)</td><td>(0.107)</td><td>(0.113)</td></tr>
+<tr class=""><td class="left">Public Treatment</td><td></td><td></td><td></td><td>-0.010</td><td>0.023</td><td>0.020</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td></td><td>(0.198)</td><td>(0.202)</td><td>(0.207)</td></tr>
+<tr class=""><td class="left">Slacker Treatment</td><td></td><td></td><td></td><td>-0.803***</td><td>-0.848***</td><td>-0.852***</td></tr>
+<tr class="se"><td class="left"></td><td></td><td></td><td></td><td>(0.192)</td><td>(0.198)</td><td>(0.202)</td></tr>
+<tr class="summary summary-border "><td class="left">Session Fixed Effects</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+<tr class="summary  "><td class="left">Sender Traits</td><td>No</td><td>No</td><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+<tr class="summary  "><td class="left">Receiver Traits</td><td>No</td><td>No</td><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+<tr class="summary  "><td class="left">Observations</td><td>1,729</td><td>1,729</td><td>805</td><td>805</td><td>804</td><td>803</td></tr>
+<tr class="summary  "><td class="left">Pseudo R²</td><td>0.078</td><td>0.100</td><td>0.054</td><td>0.076</td><td>0.089</td><td>0.110</td></tr>
+<tr class="summary  "><td class="left">Log pseudolikelihood</td><td>-1,083.134</td><td>-1,056.908</td><td>-460.716</td><td>-449.923</td><td>-443.221</td><td>-432.632</td></tr>
+<tr class="summary  bottom-border"><td class="left">Clusters (Groups)</td><td>481</td><td>481</td><td>388</td><td>388</td><td>388</td><td>388</td></tr>
+        </tbody>
+    </table>
+    <div class="note">Logit coefficients with group-clustered standard errors in parentheses. * p&lt;0.10, ** p&lt;0.05, *** p&lt;0.01</div>
+</body>
+</html>

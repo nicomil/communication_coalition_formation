@@ -4,6 +4,7 @@ Chat text analysis — single entry point.
     python run.py all         merge the data and analyse it
     python run.py merge       merge choices and chat only
     python run.py analyze     text analysis only
+    python run.py topics      TopicGPT from the final directional CSV
     python run.py keys        configure the API keys
     python run.py status      what is in input, in output and among the keys
 
@@ -14,7 +15,7 @@ Examples:
 
     python run.py all                                  automatic measures
     python run.py all --llm --llm-replicates 2         + validation rubric
-    python run.py all --topics --topicgpt-repo ~/src/topicGPT
+    python run.py topics --topicgpt-repo ~/src/topicGPT
 """
 
 from __future__ import annotations
@@ -65,30 +66,28 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument('--llm-dry-run', action='store_true',
                         help='show the request without contacting the service')
 
-        sp.add_argument('--topics', action='store_true',
-                        help='run TopicGPT')
+        # TopicGPT is deliberately not an analysis option: its independent
+        # `topics` command reads the final directional CSV, never the raw merge.
+        sp.set_defaults(topics=False)
+
+    def add_topic_options(sp):
+        sp.add_argument(
+            '--by-partner-input', type=Path,
+            default=config.DEFAULT_TOPICGPT_BY_PARTNER,
+            help='final directional by-partner CSV (the sole TopicGPT input)',
+        )
+        sp.add_argument('--verbose', action='store_true')
         sp.add_argument('--topicgpt-repo', default='./topicGPT',
                         help='cloned TopicGPT repository (holds the prompts)')
         sp.add_argument('--topicgpt-api', default='openai',
                         choices=['openai', 'azure', 'vertex', 'gemini',
                                  'ollama', 'vllm'])
         sp.add_argument('--topicgpt-model', default='gpt-4o')
-        # Topics are induced on the triad's whole conversation, which has
-        # enough text, and assigned to the directed pairs, which are the unit of
-        # persuasion.
-        sp.add_argument('--topicgpt-unit', default='group',
-                        choices=['dyad_directed', 'dyad', 'sender_group', 'group'],
-                        help='unit on which to induce the topics')
-        sp.add_argument('--topicgpt-assign-unit', default='dyad_directed',
-                        choices=['dyad_directed', 'dyad', 'sender_group', 'group'],
-                        help='unit to which the induced topics are assigned')
-        sp.add_argument('--topicgpt-seed', default='prompts/seed_coalition_formation.md',
-                        help='starting topic list; the repository seed belongs '
-                             'to another domain')
-        sp.add_argument('--topicgpt-no-refine', action='store_true',
-                        help='skip topic refinement')
+        sp.add_argument('--topicgpt-seed',
+                        default='prompts/seed_coalition_formation.md')
+        sp.add_argument('--topicgpt-no-refine', action='store_true')
         sp.add_argument('--topicgpt-dry-run', action='store_true',
-                        help='write the input file only, with no calls')
+                        help='write and validate JSONL without API calls')
 
     sp_all = sub.add_parser('all', help='merge + analysis')
     add_input_options(sp_all)
@@ -100,6 +99,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp_analyze = sub.add_parser('analyze', help='text analysis only')
     add_input_options(sp_analyze)
     add_analysis_options(sp_analyze)
+
+    sp_topics = sub.add_parser(
+        'topics', help='TopicGPT from the final directional by-partner CSV')
+    add_topic_options(sp_topics)
 
     sp_report = sub.add_parser(
         'report', help='regenerate the readable summary from existing files')
@@ -140,6 +143,11 @@ def cmd_merge(args) -> int:
 def cmd_analyze(args) -> int:
     from src import pipeline
 
+    if args.topics:
+        raise SystemExit(
+            'The raw-based --topics route has been retired. Use `python run.py '
+            'topics`; it reads only the final directional by-partner CSV.'
+        )
     _wide, _chat, stem = resolve_dataset(args)
     args.merged_dir = config.MERGED_DIR
     args.outdir = config.OUTPUT_DIR
@@ -147,6 +155,14 @@ def cmd_analyze(args) -> int:
 
     summary = pipeline.run(args)
     return pipeline.print_summary(summary)
+
+
+def cmd_topics(args) -> int:
+    from src import topicgpt_from_by_partner
+
+    args.outdir = config.OUTPUT_DIR
+    topicgpt_from_by_partner.run(args)
+    return 0
 
 
 def cmd_all(args) -> int:
@@ -241,6 +257,7 @@ COMMANDS = {
     'all': cmd_all,
     'merge': cmd_merge,
     'analyze': cmd_analyze,
+    'topics': cmd_topics,
     'report': cmd_report,
     'runs': cmd_runs,
     'dashboard': cmd_dashboard,

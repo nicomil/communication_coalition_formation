@@ -22,7 +22,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # Allowed values. Everything arriving from the browser is checked against these
 # lists: anything absent is ignored, not passed to the command.
 ALLOWED = {
-    'command': {'all', 'merge', 'analyze'},
+    'command': {'all', 'merge', 'analyze', 'topics'},
     'llm_provider': {'', 'openai', 'anthropic', 'ollama'},
     'llm_model': {
         '', 'gpt-4o', 'gpt-4.1', 'gpt-5.6-terra', 'gpt-5.6-luna',
@@ -31,8 +31,6 @@ ALLOWED = {
     'llm_replicates': {'1', '2', '3'},
     'llm_level': {'group', 'dyad_directed', 'dyad', 'sender_group'},
     'topicgpt_model': {'gpt-4o', 'gpt-4.1'},
-    'topicgpt_unit': {'group', 'dyad_directed', 'dyad', 'sender_group'},
-    'topicgpt_assign_unit': {'dyad_directed', 'dyad', 'sender_group', 'group'},
 }
 
 
@@ -44,7 +42,17 @@ def _pick(form, field, default=''):
 
 def build_command(form) -> list[str]:
     """Turn the form into arguments, one by one and only from known values."""
-    argv = [sys.executable, 'run.py', _pick(form, 'command', 'all')]
+    command = _pick(form, 'command', 'all')
+    if form.get('topics'):
+        command = 'topics'
+    argv = [sys.executable, 'run.py', command]
+
+    if command == 'topics':
+        argv += [
+            '--topicgpt-repo', str(Path.home() / 'src' / 'topicGPT'),
+            '--topicgpt-model', _pick(form, 'topicgpt_model', 'gpt-4o'),
+        ]
+        return argv
 
     if form.get('llm'):
         argv.append('--llm')
@@ -60,15 +68,6 @@ def build_command(form) -> list[str]:
         if levels:
             argv += ['--llm-levels'] + levels
 
-    if form.get('topics'):
-        argv += [
-            '--topics',
-            '--topicgpt-repo', str(Path.home() / 'src' / 'topicGPT'),
-            '--topicgpt-model', _pick(form, 'topicgpt_model', 'gpt-4o'),
-            '--topicgpt-unit', _pick(form, 'topicgpt_unit', 'group'),
-            '--topicgpt-assign-unit',
-            _pick(form, 'topicgpt_assign_unit', 'dyad_directed'),
-        ]
     return argv
 
 

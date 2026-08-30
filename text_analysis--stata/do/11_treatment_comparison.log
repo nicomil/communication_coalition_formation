@@ -1,0 +1,2887 @@
+
+  ___  ____  ____  ____  ____ ®
+ /__    /   ____/   /   ____/      StataNow 19.5
+___/   /   /___/   /   /___/       MP—Parallel Edition
+
+ Statistics and Data Science       Copyright 1985-2025 StataCorp LLC
+                                   StataCorp
+                                   4905 Lakeway Drive
+                                   College Station, Texas 77845 USA
+                                   800-782-8272        https://www.stata.com
+                                   979-696-4600        service@stata.com
+
+Stata license: Unlimited-user 2-core network, expiring  4 Nov 2026
+Serial number: 501909305434
+  Licensed to: Donato Pierno
+               Tor Vergata University of Rome
+
+Notes:
+      1. Stata is running in batch mode.
+      2. Unicode is supported; see help unicode_advice.
+      3. More than 2 billion observations are allowed; see help obs_advice.
+      4. Maximum number of variables is set to 5,000 but can be increased;
+          see help set_maxvar.
+
+. do C:\Users\Donat\communication_coalition_formation\text_analysis--stata\do\1
+> 1_treatment_comparison.do 
+
+. *============================================================================
+> ==
+. * 11_treatment_comparison.do
+. *
+. * Treatment comparisons — 3 treatments: Baseline (1), Public (2), Slacker (3)
+. *
+. * For each outcome variable:
+. *   A. OVERALL TEST across all 3 treatments
+. *      Parametric:     one-way ANOVA  /  OLS with clustered SE + joint F-test
+. *      Non-parametric: Kruskal-Wallis
+. *
+. *   B. PAIRWISE TESTS  (3 pairs)
+. *      Baseline vs Public    (treatment == 1 vs 2)
+. *      Baseline vs Slacker   (treatment == 1 vs 3)
+. *      Public   vs Slacker   (treatment == 2 vs 3)
+. *      Parametric:     Welch t-test  /  OLS clustered SE
+. *      Non-parametric: Wilcoxon rank-sum
+. *
+. * NOTE on units of analysis:
+. *   efficiency_group   -> GROUP level  (preserve; keep 1 row per group)
+. *   CC_i               -> PLAYER level (cluster SE at group level)
+. *   persuasion_ij / ik -> DYAD level   (ccf_dyad.dta; cluster at group level)
+. *   topic_*            -> DYAD level   (ccf_dyad.dta; cluster at group level)
+. *   Sections 18–23     -> TopicGPT Topics (Coalition Proposal, Commitment, Pa
+> yoff Reasoning)
+. *============================================================================
+> ==
+. 
+. version 19.0
+
+. clear all
+
+. set more off
+
+. 
+. use `"C:\Users\Donat\communication_coalition_formation\text_analysis--stata\c
+> cf_master.dta"', clear
+
+. keep if group_valid == 1
+(0 observations deleted)
+
+. 
+. *----------------------------------------------------------------------------
+> --
+. * Utility program: prints a pairwise comparison header
+. *----------------------------------------------------------------------------
+> --
+. capture program drop pair_header
+
+. program define pair_header
+  1.     args lab1 lab2
+  2.     display as result _newline "  -- `lab1'  vs  `lab2' --"
+  3. end
+
+. 
+. *============================================================================
+> ==
+. * SECTION 1 -- EFFICIENCY
+. * Unit of analysis: GROUP. efficiency_group repeats 3 times per group, so
+. * we collapse to 1 row per group inside preserve/restore before any test.
+. *============================================================================
+> ==
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 1. EFFICIENCY   (unit = group)"
+ 1. EFFICIENCY   (unit = group)
+
+. display as result "========================================================"
+========================================================
+
+. 
+. preserve
+
+.     bysort sessioncode group_id: keep if _n == 1
+(962 observations deleted)
+
+. 
+.     display as result _newline "--- Descriptives by treatment ---"
+
+--- Descriptives by treatment ---
+
+.     tabstat efficiency_group, by(treatment) stat(n mean sd p50) nototal col(s
+> tat)
+
+Summary for variables: efficiency_group
+Group variable: treatment 
+
+treatment |         N      Mean        SD       p50
+----------+----------------------------------------
+ Baseline |       160    1.9125  .4103611         2
+   Public |       158  1.886076   .465014         2
+  Slacker |       163  1.644172   .767238         2
+---------------------------------------------------
+
+. 
+.     display as result _newline "--- A. Overall: one-way ANOVA ---"
+
+--- A. Overall: one-way ANOVA ---
+
+.     oneway efficiency_group treatment, tabulate
+
+            |  Summary of Efficiency: mean group
+            |               payoff
+  treatment |        Mean   Std. dev.       Freq.
+------------+------------------------------------
+   Baseline |        1.91        0.41         160
+     Public |        1.89        0.47         158
+    Slacker |        1.64        0.77         163
+------------+------------------------------------
+      Total |        1.81        0.58         481
+
+                        Analysis of variance
+    Source              SS         df      MS            F     Prob > F
+------------------------------------------------------------------------
+Between groups      7.07375288      2   3.53687644     10.83     0.0000
+ Within groups       156.08633    478    .32654044
+------------------------------------------------------------------------
+    Total           163.160083    480    .33991684
+
+Bartlett's equal-variances test: chi2(2) =  74.3350    Prob>chi2 = 0.000
+
+. 
+.     display as result _newline "--- A. Overall: Kruskal-Wallis ---"
+
+--- A. Overall: Kruskal-Wallis ---
+
+.     kwallis efficiency_group, by(treatment)
+
+Kruskal–Wallis equality-of-populations rank test
+
+  +---------------------------+
+  | treatm~t | Obs | Rank sum |
+  |----------+-----+----------|
+  | Baseline | 160 | 40476.50 |
+  |   Public | 158 | 39468.50 |
+  |  Slacker | 163 | 35976.00 |
+  +---------------------------+
+
+  chi2(2) =  5.294
+     Prob = 0.0709
+
+  chi2(2) with ties = 20.810
+               Prob = 0.0001
+
+. 
+.     display as result _newline "--- B. Pairwise ---"
+
+--- B. Pairwise ---
+
+.     foreach pair in "1 2 Baseline Public" "1 3 Baseline Slacker" "2 3 Public 
+> Slacker" {
+  2.         local t1   = word("`pair'", 1)
+  3.         local t2   = word("`pair'", 2)
+  4.         local lab1 = word("`pair'", 3)
+  5.         local lab2 = word("`pair'", 4)
+  6.         pair_header `lab1' `lab2'
+  7.         ttest efficiency_group if inlist(treatment,`t1',`t2'), by(treatmen
+> t) unequal
+  8.         ranksum efficiency_group if inlist(treatment,`t1',`t2'), by(treatm
+> ent)
+  9.     }
+
+  -- Baseline  vs  Public --
+
+Two-sample t test with unequal variances
+------------------------------------------------------------------------------
+   Group |     Obs        Mean    Std. err.   Std. dev.   [95% conf. interval]
+---------+--------------------------------------------------------------------
+Baseline |     160      1.9125    .0324419    .4103611    1.848427    1.976573
+  Public |     158    1.886076    .0369945     .465014    1.813005    1.959147
+---------+--------------------------------------------------------------------
+Combined |     318    1.899371    .0245548    .4378751     1.85106    1.947682
+---------+--------------------------------------------------------------------
+    diff |            .0264241    .0492044               -.0703925    .1232406
+------------------------------------------------------------------------------
+    diff = mean(Baseline) - mean(Public)                          t =   0.5370
+H0: diff = 0                     Satterthwaite's degrees of freedom =  310.186
+
+    Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(T < t) = 0.7042         Pr(|T| > |t|) = 0.5916          Pr(T > t) = 0.2958
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+    Baseline |      160       25687       25520
+      Public |      158       25034       25201
+-------------+---------------------------------
+    Combined |      318       50721       50721
+
+Unadjusted variance   672026.67
+Adjustment for ties  -575691.52
+                     ----------
+Adjusted variance      96335.14
+
+H0: effici~p(treatm~t==Baseline) = effici~p(treatm~t==Public)
+         z =  0.538
+Prob > |z| = 0.5905
+
+Note: Exact p-value is not computed by default for sample sizes > 200.
+      Use option exact to compute it.
+
+  -- Baseline  vs  Slacker --
+
+Two-sample t test with unequal variances
+------------------------------------------------------------------------------
+   Group |     Obs        Mean    Std. err.   Std. dev.   [95% conf. interval]
+---------+--------------------------------------------------------------------
+Baseline |     160      1.9125    .0324419    .4103611    1.848427    1.976573
+ Slacker |     163    1.644172    .0600947     .767238    1.525502    1.762842
+---------+--------------------------------------------------------------------
+Combined |     323     1.77709    .0350745    .6303663    1.708086    1.846094
+---------+--------------------------------------------------------------------
+    diff |            .2683282    .0682924                .1338229    .4028335
+------------------------------------------------------------------------------
+    diff = mean(Baseline) - mean(Slacker)                         t =   3.9291
+H0: diff = 0                     Satterthwaite's degrees of freedom =  248.665
+
+    Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(T < t) = 0.9999         Pr(|T| > |t|) = 0.0001          Pr(T > t) = 0.0001
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+    Baseline |      160     27669.5       25920
+     Slacker |      163     24656.5       26406
+-------------+---------------------------------
+    Combined |      323       52326       52326
+
+Unadjusted variance   704160.00
+Adjustment for ties  -494953.04
+                     ----------
+Adjusted variance     209206.96
+
+H0: effici~p(treatm~t==Baseline) = effici~p(treatm~t==Slacker)
+         z =  3.825
+Prob > |z| = 0.0001
+
+Note: Exact p-value is not computed by default for sample sizes > 200.
+      Use option exact to compute it.
+
+  -- Public  vs  Slacker --
+
+Two-sample t test with unequal variances
+------------------------------------------------------------------------------
+   Group |     Obs        Mean    Std. err.   Std. dev.   [95% conf. interval]
+---------+--------------------------------------------------------------------
+  Public |     158    1.886076    .0369945     .465014    1.813005    1.959147
+ Slacker |     163    1.644172    .0600947     .767238    1.525502    1.762842
+---------+--------------------------------------------------------------------
+Combined |     321     1.76324    .0361189     .647124    1.692179      1.8343
+---------+--------------------------------------------------------------------
+    diff |            .2419042    .0705689                .1029649    .3808434
+------------------------------------------------------------------------------
+    diff = mean(Public) - mean(Slacker)                           t =   3.4279
+H0: diff = 0                     Satterthwaite's degrees of freedom =  268.293
+
+    Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(T < t) = 0.9996         Pr(|T| > |t|) = 0.0007          Pr(T > t) = 0.0004
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+      Public |      158     26995.5       25438
+     Slacker |      163     24685.5       26243
+-------------+---------------------------------
+    Combined |      321       51681       51681
+
+Unadjusted variance   691065.67
+Adjustment for ties  -474691.83
+                     ----------
+Adjusted variance     216373.84
+
+H0: effici~p(treatm~t==Public) = effici~p(treatm~t==Slacker)
+         z =  3.348
+Prob > |z| = 0.0008
+
+Note: Exact p-value is not computed by default for sample sizes > 200.
+      Use option exact to compute it.
+
+. restore
+
+. 
+. *============================================================================
+> ==
+. * SECTION 2 -- CHOICE-SIGNAL CONSISTENCY  CC_i
+. * Unit of analysis: PLAYER. Cluster SE at group level (3 players share a game
+> ).
+. *============================================================================
+> ==
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 2. CHOICE-SIGNAL CONSISTENCY  CC_i   (unit = player)"
+ 2. CHOICE-SIGNAL CONSISTENCY  CC_i   (unit = player)
+
+. display as result "========================================================"
+========================================================
+
+. 
+. display as result _newline "--- Descriptives by treatment ---"
+
+--- Descriptives by treatment ---
+
+. tabstat CC_i, by(treatment) stat(n mean sd p50) nototal col(stat)
+
+Summary for variables: CC_i
+Group variable: treatment 
+
+treatment |         N      Mean        SD       p50
+----------+----------------------------------------
+ Baseline |       480  .7760417  .2949629         1
+   Public |       474  .7658228   .366419         1
+  Slacker |       489  .6492843  .3843833        .5
+---------------------------------------------------
+
+. 
+. display as result _newline "--- Distribution CC_i in {0, 0.5, 1} by treatment
+>  ---"
+
+--- Distribution CC_i in {0, 0.5, 1} by treatment ---
+
+. tab CC_i treatment, col chi2
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+Choice-Sig |
+       nal |
+Consistenc |
+y: (C_ij + |            treatment
+ C_ik) / 2 |  Baseline     Public    Slacker |     Total
+-----------+---------------------------------+----------
+      0.00 |        24         68         93 |       185 
+           |      5.00      14.35      19.02 |     12.82 
+-----------+---------------------------------+----------
+      0.50 |       167         86        157 |       410 
+           |     34.79      18.14      32.11 |     28.41 
+-----------+---------------------------------+----------
+      1.00 |       289        320        239 |       848 
+           |     60.21      67.51      48.88 |     58.77 
+-----------+---------------------------------+----------
+     Total |       480        474        489 |     1,443 
+           |    100.00     100.00     100.00 |    100.00 
+
+          Pearson chi2(4) =  79.7037   Pr = 0.000
+
+. 
+. display as result _newline "--- A. Overall: OLS group-clustered SE + joint F-
+> test ---"
+
+--- A. Overall: OLS group-clustered SE + joint F-test ---
+
+. regress CC_i i.treatment, vce(cluster group_id)
+
+Linear regression                               Number of obs     =      1,443
+                                                F(2, 480)         =      18.54
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0264
+                                                Root MSE          =     .35087
+
+                             (Std. err. adjusted for 481 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+        CC_i | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+     Public  |  -.0102189   .0216954    -0.47   0.638    -.0528486    .0324108
+    Slacker  |  -.1267574   .0222143    -5.71   0.000    -.1704066   -.0831082
+             |
+       _cons |   .7760417   .0142347    54.52   0.000     .7480717    .8040117
+------------------------------------------------------------------------------
+
+. testparm i.treatment
+
+ ( 1)  2.treatment = 0
+ ( 2)  3.treatment = 0
+
+       F(  2,   480) =   18.54
+            Prob > F =    0.0000
+
+. 
+. display as result _newline "--- A. Overall: Kruskal-Wallis ---"
+
+--- A. Overall: Kruskal-Wallis ---
+
+. kwallis CC_i, by(treatment)
+
+Kruskal–Wallis equality-of-populations rank test
+
+  +----------------------------+
+  | treatm~t | Obs |  Rank sum |
+  |----------+-----+-----------|
+  | Baseline | 480 | 362081.00 |
+  |   Public | 474 | 366147.00 |
+  |  Slacker | 489 | 313618.00 |
+  +----------------------------+
+
+  chi2(2) = 28.161
+     Prob = 0.0001
+
+  chi2(2) with ties = 36.478
+               Prob = 0.0001
+
+. 
+. display as result _newline "--- B. Pairwise ---"
+
+--- B. Pairwise ---
+
+. foreach pair in "1 2 Baseline Public" "1 3 Baseline Slacker" "2 3 Public Slac
+> ker" {
+  2.     local t1   = word("`pair'", 1)
+  3.     local t2   = word("`pair'", 2)
+  4.     local lab1 = word("`pair'", 3)
+  5.     local lab2 = word("`pair'", 4)
+  6.     pair_header `lab1' `lab2'
+  7.     ttest CC_i if inlist(treatment,`t1',`t2'), by(treatment) unequal
+  8.     regress CC_i i.treatment if inlist(treatment,`t1',`t2'), vce(cluster g
+> roup_id)
+  9.     ranksum CC_i if inlist(treatment,`t1',`t2'), by(treatment)
+ 10. }
+
+  -- Baseline  vs  Public --
+
+Two-sample t test with unequal variances
+------------------------------------------------------------------------------
+   Group |     Obs        Mean    Std. err.   Std. dev.   [95% conf. interval]
+---------+--------------------------------------------------------------------
+Baseline |     480    .7760417    .0134632    .2949629    .7495875    .8024958
+  Public |     474    .7658228    .0168302     .366419    .7327516     .798894
+---------+--------------------------------------------------------------------
+Combined |     954    .7709644    .0107572    .3322563    .7498538    .7920749
+---------+--------------------------------------------------------------------
+    diff |            .0102189    .0215525               -.0320798    .0525176
+------------------------------------------------------------------------------
+    diff = mean(Baseline) - mean(Public)                          t =   0.4741
+H0: diff = 0                     Satterthwaite's degrees of freedom =  905.782
+
+    Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(T < t) = 0.6822         Pr(|T| > |t|) = 0.6355          Pr(T > t) = 0.3178
+
+Linear regression                               Number of obs     =        954
+                                                F(1, 317)         =       0.22
+                                                Prob > F          =     0.6381
+                                                R-squared         =     0.0002
+                                                Root MSE          =     .33239
+
+                             (Std. err. adjusted for 318 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+        CC_i | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+     Public  |  -.0102189   .0217033    -0.47   0.638    -.0529196    .0324819
+       _cons |   .7760417   .0142399    54.50   0.000      .748025    .8040583
+------------------------------------------------------------------------------
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+    Baseline |      480      225539      229200
+      Public |      474      229996      226335
+-------------+---------------------------------
+    Combined |      954      455535      455535
+
+Unadjusted variance    18106800
+Adjustment for ties  -5064244.6
+                     ----------
+Adjusted variance      13042555
+
+H0: CC_i(treatm~t==Baseline) = CC_i(treatm~t==Public)
+         z = -1.014
+Prob > |z| = 0.3107
+
+Note: Exact p-value is not computed by default for sample sizes > 200.
+      Use option exact to compute it.
+
+  -- Baseline  vs  Slacker --
+
+Two-sample t test with unequal variances
+------------------------------------------------------------------------------
+   Group |     Obs        Mean    Std. err.   Std. dev.   [95% conf. interval]
+---------+--------------------------------------------------------------------
+Baseline |     480    .7760417    .0134632    .2949629    .7495875    .8024958
+ Slacker |     489    .6492843    .0173824    .3843833    .6151306    .6834379
+---------+--------------------------------------------------------------------
+Combined |     969    .7120743    .0112003    .3486526    .6900946     .734054
+---------+--------------------------------------------------------------------
+    diff |            .1267574    .0219865                .0836076    .1699072
+------------------------------------------------------------------------------
+    diff = mean(Baseline) - mean(Slacker)                         t =   5.7652
+H0: diff = 0                     Satterthwaite's degrees of freedom =  914.007
+
+    Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(T < t) = 1.0000         Pr(|T| > |t|) = 0.0000          Pr(T > t) = 0.0000
+
+Linear regression                               Number of obs     =        969
+                                                F(1, 322)         =      32.54
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0331
+                                                Root MSE          =     .34302
+
+                             (Std. err. adjusted for 323 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+        CC_i | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+    Slacker  |  -.1267574   .0222216    -5.70   0.000    -.1704754   -.0830395
+       _cons |   .7760417   .0142394    54.50   0.000     .7480276    .8040557
+------------------------------------------------------------------------------
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+    Baseline |      480      251982      232800
+     Slacker |      489      217983      237165
+-------------+---------------------------------
+    Combined |      969      469965      469965
+
+Unadjusted variance    18973200
+Adjustment for ties  -3812164.3
+                     ----------
+Adjusted variance      15161036
+
+H0: CC_i(treatm~t==Baseline) = CC_i(treatm~t==Slacker)
+         z =  4.926
+Prob > |z| = 0.0000
+
+Note: Exact p-value is not computed by default for sample sizes > 200.
+      Use option exact to compute it.
+
+  -- Public  vs  Slacker --
+
+Two-sample t test with unequal variances
+------------------------------------------------------------------------------
+   Group |     Obs        Mean    Std. err.   Std. dev.   [95% conf. interval]
+---------+--------------------------------------------------------------------
+  Public |     474    .7658228    .0168302     .366419    .7327516     .798894
+ Slacker |     489    .6492843    .0173824    .3843833    .6151306    .6834379
+---------+--------------------------------------------------------------------
+Combined |     963    .7066459    .0122438    .3799517    .6826183    .7306735
+---------+--------------------------------------------------------------------
+    diff |            .1165385    .0241951                .0690572    .1640199
+------------------------------------------------------------------------------
+    diff = mean(Public) - mean(Slacker)                           t =   4.8166
+H0: diff = 0                     Satterthwaite's degrees of freedom =  960.733
+
+    Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(T < t) = 1.0000         Pr(|T| > |t|) = 0.0000          Pr(T > t) = 0.0000
+
+Linear regression                               Number of obs     =        963
+                                                F(1, 320)         =      24.28
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0235
+                                                Root MSE          =     .37565
+
+                             (Std. err. adjusted for 321 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+        CC_i | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+    Slacker  |  -.1165385   .0236495    -4.93   0.000    -.1630666   -.0700105
+       _cons |   .7658228   .0163783    46.76   0.000        .7336    .7980456
+------------------------------------------------------------------------------
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+      Public |      474      248726      228468
+     Slacker |      489      215440      235698
+-------------+---------------------------------
+    Combined |      963      464166      464166
+
+Unadjusted variance    18620142
+Adjustment for ties  -4028166.9
+                     ----------
+Adjusted variance      14591975
+
+H0: CC_i(treatm~t==Public) = CC_i(treatm~t==Slacker)
+         z =  5.303
+Prob > |z| = 0.0000
+
+Note: Exact p-value is not computed by default for sample sizes > 200.
+      Use option exact to compute it.
+
+. 
+. *============================================================================
+> ==
+. * SECTION 3 -- PERSUASION  persuasion_ij = S_ij x A_ji
+. * Unit of analysis: DIRECTED PAIR (6 per group). Use ccf_dyad.dta.
+. * Binary outcome: proportion z-test (parametric) + OLS LPM clustered.
+. *============================================================================
+> ==
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 3. PERSUASION   persuasion_ij = S_ij x A_ji"
+ 3. PERSUASION   persuasion_ij = S_ij x A_ji
+
+. display as result "    (unit = directed pair, 6 per group, from ccf_dyad.dta)
+> "
+    (unit = directed pair, 6 per group, from ccf_dyad.dta)
+
+. display as result "========================================================"
+========================================================
+
+. 
+. preserve
+
+.     use `"C:\Users\Donat\communication_coalition_formation\text_analysis--sta
+> ta\ccf_dyad.dta"', clear
+
+.     keep if group_valid == 1
+(156 observations deleted)
+
+. 
+.     display as result _newline "--- Proportion persuasion_ij = 1 by treatment
+>  ---"
+
+--- Proportion persuasion_ij = 1 by treatment ---
+
+.     tabstat persuasion_ij, by(treatment) stat(n mean sd) nototal col(stat)
+
+Summary for variables: persuasion_ij
+Group variable: treatment 
+
+treatment |         N      Mean        SD
+----------+------------------------------
+ Baseline |       590  .6338983  .4821465
+   Public |       521  .6122841  .4876975
+  Slacker |       618  .5113269  .5002766
+-----------------------------------------
+
+. 
+.     display as result _newline "--- Cross-tab persuasion_ij x treatment ---"
+
+--- Cross-tab persuasion_ij x treatment ---
+
+.     tab persuasion_ij treatment, col chi2 exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+Enumerating sample-space combinations:
+stage 3:  enumerations = 1
+stage 2:  enumerations = 86
+stage 1:  enumerations = 0
+
+persuasion |            treatment
+       _ij |  Baseline     Public    Slacker |     Total
+-----------+---------------------------------+----------
+         0 |       216        202        302 |       720 
+           |     36.61      38.77      48.87 |     41.64 
+-----------+---------------------------------+----------
+         1 |       374        319        316 |     1,009 
+           |     63.39      61.23      51.13 |     58.36 
+-----------+---------------------------------+----------
+     Total |       590        521        618 |     1,729 
+           |    100.00     100.00     100.00 |    100.00 
+
+          Pearson chi2(2) =  21.1895   Pr = 0.000
+           Fisher's exact =                 0.000
+
+. 
+.     display as result _newline "--- A. Overall: OLS (LPM) group-clustered SE 
+> + joint F-test ---"
+
+--- A. Overall: OLS (LPM) group-clustered SE + joint F-test ---
+
+.     regress persuasion_ij i.treatment , vce(cluster group_id)
+
+Linear regression                               Number of obs     =      1,729
+                                                F(2, 480)         =      20.30
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0123
+                                                Root MSE          =     .49036
+
+                             (Std. err. adjusted for 481 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+     Public  |  -.0216142   .0174181    -1.24   0.215    -.0558393    .0126108
+    Slacker  |  -.1225714   .0195854    -6.26   0.000    -.1610551   -.0840878
+             |
+       _cons |   .6338983   .0113163    56.02   0.000     .6116626     .656134
+------------------------------------------------------------------------------
+
+.     testparm i.treatment
+
+ ( 1)  2.treatment = 0
+ ( 2)  3.treatment = 0
+
+       F(  2,   480) =   20.30
+            Prob > F =    0.0000
+
+. 
+.     display as result _newline "--- A. Overall: Kruskal-Wallis ---"
+
+--- A. Overall: Kruskal-Wallis ---
+
+.     kwallis persuasion_ij, by(treatment)
+
+Kruskal–Wallis equality-of-populations rank test
+
+  +----------------------------+
+  | treatm~t | Obs |  Rank sum |
+  |----------+-----+-----------|
+  | Baseline | 590 | 536018.00 |
+  |   Public | 521 | 463596.00 |
+  |  Slacker | 618 | 495971.00 |
+  +----------------------------+
+
+  chi2(2) = 15.439
+     Prob = 0.0004
+
+  chi2(2) with ties = 21.177
+               Prob = 0.0001
+
+. 
+.     display as result _newline "--- B. Pairwise ---"
+
+--- B. Pairwise ---
+
+.     foreach pair in "1 2 Baseline Public" "1 3 Baseline Slacker" "2 3 Public 
+> Slacker" {
+  2.         local t1   = word("`pair'", 1)
+  3.         local t2   = word("`pair'", 2)
+  4.         local lab1 = word("`pair'", 3)
+  5.         local lab2 = word("`pair'", 4)
+  6.         pair_header `lab1' `lab2'
+  7.         prtest persuasion_ij if inlist(treatment,`t1',`t2'), by(treatment)
+  8.         regress persuasion_ij i.treatment if inlist(treatment,`t1',`t2'), 
+> ///
+>             vce(cluster group_id)
+  9.         ranksum persuasion_ij if inlist(treatment,`t1',`t2'), by(treatment
+> )
+ 10.     }
+
+  -- Baseline  vs  Public --
+
+Two-sample test of proportions              Baseline: Number of obs =      590
+                                              Public: Number of obs =      521
+------------------------------------------------------------------------------
+       Group |       Mean   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    Baseline |   .6338983   .0198328                      .5950267    .6727699
+      Public |   .6122841   .0213459                      .5704469    .6541213
+-------------+----------------------------------------------------------------
+        diff |   .0216142   .0291374                      -.035494    .0787225
+             |  under H0:   .0291241     0.74   0.458
+------------------------------------------------------------------------------
+        diff = prop(Baseline) - prop(Public)                      z =   0.7421
+    H0: diff = 0
+
+    Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(Z < z) = 0.7710         Pr(|Z| > |z|) = 0.4580          Pr(Z > z) = 0.2290
+
+Linear regression                               Number of obs     =      1,111
+                                                F(1, 317)         =       1.54
+                                                Prob > F          =     0.2157
+                                                R-squared         =     0.0005
+                                                Root MSE          =     .48476
+
+                             (Std. err. adjusted for 318 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+     Public  |  -.0216142   .0174251    -1.24   0.216    -.0558978    .0126693
+       _cons |   .6338983   .0113209    55.99   0.000     .6116247     .656172
+------------------------------------------------------------------------------
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+    Baseline |      590      331362      328040
+      Public |      521      286354      289676
+-------------+---------------------------------
+    Combined |     1111      617716      617716
+
+Unadjusted variance    28484807
+Adjustment for ties  -8430101.5
+                     ----------
+Adjusted variance      20054705
+
+H0: persua~j(treatm~t==Baseline) = persua~j(treatm~t==Public)
+         z =  0.742
+Prob > |z| = 0.4582
+
+  -- Baseline  vs  Slacker --
+
+Two-sample test of proportions              Baseline: Number of obs =      590
+                                             Slacker: Number of obs =      618
+------------------------------------------------------------------------------
+       Group |       Mean   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    Baseline |   .6338983   .0198328                      .5950267    .6727699
+     Slacker |   .5113269   .0201078                      .4719163    .5507374
+-------------+----------------------------------------------------------------
+        diff |   .1225714    .028243                      .0672163    .1779266
+             |  under H0:   .0284863     4.30   0.000
+------------------------------------------------------------------------------
+        diff = prop(Baseline) - prop(Slacker)                     z =   4.3028
+    H0: diff = 0
+
+    Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(Z < z) = 1.0000         Pr(|Z| > |z|) = 0.0000          Pr(Z > z) = 0.0000
+
+Linear regression                               Number of obs     =      1,208
+                                                F(1, 322)         =      39.14
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0153
+                                                Root MSE          =     .49151
+
+                             (Std. err. adjusted for 323 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+    Slacker  |  -.1225714   .0195921    -6.26   0.000    -.1611162   -.0840267
+       _cons |   .6338983   .0113202    56.00   0.000     .6116273    .6561693
+------------------------------------------------------------------------------
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+    Baseline |      590      379001      356655
+     Slacker |      618      351235      373581
+-------------+---------------------------------
+    Combined |     1208      730236      730236
+
+Unadjusted variance    36735465
+Adjustment for ties  -9742407.8
+                     ----------
+Adjusted variance      26993057
+
+H0: persua~j(treatm~t==Baseline) = persua~j(treatm~t==Slacker)
+         z =  4.301
+Prob > |z| = 0.0000
+
+  -- Public  vs  Slacker --
+
+Two-sample test of proportions                Public: Number of obs =      521
+                                             Slacker: Number of obs =      618
+------------------------------------------------------------------------------
+       Group |       Mean   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      Public |   .6122841   .0213459                      .5704469    .6541213
+     Slacker |   .5113269   .0201078                      .4719163    .5507374
+-------------+----------------------------------------------------------------
+        diff |   .1009572   .0293253                      .0434808    .1584337
+             |  under H0:   .0295411     3.42   0.001
+------------------------------------------------------------------------------
+        diff = prop(Public) - prop(Slacker)                       z =   3.4175
+    H0: diff = 0
+
+    Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(Z < z) = 0.9997         Pr(|Z| > |z|) = 0.0006          Pr(Z > z) = 0.0003
+
+Linear regression                               Number of obs     =      1,139
+                                                F(1, 320)         =      23.64
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0103
+                                                Root MSE          =     .49456
+
+                             (Std. err. adjusted for 321 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+    Slacker  |  -.1009572    .020765    -4.86   0.000    -.1418103   -.0601041
+       _cons |   .6122841   .0132462    46.22   0.000     .5862234    .6383448
+------------------------------------------------------------------------------
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+      Public |      521      313223      296970
+     Slacker |      618      336007      352260
+-------------+---------------------------------
+    Combined |     1139      649230      649230
+
+Unadjusted variance    30587910
+Adjustment for ties  -7950423.4
+                     ----------
+Adjusted variance      22637487
+
+H0: persua~j(treatm~t==Public) = persua~j(treatm~t==Slacker)
+         z =  3.416
+Prob > |z| = 0.0006
+
+. restore
+
+. 
+. *============================================================================
+> ==
+. * SECTION 3b -- PERSUASION by direction (player-wide, ccf_master)
+. * persuasion_ij = toward left partner j
+. * persuasion_ik = toward right partner k
+. * Tests symmetry across topological directions.
+. *============================================================================
+> ==
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 3b. PERSUASION by direction (player-wide)"
+ 3b. PERSUASION by direction (player-wide)
+
+. display as result "========================================================"
+========================================================
+
+. 
+. foreach var in persuasion_ij persuasion_ik {
+  2. 
+.     display as result _newline "=== `var' ==="
+  3.     tabstat `var', by(treatment) stat(n mean sd) nototal col(stat)
+  4. 
+.     display as result _newline "--- A. Overall: OLS (LPM) group-clustered SE 
+> ---"
+  5.     regress `var' i.treatment, vce(cluster group_id)
+  6.     testparm i.treatment
+  7. 
+.     display as result _newline "--- A. Overall: Kruskal-Wallis ---"
+  8.     kwallis `var', by(treatment)
+  9. 
+.     display as result _newline "--- B. Pairwise ---"
+ 10.     foreach pair in "1 2 Baseline Public" "1 3 Baseline Slacker" "2 3 Publ
+> ic Slacker" {
+ 11.         local t1   = word("`pair'", 1)
+ 12.         local t2   = word("`pair'", 2)
+ 13.         local lab1 = word("`pair'", 3)
+ 14.         local lab2 = word("`pair'", 4)
+ 15.         pair_header `lab1' `lab2'
+ 16.         regress `var' i.treatment if inlist(treatment,`t1',`t2'), vce(clus
+> ter group_id)
+ 17.         ranksum `var' if inlist(treatment,`t1',`t2'), by(treatment)
+ 18.     }
+ 19. }
+
+=== persuasion_ij ===
+
+Summary for variables: persuasion_ij
+Group variable: treatment 
+
+treatment |         N      Mean        SD
+----------+------------------------------
+ Baseline |       301  .6445183  .4794561
+   Public |       261  .6091954  .4888681
+  Slacker |       299  .5117057   .500701
+-----------------------------------------
+
+--- A. Overall: OLS (LPM) group-clustered SE ---
+
+Linear regression                               Number of obs     =        861
+                                                F(2, 475)         =       9.80
+                                                Prob > F          =     0.0001
+                                                R-squared         =     0.0135
+                                                Root MSE          =     .48977
+
+                             (Std. err. adjusted for 476 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+     Public  |  -.0353229   .0269427    -1.31   0.190    -.0882645    .0176188
+    Slacker  |  -.1328126   .0303473    -4.38   0.000    -.1924442    -.073181
+             |
+       _cons |   .6445183   .0188728    34.15   0.000     .6074339    .6816027
+------------------------------------------------------------------------------
+
+ ( 1)  2.treatment = 0
+ ( 2)  3.treatment = 0
+
+       F(  2,   475) =    9.80
+            Prob > F =    0.0001
+
+--- A. Overall: Kruskal-Wallis ---
+
+Kruskal–Wallis equality-of-populations rank test
+
+  +----------------------------+
+  | treatm~t | Obs |  Rank sum |
+  |----------+-----+-----------|
+  | Baseline | 301 | 137095.00 |
+  |   Public | 261 | 114907.50 |
+  |  Slacker | 299 | 119088.50 |
+  +----------------------------+
+
+  chi2(2) =  8.448
+     Prob = 0.0146
+
+  chi2(2) with ties = 11.621
+               Prob = 0.0030
+
+--- B. Pairwise ---
+
+  -- Baseline  vs  Public --
+
+Linear regression                               Number of obs     =        562
+                                                F(1, 315)         =       1.72
+                                                Prob > F          =     0.1909
+                                                R-squared         =     0.0013
+                                                Root MSE          =     .48385
+
+                             (Std. err. adjusted for 316 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+     Public  |  -.0353229   .0269497    -1.31   0.191    -.0883471    .0177014
+       _cons |   .6445183   .0188777    34.14   0.000      .607376    .6816606
+------------------------------------------------------------------------------
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+    Baseline |      301       86119     84731.5
+      Public |      261       72084     73471.5
+-------------+---------------------------------
+    Combined |      562      158203      158203
+
+Unadjusted variance  3685820.25
+Adjustment for ties   -1.10e+06
+                     ----------
+Adjusted variance    2582885.43
+
+H0: persua~j(treatm~t==Baseline) = persua~j(treatm~t==Public)
+         z =  0.863
+Prob > |z| = 0.3880
+
+Note: Exact p-value is not computed by default for sample sizes > 200.
+      Use option exact to compute it.
+
+  -- Baseline  vs  Slacker --
+
+Linear regression                               Number of obs     =        600
+                                                F(1, 318)         =      19.15
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0181
+                                                Root MSE          =     .49016
+
+                             (Std. err. adjusted for 319 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+    Slacker  |  -.1328126   .0303531    -4.38   0.000    -.1925308   -.0730944
+       _cons |   .6445183   .0188763    34.14   0.000       .60738    .6816566
+------------------------------------------------------------------------------
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+    Baseline |      301       96427     90450.5
+     Slacker |      299       83873     89849.5
+-------------+---------------------------------
+    Combined |      600      180300      180300
+
+Unadjusted variance  4507449.92
+Adjustment for ties   -1.21e+06
+                     ----------
+Adjusted variance    3297621.96
+
+H0: persua~j(treatm~t==Baseline) = persua~j(treatm~t==Slacker)
+         z =  3.291
+Prob > |z| = 0.0010
+
+Note: Exact p-value is not computed by default for sample sizes > 200.
+      Use option exact to compute it.
+
+  -- Public  vs  Slacker --
+
+Linear regression                               Number of obs     =        560
+                                                F(1, 316)         =      10.17
+                                                Prob > F          =     0.0016
+                                                R-squared         =     0.0096
+                                                Root MSE          =     .49522
+
+                             (Std. err. adjusted for 317 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+    Slacker  |  -.0974897   .0305776    -3.19   0.002    -.1576512   -.0373282
+       _cons |   .6091954   .0192333    31.67   0.000     .5713539    .6470369
+------------------------------------------------------------------------------
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+      Public |      261     77014.5     73210.5
+     Slacker |      299     80065.5     83869.5
+-------------+---------------------------------
+    Combined |      560      157080      157080
+
+Unadjusted variance  3648323.25
+Adjustment for ties  -947810.88
+                     ----------
+Adjusted variance    2700512.37
+
+H0: persua~j(treatm~t==Public) = persua~j(treatm~t==Slacker)
+         z =  2.315
+Prob > |z| = 0.0206
+
+Note: Exact p-value is not computed by default for sample sizes > 200.
+      Use option exact to compute it.
+
+=== persuasion_ik ===
+
+Summary for variables: persuasion_ik
+Group variable: treatment 
+
+treatment |         N      Mean        SD
+----------+------------------------------
+ Baseline |       289  .6228374  .4855169
+   Public |       260  .6153846  .4874425
+  Slacker |       319  .5109718   .500665
+-----------------------------------------
+
+--- A. Overall: OLS (LPM) group-clustered SE ---
+
+Linear regression                               Number of obs     =        868
+                                                F(2, 476)         =       7.82
+                                                Prob > F          =     0.0005
+                                                R-squared         =     0.0112
+                                                Root MSE          =     .49171
+
+                             (Std. err. adjusted for 477 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~k | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+     Public  |  -.0074528    .031209    -0.24   0.811    -.0687771    .0538716
+    Slacker  |  -.1118656   .0304972    -3.67   0.000    -.1717914   -.0519398
+             |
+       _cons |   .6228374   .0202202    30.80   0.000     .5831054    .6625693
+------------------------------------------------------------------------------
+
+ ( 1)  2.treatment = 0
+ ( 2)  3.treatment = 0
+
+       F(  2,   476) =    7.82
+            Prob > F =    0.0005
+
+--- A. Overall: Kruskal-Wallis ---
+
+Kruskal–Wallis equality-of-populations rank test
+
+  +----------------------------+
+  | treatm~t | Obs |  Rank sum |
+  |----------+-----+-----------|
+  | Baseline | 289 | 131007.00 |
+  |   Public | 260 | 117020.00 |
+  |  Slacker | 319 | 129119.00 |
+  +----------------------------+
+
+  chi2(2) =  7.119
+     Prob = 0.0285
+
+  chi2(2) with ties =  9.738
+               Prob = 0.0077
+
+--- B. Pairwise ---
+
+  -- Baseline  vs  Public --
+
+Linear regression                               Number of obs     =        549
+                                                F(1, 316)         =       0.06
+                                                Prob > F          =     0.8115
+                                                R-squared         =     0.0001
+                                                Root MSE          =     .48643
+
+                             (Std. err. adjusted for 317 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~k | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+     Public  |  -.0074528    .031218    -0.24   0.811    -.0688741    .0539686
+       _cons |   .6228374   .0202261    30.79   0.000     .5830425    .6626322
+------------------------------------------------------------------------------
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+    Baseline |      289       79755       79475
+      Public |      260       71220       71500
+-------------+---------------------------------
+    Combined |      549      150975      150975
+
+Unadjusted variance  3443916.67
+Adjustment for ties   -1.01e+06
+                     ----------
+Adjusted variance    2435879.74
+
+H0: persua~k(treatm~t==Baseline) = persua~k(treatm~t==Public)
+         z =  0.179
+Prob > |z| = 0.8576
+
+Note: Exact p-value is not computed by default for sample sizes > 200.
+      Use option exact to compute it.
+
+  -- Baseline  vs  Slacker --
+
+Linear regression                               Number of obs     =        608
+                                                F(1, 318)         =      13.45
+                                                Prob > F          =     0.0003
+                                                R-squared         =     0.0127
+                                                Root MSE          =     .49352
+
+                             (Std. err. adjusted for 319 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~k | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+    Slacker  |  -.1118656    .030503    -3.67   0.000    -.1718788   -.0518524
+       _cons |   .6228374   .0202241    30.80   0.000     .5830474    .6626273
+------------------------------------------------------------------------------
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+    Baseline |      289       93157     88000.5
+     Slacker |      319       91979     97135.5
+-------------+---------------------------------
+    Combined |      608      185136      185136
+
+Unadjusted variance  4678693.25
+Adjustment for ties   -1.23e+06
+                     ----------
+Adjusted variance    3451277.16
+
+H0: persua~k(treatm~t==Baseline) = persua~k(treatm~t==Slacker)
+         z =  2.776
+Prob > |z| = 0.0055
+
+Note: Exact p-value is not computed by default for sample sizes > 200.
+      Use option exact to compute it.
+
+  -- Public  vs  Slacker --
+
+Linear regression                               Number of obs     =        579
+                                                F(1, 317)         =      10.03
+                                                Prob > F          =     0.0017
+                                                R-squared         =     0.0109
+                                                Root MSE          =     .49477
+
+                             (Std. err. adjusted for 318 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~k | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   treatment |
+    Slacker  |  -.1044128   .0329678    -3.17   0.002    -.1692762   -.0395495
+       _cons |   .6153846   .0237783    25.88   0.000     .5686013    .6621679
+------------------------------------------------------------------------------
+
+Two-sample Wilcoxon rank-sum (Mann–Whitney) test
+
+   treatment |      Obs    Rank sum    Expected
+-------------+---------------------------------
+      Public |      260       79730       75400
+     Slacker |      319       88180       92510
+-------------+---------------------------------
+    Combined |      579      167910      167910
+
+Unadjusted variance  4008766.67
+Adjustment for ties   -1.04e+06
+                     ----------
+Adjusted variance    2966324.71
+
+H0: persua~k(treatm~t==Public) = persua~k(treatm~t==Slacker)
+         z =  2.514
+Prob > |z| = 0.0119
+
+Note: Exact p-value is not computed by default for sample sizes > 200.
+      Use option exact to compute it.
+
+. 
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " Done."
+ Done.
+
+. display as result "========================================================"
+========================================================
+
+. 
+. *============================================================================
+> ==
+. * SECTION 4 -- OUTCOME TYPE BAR CHART
+. *   Unit of analysis: GROUP (1 row per group).
+. *   Outcomes:
+. *     Baseline / Public : coalition (mutual_*) | zero payoff (disagreement)
+. *     Slacker           : coalition (mutual_*) | slacker (no_dwl_star_*)
+. *                         | zero payoff (disagreement)
+. *   Restriction: group_valid == 1  (already loaded above)
+. *============================================================================
+> ==
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 4. OUTCOME TYPE BAR CHART  (unit = group)"
+ 4. OUTCOME TYPE BAR CHART  (unit = group)
+
+. display as result "========================================================"
+========================================================
+
+. 
+. preserve
+
+.     keep if group_valid == 1
+(0 observations deleted)
+
+.     * ── Collapse to one row per group ──────────────────────────────────────
+.     bysort sessioncode group_id: keep if _n == 1
+(962 observations deleted)
+
+. 
+.     * ── Count groups per treatment for x-axis labels ───────────────────────
+> ──
+.     quietly count if treatment == 1
+
+.     local n_g1 = r(N)
+
+.     quietly count if treatment == 2
+
+.     local n_g2 = r(N)
+
+.     quietly count if treatment == 3
+
+.     local n_g3 = r(N)
+
+. 
+.     * ── Classify each group's outcome into three mutually exclusive types ──
+.     * group_outcome values:
+.     *   mutual_12, mutual_23, mutual_31  → coalition
+.     *   no_dwl_star_1/2/3               → slacker star (Slacker treatment onl
+> y)
+.     *   disagreement                     → zero payoff
+.     generate byte out_coalition = inlist(group_outcome, ///
+>         "mutual_12", "mutual_23", "mutual_31")
+
+.     generate byte out_slacker   = inlist(group_outcome, ///
+>         "no_dwl_star_1", "no_dwl_star_2", "no_dwl_star_3")
+
+.     generate byte out_zeropay   = (group_outcome == "disagreement")
+
+. 
+.     * ── Compute proportions by treatment ───────────────────────────────────
+> ─
+.     * We need one percentage per (treatment × outcome_type) cell.
+.     * collapse to treatment means → each proportion is the group-level share.
+.     collapse (mean) out_coalition out_slacker out_zeropay, by(treatment)
+
+. 
+.     * Convert to percentages
+.     foreach v in out_coalition out_slacker out_zeropay {
+  2.         replace `v' = `v' * 100
+  3.     }
+(3 real changes made)
+(1 real change made)
+(3 real changes made)
+
+. 
+.     * ── Stack for bar chart: reshape to long ───────────────────────────────
+> ─
+.     generate id = _n
+
+.     reshape long out_, i(id treatment) j(outcome_type) string
+(j = coalition slacker zeropay)
+
+Data                               Wide   ->   Long
+-----------------------------------------------------------------------------
+Number of observations                3   ->   9           
+Number of variables                   5   ->   4           
+j variable (3 values)                     ->   outcome_type
+xij variables:
+  out_coalition out_slacker out_zeropay   ->   out_
+-----------------------------------------------------------------------------
+
+. 
+.     * Ordered category: 1=Coalition  2=Zero payoff  3=Slacker star
+.     generate byte out_cat = .
+(9 missing values generated)
+
+.     replace out_cat = 1 if outcome_type == "coalition"
+(3 real changes made)
+
+.     replace out_cat = 2 if outcome_type == "zeropay"
+(3 real changes made)
+
+.     replace out_cat = 3 if outcome_type == "slacker"
+(3 real changes made)
+
+.     label define out_lbl 1 "Coalition" 2 "Zero payoff" 3 "Slacker star", repl
+> ace
+
+.     label values out_cat out_lbl
+
+. 
+.     * ── Treatment labels with N groups (applied after reshape) ─────────────
+> ──
+.     label define trt_lbl 1 `"Baseline (N=`n_g1')"' 2 `"Public (N=`n_g2')"' 3 
+> `"Slacker (N=`n_g3')"', replace
+
+.     label values treatment trt_lbl
+
+. 
+.     * ── Bar chart ──────────────────────────────────────────────────────────
+> ──
+.     graph bar out_,                                          ///
+>         over(out_cat, label(angle(0) labsize(small)))        ///
+>         over(treatment, relabel(1 `"Baseline (N=`n_g1')"' 2 `"Public (N=`n_g2
+> ')"' 3 `"Slacker (N=`n_g3')"') label(labsize(medsmall))) ///
+>         asyvars                                              ///
+>         bargap(10)                                           ///
+>         title("Outcome Type by Treatment", size(medlarge))   ///
+>         ytitle("% of groups")                               ///
+>         ylabel(0(10)100, grid)                               ///
+>         blabel(bar, format(%4.1f) size(small))               ///
+>         bar(1, color(black))                                 ///
+>         bar(2, color(gray))                                  ///
+>         bar(3, color(navy))                                 ///
+>         legend(title("Outcome type", size(small))            ///
+>                order(1 "Coalition" 2 "Zero payoff" 3 "Slacker star") ///
+>                cols(1) size(small))
+
+. 
+.     graph export ///
+>         "C:\Users\Donat\communication_coalition_formation\text_analysis--stat
+> a\fig_outcome_types_by_treatment.png", ///
+>         replace width(1200)
+file
+    C:\Users\Donat\communication_coalition_formation\text_analysis--stata\fig
+    > _outcome_types_by_treatment.png saved as PNG format
+
+. 
+.     display as text " → Saved: fig_outcome_types_by_treatment.png"
+ → Saved: fig_outcome_types_by_treatment.png
+
+. 
+.     * ── Print the underlying proportions ───────────────────────────────────
+.     display as result _newline "--- % by treatment and outcome type ---"
+
+--- % by treatment and outcome type ---
+
+.     list treatment out_cat out_ if out_cat != ., ///
+>         noobs abbrev(20) sepby(treatment)
+
+  +-------------------------------------------+
+  |        treatment        out_cat      out_ |
+  |-------------------------------------------|
+  | Baseline (N=160)      Coalition    95.625 |
+  | Baseline (N=160)   Slacker star         0 |
+  | Baseline (N=160)    Zero payoff     4.375 |
+  |-------------------------------------------|
+  |   Public (N=158)      Coalition   94.3038 |
+  |   Public (N=158)   Slacker star         0 |
+  |   Public (N=158)    Zero payoff    5.6962 |
+  |-------------------------------------------|
+  |  Slacker (N=163)      Coalition   65.0307 |
+  |  Slacker (N=163)   Slacker star   17.1779 |
+  |  Slacker (N=163)    Zero payoff   17.7914 |
+  +-------------------------------------------+
+
+. 
+. restore
+
+. 
+. *============================================================================
+> ==
+. * SECTION 5 -- FISHER EXACT TEST: % ZERO PAYOFF
+. *   Comparison: Baseline (1) vs Public (2) ; Baseline (1) vs Slacker (3)
+. *   Unit: GROUP.  Fisher exact test on 2×2 table (zero_payoff × treatment).
+. *   Restriction: group_valid == 1.
+. *============================================================================
+> ==
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 5. FISHER EXACT TEST: % ZERO PAYOFF  (unit = group)"
+ 5. FISHER EXACT TEST: % ZERO PAYOFF  (unit = group)
+
+. display as result "========================================================"
+========================================================
+
+. 
+. preserve
+
+.     keep if group_valid == 1
+(0 observations deleted)
+
+.     * Collapse to one row per group
+.     bysort sessioncode group_id: keep if _n == 1
+(962 observations deleted)
+
+. 
+.     generate byte zero_payoff = (group_outcome == "disagreement")
+
+. 
+.     display as result _newline "--- Frequencies by treatment ---"
+
+--- Frequencies by treatment ---
+
+.     tabstat zero_payoff, by(treatment) stat(n sum mean) nototal col(stat)
+
+Summary for variables: zero_payoff
+Group variable: treatment 
+
+treatment |         N       Sum      Mean
+----------+------------------------------
+ Baseline |       160         7    .04375
+   Public |       158         9   .056962
+  Slacker |       163        29  .1779141
+-----------------------------------------
+
+. 
+.     display as result _newline "--- Fisher exact test: Baseline vs Public ---
+> "
+
+--- Fisher exact test: Baseline vs Public ---
+
+.     tab zero_payoff treatment if inlist(treatment, 1, 2), row col exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+zero_payof |       treatment
+         f |  Baseline     Public |     Total
+-----------+----------------------+----------
+         0 |       153        149 |       302 
+           |     50.66      49.34 |    100.00 
+           |     95.62      94.30 |     94.97 
+-----------+----------------------+----------
+         1 |         7          9 |        16 
+           |     43.75      56.25 |    100.00 
+           |      4.38       5.70 |      5.03 
+-----------+----------------------+----------
+     Total |       160        158 |       318 
+           |     50.31      49.69 |    100.00 
+           |    100.00     100.00 |    100.00 
+
+           Fisher's exact =                 0.618
+   1-sided Fisher's exact =                 0.389
+
+. 
+.     display as result _newline "--- Fisher exact test: Baseline vs Slacker --
+> -"
+
+--- Fisher exact test: Baseline vs Slacker ---
+
+.     tab zero_payoff treatment if inlist(treatment, 1, 3), row col exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+zero_payof |       treatment
+         f |  Baseline    Slacker |     Total
+-----------+----------------------+----------
+         0 |       153        134 |       287 
+           |     53.31      46.69 |    100.00 
+           |     95.62      82.21 |     88.85 
+-----------+----------------------+----------
+         1 |         7         29 |        36 
+           |     19.44      80.56 |    100.00 
+           |      4.38      17.79 |     11.15 
+-----------+----------------------+----------
+     Total |       160        163 |       323 
+           |     49.54      50.46 |    100.00 
+           |    100.00     100.00 |    100.00 
+
+           Fisher's exact =                 0.000
+   1-sided Fisher's exact =                 0.000
+
+. 
+. restore
+
+. 
+. *============================================================================
+> ==
+. * SECTION 6 -- INDIVIDUAL CHOICE: % SUPPORT NO ONE   BAR CHART
+. *   Unit of analysis: PLAYER (one row per player).
+. *   Outcome: indicator for individual choice == "no_one" (support no one).
+. *============================================================================
+> ==
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 6. INDIVIDUAL CHOICE: % SUPPORT NO ONE  (unit = player)"
+ 6. INDIVIDUAL CHOICE: % SUPPORT NO ONE  (unit = player)
+
+. display as result "========================================================"
+========================================================
+
+. 
+. preserve
+
+.     keep if group_valid == 1
+(0 observations deleted)
+
+. 
+.     * ── Keep one row per player (dataset has 2 rows per player, one per dyad
+> ) ─
+.     bysort sessioncode group_id id_in_group: keep if _n == 1
+(0 observations deleted)
+
+. 
+.     * ── Count players per treatment for x-axis labels ──────────────────────
+> ──
+.     quietly count if treatment == 1
+
+.     local n_p1 = r(N)
+
+.     quietly count if treatment == 2
+
+.     local n_p2 = r(N)
+
+.     quietly count if treatment == 3
+
+.     local n_p3 = r(N)
+
+. 
+.     * ── Binary indicator: 1 if the player's individual choice is "no one" ──
+.     generate byte support_noone = (final_decision == "NoOne")
+
+. 
+.     * ── Descriptives by treatment ─────────────────────────────────────────
+.     display as result _newline "--- Frequencies by treatment ---"
+
+--- Frequencies by treatment ---
+
+.     tabstat support_noone, by(treatment) stat(n sum mean) nototal col(stat)
+
+Summary for variables: support_noone
+Group variable: treatment 
+
+treatment |         N       Sum      Mean
+----------+------------------------------
+ Baseline |       480        32  .0666667
+   Public |       474        73  .1540084
+  Slacker |       489       103  .2106339
+-----------------------------------------
+
+. 
+.     * ── Collapse to one mean (proportion) per treatment ───────────────────
+.     collapse (mean) support_noone, by(treatment)
+
+.     replace support_noone = support_noone * 100
+(3 real changes made)
+
+. 
+.     * ── Treatment labels with N players ────────────────────────────────────
+> ──
+.     label define trt_lbl6 1 `"Baseline (N=`n_p1')"' 2 `"Public (N=`n_p2')"' 3
+>  `"Slacker (N=`n_p3')"', replace
+
+.     label values treatment trt_lbl6
+
+. 
+.     * ── Bar chart ─────────────────────────────────────────────────────────
+.     graph bar support_noone,                                               //
+> /
+>         over(treatment, relabel(1 `"Baseline (N=`n_p1')"' 2 `"Public (N=`n_p2
+> ')"' 3 `"Slacker (N=`n_p3')"') label(labsize(medsmall))) ///
+>         asyvars showyvars                                                  //
+> /
+>         bargap(20)                                                         //
+> /
+>         title("% Support No One by Treatment", size(medlarge))            ///
+>         ytitle("% of players")                                            ///
+>         ylabel(0(10)100, grid)                                             //
+> /
+>         blabel(bar, format(%4.1f) size(small))                            ///
+>         bar(1, color(black))                                               //
+> /
+>         bar(2, color(gray))                                                //
+> /
+>         bar(3, color(dnavy))                                               //
+> /
+>         legend(off)
+(note:  named style dnavy not found in class color, default attributes used)
+(note:  named style dnavy not found in class color, default attributes used)
+
+. 
+.     graph export ///
+>         "C:\Users\Donat\communication_coalition_formation\text_analysis--stat
+> a\fig_support_noone_by_treatment.png", ///
+>         replace width(1200)
+file
+    C:\Users\Donat\communication_coalition_formation\text_analysis--stata\fig
+    > _support_noone_by_treatment.png saved as PNG format
+
+. 
+.     display as text " → Saved: fig_support_noone_by_treatment.png"
+ → Saved: fig_support_noone_by_treatment.png
+
+. 
+. restore
+
+. 
+. *============================================================================
+> ==
+. * SECTION 7 -- FISHER EXACT TEST: % SUPPORT NO ONE
+. *   Comparison: Baseline (1) vs Public (2) ; Baseline (1) vs Slacker (3)
+. *   Unit: PLAYER.  Fisher exact test on 2×2 table (support_noone × treatment)
+> .
+. *============================================================================
+> ==
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 7. FISHER EXACT TEST: % SUPPORT NO ONE  (unit = player)"
+ 7. FISHER EXACT TEST: % SUPPORT NO ONE  (unit = player)
+
+. display as result "========================================================"
+========================================================
+
+. 
+. preserve
+
+.     keep if group_valid == 1
+(0 observations deleted)
+
+. 
+.     * ── Keep one row per player (dataset has 2 rows per player, one per dyad
+> ) ─
+.     bysort sessioncode group_id id_in_group: keep if _n == 1
+(0 observations deleted)
+
+. 
+.     generate byte support_noone = (final_decision == "NoOne")
+
+. 
+.     display as result _newline "--- Frequencies by treatment ---"
+
+--- Frequencies by treatment ---
+
+.     tabstat support_noone, by(treatment) stat(n sum mean) nototal col(stat)
+
+Summary for variables: support_noone
+Group variable: treatment 
+
+treatment |         N       Sum      Mean
+----------+------------------------------
+ Baseline |       480        32  .0666667
+   Public |       474        73  .1540084
+  Slacker |       489       103  .2106339
+-----------------------------------------
+
+. 
+.     display as result _newline "--- Fisher exact test: Baseline vs Public ---
+> "
+
+--- Fisher exact test: Baseline vs Public ---
+
+.     tab support_noone treatment if inlist(treatment, 1, 2), row col exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+support_no |       treatment
+       one |  Baseline     Public |     Total
+-----------+----------------------+----------
+         0 |       448        401 |       849 
+           |     52.77      47.23 |    100.00 
+           |     93.33      84.60 |     88.99 
+-----------+----------------------+----------
+         1 |        32         73 |       105 
+           |     30.48      69.52 |    100.00 
+           |      6.67      15.40 |     11.01 
+-----------+----------------------+----------
+     Total |       480        474 |       954 
+           |     50.31      49.69 |    100.00 
+           |    100.00     100.00 |    100.00 
+
+           Fisher's exact =                 0.000
+   1-sided Fisher's exact =                 0.000
+
+. 
+.     display as result _newline "--- Fisher exact test: Baseline vs Slacker --
+> -"
+
+--- Fisher exact test: Baseline vs Slacker ---
+
+.     tab support_noone treatment if inlist(treatment, 1, 3), row col exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+support_no |       treatment
+       one |  Baseline    Slacker |     Total
+-----------+----------------------+----------
+         0 |       448        386 |       834 
+           |     53.72      46.28 |    100.00 
+           |     93.33      78.94 |     86.07 
+-----------+----------------------+----------
+         1 |        32        103 |       135 
+           |     23.70      76.30 |    100.00 
+           |      6.67      21.06 |     13.93 
+-----------+----------------------+----------
+     Total |       480        489 |       969 
+           |     49.54      50.46 |    100.00 
+           |    100.00     100.00 |    100.00 
+
+           Fisher's exact =                 0.000
+   1-sided Fisher's exact =                 0.000
+
+. 
+. restore
+
+. 
+. *============================================================================
+> ==
+. * SECTION 8 -- SIGNAL TYPE BAR CHART: Honest, Deceptive, Other
+. *   Unit of analysis: PLAYER (1 row per player, signals constant within playe
+> r).
+. *   Classification (3 mutually exclusive categories, 9 total combinations):
+. *     1. Honest:
+. *        - (split_you, split_other) OR (split_other, split_you)
+. *     2. Deceptive:
+. *        - (split_you, split_you)
+. *     3. Other (6 combinations):
+. *        - (support_none, support_none)
+. *        - (support_none, split_you)
+. *        - (support_none, split_other)
+. *        - (split_you, support_none)
+. *        - (split_other, support_none)
+. *        - (split_other, split_other)
+. *============================================================================
+> ==
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 8. SIGNAL TYPE BAR CHART: Honest, Deceptive, Other  (unit
+>  = player)"
+ 8. SIGNAL TYPE BAR CHART: Honest, Deceptive, Other  (unit = player)
+
+. display as result "========================================================"
+========================================================
+
+. 
+. preserve
+
+.     keep if group_valid == 1
+(0 observations deleted)
+
+.     * ── Keep one row per player ────────────────────────────────────────────
+> ──
+.     bysort sessioncode group_id id_in_group: keep if _n == 1
+(0 observations deleted)
+
+. 
+.     * ── Count players per treatment for x-axis labels ──────────────────────
+> ──
+.     quietly count if treatment == 1
+
+.     local n_p1 = r(N)
+
+.     quietly count if treatment == 2
+
+.     local n_p2 = r(N)
+
+.     quietly count if treatment == 3
+
+.     local n_p3 = r(N)
+
+. 
+.     * ── Raw crosstab: inspect all observed (left × right) combinations ─────
+> ──
+.     display as result _newline "--- Raw signal combinations (sendsignal_left 
+> x sendsignal_right) ---"
+
+--- Raw signal combinations (sendsignal_left x sendsignal_right) ---
+
+.     tab sendsignal_left sendsignal_right, miss
+
+send.signal_ |        send.signal_right
+        left | split_o..  split_you  support.. |     Total
+-------------+---------------------------------+----------
+ split_other |        10        433          3 |       446 
+   split_you |       437        364         60 |       861 
+support_none |         1         71         64 |       136 
+-------------+---------------------------------+----------
+       Total |       448        868        127 |     1,443 
+
+. 
+.     * ── Classify signal type (3 categories: Honest, Deceptive, Other) ──────
+> ──
+.     generate byte sig_honest    = ///
+>         (sendsignal_left == "split_you"   & sendsignal_right == "split_other"
+> ) | ///
+>         (sendsignal_left == "split_other" & sendsignal_right == "split_you")
+
+. 
+.     generate byte sig_deceptive = ///
+>         (sendsignal_left == "split_you"   & sendsignal_right == "split_you")
+
+. 
+.     generate byte sig_other     = ///
+>         (inlist(sendsignal_left, "support_none", "supportNone") & inlist(send
+> signal_right, "support_none", "supportNone")) | ///
+>         (inlist(sendsignal_left, "support_none", "supportNone") & sendsignal_
+> right == "split_you")                         | ///
+>         (inlist(sendsignal_left, "support_none", "supportNone") & sendsignal_
+> right == "split_other")                       | ///
+>         (sendsignal_left == "split_you"   & inlist(sendsignal_right, "support
+> _none", "supportNone"))                         | ///
+>         (sendsignal_left == "split_other" & inlist(sendsignal_right, "support
+> _none", "supportNone"))                         | ///
+>         (sendsignal_left == "split_other" & sendsignal_right == "split_other"
+> )
+
+. 
+.     * Sanity check: every player in exactly one category (all 9 combos covere
+> d)
+.     assert sig_honest + sig_deceptive + sig_other == 1
+
+. 
+.     * ── Descriptives by treatment ──────────────────────────────────────────
+> ──
+.     display as result _newline "--- Frequencies by treatment ---"
+
+--- Frequencies by treatment ---
+
+.     tabstat sig_honest sig_deceptive sig_other, ///
+>         by(treatment) stat(n sum mean) nototal col(stat)
+
+Summary for variables: sig_honest sig_deceptive sig_other
+Group variable: treatment 
+
+treatment |         N       Sum      Mean
+----------+------------------------------
+ Baseline |       480       287  .5979167
+          |       480       132      .275
+          |       480        61  .1270833
+----------+------------------------------
+   Public |       474       346  .7299578
+          |       474        73  .1540084
+          |       474        55  .1160338
+----------+------------------------------
+  Slacker |       489       237  .4846626
+          |       489       159  .3251534
+          |       489        93   .190184
+-----------------------------------------
+
+. 
+.     * ── Collapse to proportions per treatment ──────────────────────────────
+> ──
+.     collapse (mean) sig_honest sig_deceptive sig_other, by(treatment)
+
+.     foreach v in sig_honest sig_deceptive sig_other {
+  2.         replace `v' = `v' * 100
+  3.     }
+(3 real changes made)
+(3 real changes made)
+(3 real changes made)
+
+. 
+.     * ── Reshape to long for grouped bar chart ──────────────────────────────
+> ──
+.     generate id = _n
+
+.     reshape long sig_, i(id treatment) j(sig_type) string
+(j = deceptive honest other)
+
+Data                               Wide   ->   Long
+-----------------------------------------------------------------------------
+Number of observations                3   ->   9           
+Number of variables                   5   ->   4           
+j variable (3 values)                     ->   sig_type
+xij variables:
+     sig_deceptive sig_honest sig_other   ->   sig_
+-----------------------------------------------------------------------------
+
+. 
+.     generate byte sig_cat = .
+(9 missing values generated)
+
+.     replace sig_cat = 1 if sig_type == "honest"
+(3 real changes made)
+
+.     replace sig_cat = 2 if sig_type == "deceptive"
+(3 real changes made)
+
+.     replace sig_cat = 3 if sig_type == "other"
+(3 real changes made)
+
+.     label define sig_lbl 1 "Honest" 2 "Deceptive" 3 "Other", replace
+
+.     label values sig_cat sig_lbl
+
+. 
+.     * ── Treatment labels with N players (applied after reshape) ────────────
+> ──
+.     label define trt_lbl8 1 `"Baseline (N=`n_p1')"' 2 `"Public (N=`n_p2')"' 3
+>  `"Slacker (N=`n_p3')"', replace
+
+.     label values treatment trt_lbl8
+
+. 
+.     * ── Bar chart: 3 clusters (one per treatment), 3 bars per cluster ──────
+> ──
+.     graph bar sig_,                                                          
+>  ///
+>         over(sig_cat, label(angle(0) labsize(small)))                        
+>  ///
+>         over(treatment, relabel(1 `"Baseline (N=`n_p1')"' 2 `"Public (N=`n_p2
+> ')"' 3 `"Slacker (N=`n_p3')"') label(labsize(medsmall))) ///
+>         asyvars                                                              
+>  ///
+>         bargap(10)                                                           
+>  ///
+>         title("Signal Type by Treatment", size(medlarge))                    
+> ///
+>         ytitle("% of players")                                               
+> ///
+>         ylabel(0(10)100, grid)                                               
+>  ///
+>         blabel(bar, format(%4.1f) size(small))                               
+> ///
+>         bar(1, color(black))                                                 
+> ///
+>         bar(2, color(gray))                                                  
+> ///
+>         bar(3, color(dnavy))                                                 
+> ///
+>         legend(title("Signal type", size(small))                             
+> ///
+>                order(1 "Honest" 2 "Deceptive" 3 "Other")                    /
+> //
+>                cols(1) size(small))
+(note:  named style dnavy not found in class color, default attributes used)
+(note:  named style dnavy not found in class color, default attributes used)
+
+. 
+.     graph export ///
+>         "C:\Users\Donat\communication_coalition_formation\text_analysis--stat
+> a\fig_signal_type_by_treatment.png", ///
+>         replace width(1200)
+(file
+    C:\Users\Donat\communication_coalition_formation\text_analysis--stata\fig
+    > _signal_type_by_treatment.png not found)
+file
+    C:\Users\Donat\communication_coalition_formation\text_analysis--stata\fig
+    > _signal_type_by_treatment.png saved as PNG format
+
+. 
+.     display as text " → Saved: fig_signal_type_by_treatment.png"
+ → Saved: fig_signal_type_by_treatment.png
+
+. 
+. restore
+
+. 
+. *============================================================================
+> ==
+. * SECTION 8b -- SIGNAL TYPE BAR CHART: Honest (incl. No One to both)
+. *   Alternative specification:
+. *     1. Honest (broad):
+. *        - (split_you, split_other) OR (split_other, split_you)
+. *        - PLUS (support_none, support_none) → truthful commitment to no one
+. *     2. Deceptive:
+. *        - (split_you, split_you)
+. *     3. Other (remaining 5 combinations):
+. *        - (support_none, split_you)
+. *        - (support_none, split_other)
+. *        - (split_you, support_none)
+. *        - (split_other, support_none)
+. *        - (split_other, split_other)
+. *============================================================================
+> ==
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 8b. SIGNAL TYPE BAR CHART: Honest incl. No One to both (u
+> nit = player)"
+ 8b. SIGNAL TYPE BAR CHART: Honest incl. No One to both (unit = player)
+
+. display as result "========================================================"
+========================================================
+
+. 
+. preserve
+
+.     keep if group_valid == 1
+(0 observations deleted)
+
+.     * ── Keep one row per player ────────────────────────────────────────────
+> ──
+.     bysort sessioncode group_id id_in_group: keep if _n == 1
+(0 observations deleted)
+
+. 
+.     * ── Count players per treatment for x-axis labels ──────────────────────
+> ──
+.     quietly count if treatment == 1
+
+.     local n_p1 = r(N)
+
+.     quietly count if treatment == 2
+
+.     local n_p2 = r(N)
+
+.     quietly count if treatment == 3
+
+.     local n_p3 = r(N)
+
+. 
+.     * ── Classify signal type (Honest includes support_none to both) ────────
+> ───
+.     generate byte sig_honest_broad = ///
+>         (sendsignal_left == "split_you"   & sendsignal_right == "split_other"
+> ) | ///
+>         (sendsignal_left == "split_other" & sendsignal_right == "split_you") 
+>   | ///
+>         (inlist(sendsignal_left, "support_none", "supportNone") & inlist(send
+> signal_right, "support_none", "supportNone"))
+
+. 
+.     generate byte sig_deceptive = ///
+>         (sendsignal_left == "split_you"   & sendsignal_right == "split_you")
+
+. 
+.     generate byte sig_other_broad = ///
+>         (inlist(sendsignal_left, "support_none", "supportNone") & sendsignal_
+> right == "split_you")   | ///
+>         (inlist(sendsignal_left, "support_none", "supportNone") & sendsignal_
+> right == "split_other") | ///
+>         (sendsignal_left == "split_you"   & inlist(sendsignal_right, "support
+> _none", "supportNone"))   | ///
+>         (sendsignal_left == "split_other" & inlist(sendsignal_right, "support
+> _none", "supportNone"))   | ///
+>         (sendsignal_left == "split_other" & sendsignal_right == "split_other"
+> )
+
+. 
+.     * Sanity check: all 9 combos covered
+.     assert sig_honest_broad + sig_deceptive + sig_other_broad == 1
+
+. 
+.     * ── Descriptives by treatment ──────────────────────────────────────────
+> ──
+.     display as result _newline "--- Frequencies by treatment (Honest incl. No
+>  One to both) ---"
+
+--- Frequencies by treatment (Honest incl. No One to both) ---
+
+.     tabstat sig_honest_broad sig_deceptive sig_other_broad, ///
+>         by(treatment) stat(n sum mean) nototal col(stat)
+
+Summary for variables: sig_honest_broad sig_deceptive sig_other_broad
+Group variable: treatment 
+
+treatment |         N       Sum      Mean
+----------+------------------------------
+ Baseline |       480       303    .63125
+          |       480       132      .275
+          |       480        45    .09375
+----------+------------------------------
+   Public |       474       369   .778481
+          |       474        73  .1540084
+          |       474        32  .0675105
+----------+------------------------------
+  Slacker |       489       262  .5357873
+          |       489       159  .3251534
+          |       489        68  .1390593
+-----------------------------------------
+
+. 
+.     * ── Collapse to proportions per treatment ──────────────────────────────
+> ──
+.     collapse (mean) sig_honest_broad sig_deceptive sig_other_broad, by(treatm
+> ent)
+
+.     foreach v in sig_honest_broad sig_deceptive sig_other_broad {
+  2.         replace `v' = `v' * 100
+  3.     }
+(3 real changes made)
+(3 real changes made)
+(3 real changes made)
+
+. 
+.     * ── Reshape to long for grouped bar chart ──────────────────────────────
+> ──
+.     generate id = _n
+
+.     reshape long sig_, i(id treatment) j(sig_type) string
+(j = deceptive honest_broad other_broad)
+
+Data                               Wide   ->   Long
+-----------------------------------------------------------------------------
+Number of observations                3   ->   9           
+Number of variables                   5   ->   4           
+j variable (3 values)                     ->   sig_type
+xij variables:
+sig_deceptive sig_honest_broad sig_other_broad->sig_
+-----------------------------------------------------------------------------
+
+. 
+.     generate byte sig_cat = .
+(9 missing values generated)
+
+.     replace sig_cat = 1 if sig_type == "honest_broad"
+(3 real changes made)
+
+.     replace sig_cat = 2 if sig_type == "deceptive"
+(3 real changes made)
+
+.     replace sig_cat = 3 if sig_type == "other_broad"
+(3 real changes made)
+
+.     label define sig_lbl_b 1 "Honest (incl. No One)" 2 "Deceptive" 3 "Other",
+>  replace
+
+.     label values sig_cat sig_lbl_b
+
+. 
+.     * ── Treatment labels with N players (applied after reshape) ────────────
+> ──
+.     label define trt_lbl8b 1 `"Baseline (N=`n_p1')"' 2 `"Public (N=`n_p2')"' 
+> 3 `"Slacker (N=`n_p3')"', replace
+
+.     label values treatment trt_lbl8b
+
+. 
+.     * ── Bar chart: 3 clusters (one per treatment), 3 bars per cluster ──────
+> ──
+.     graph bar sig_,                                                          
+>  ///
+>         over(sig_cat, label(angle(0) labsize(small)))                        
+>  ///
+>         over(treatment, relabel(1 `"Baseline (N=`n_p1')"' 2 `"Public (N=`n_p2
+> ')"' 3 `"Slacker (N=`n_p3')"') label(labsize(medsmall))) ///
+>         asyvars                                                              
+>  ///
+>         bargap(10)                                                           
+>  ///
+>         title("Signal Type by Treatment (Honest incl. No One to Both)", size(
+> medlarge)) ///
+>         ytitle("% of players")                                               
+> ///
+>         ylabel(0(10)100, grid)                                               
+>  ///
+>         blabel(bar, format(%4.1f) size(small))                               
+> ///
+>         bar(1, color(black))                                                 
+> ///
+>         bar(2, color(gray))                                                  
+> ///
+>         bar(3, color(dnavy))                                                 
+> ///
+>         legend(title("Signal type", size(small))                             
+> ///
+>                order(1 "Honest (incl. No One)" 2 "Deceptive" 3 "Other")     /
+> //
+>                cols(1) size(small))
+(note:  named style dnavy not found in class color, default attributes used)
+(note:  named style dnavy not found in class color, default attributes used)
+
+. 
+.     graph export ///
+>         "C:\Users\Donat\communication_coalition_formation\text_analysis--stat
+> a\fig_signal_type_broad_by_treatment.png", ///
+>         replace width(1200)
+(file
+    C:\Users\Donat\communication_coalition_formation\text_analysis--stata\fig
+    > _signal_type_broad_by_treatment.png not found)
+file
+    C:\Users\Donat\communication_coalition_formation\text_analysis--stata\fig
+    > _signal_type_broad_by_treatment.png saved as PNG format
+
+. 
+.     display as text " → Saved: fig_signal_type_broad_by_treatment.png"
+ → Saved: fig_signal_type_broad_by_treatment.png
+
+. 
+. restore
+
+. 
+. *============================================================================
+> ==
+. * SECTION 9 -- FISHER EXACT TESTS: SIGNAL TYPES
+. *   Comparison: Baseline (1) vs Public (2) ; Baseline (1) vs Slacker (3)
+. *   Unit: PLAYER (1 row per player).  Fisher exact on 2×2 tables.
+. *   Tests:
+. *     1. % Honest (standard: split_you + split_other)
+. *     2. % Honest broad (includes support_none to both)
+. *     3. % Deceptive (split_you + split_you)
+. *     4. % Other
+. *============================================================================
+> ==
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 9. FISHER EXACT TESTS: SIGNAL TYPES  (unit = player)"
+ 9. FISHER EXACT TESTS: SIGNAL TYPES  (unit = player)
+
+. display as result "========================================================"
+========================================================
+
+. 
+. preserve
+
+.     keep if group_valid == 1
+(0 observations deleted)
+
+.     bysort sessioncode group_id id_in_group: keep if _n == 1
+(0 observations deleted)
+
+. 
+.     * ── Signal type indicators ─────────────────────────────────────────────
+> ──
+.     generate byte sig_honest = ///
+>         (sendsignal_left == "split_you"   & sendsignal_right == "split_other"
+> ) | ///
+>         (sendsignal_left == "split_other" & sendsignal_right == "split_you")
+
+. 
+.     generate byte sig_honest_broad = ///
+>         (sendsignal_left == "split_you"   & sendsignal_right == "split_other"
+> ) | ///
+>         (sendsignal_left == "split_other" & sendsignal_right == "split_you") 
+>   | ///
+>         (inlist(sendsignal_left, "support_none", "supportNone") & inlist(send
+> signal_right, "support_none", "supportNone"))
+
+. 
+.     generate byte sig_deceptive = ///
+>         (sendsignal_left == "split_you"   & sendsignal_right == "split_you")
+
+. 
+.     generate byte sig_other = ///
+>         (sig_honest == 0 & sig_deceptive == 0)
+
+. 
+.     * ── Frequencies ────────────────────────────────────────────────────────
+> ──
+.     display as result _newline "--- Frequencies by treatment ---"
+
+--- Frequencies by treatment ---
+
+.     tabstat sig_honest sig_honest_broad sig_deceptive sig_other, ///
+>         by(treatment) stat(n sum mean) nototal col(stat)
+
+Summary for variables: sig_honest sig_honest_broad sig_deceptive sig_other
+Group variable: treatment 
+
+treatment |         N       Sum      Mean
+----------+------------------------------
+ Baseline |       480       287  .5979167
+          |       480       303    .63125
+          |       480       132      .275
+          |       480        61  .1270833
+----------+------------------------------
+   Public |       474       346  .7299578
+          |       474       369   .778481
+          |       474        73  .1540084
+          |       474        55  .1160338
+----------+------------------------------
+  Slacker |       489       237  .4846626
+          |       489       262  .5357873
+          |       489       159  .3251534
+          |       489        93   .190184
+-----------------------------------------
+
+. 
+.     * ── Fisher exact: % HONEST (standard) ──────────────────────────────────
+> ──
+.     display as result _newline "--- Fisher exact (Honest standard): Baseline 
+> vs Public ---"
+
+--- Fisher exact (Honest standard): Baseline vs Public ---
+
+.     tab sig_honest treatment if inlist(treatment, 1, 2), row col exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+           |       treatment
+sig_honest |  Baseline     Public |     Total
+-----------+----------------------+----------
+         0 |       193        128 |       321 
+           |     60.12      39.88 |    100.00 
+           |     40.21      27.00 |     33.65 
+-----------+----------------------+----------
+         1 |       287        346 |       633 
+           |     45.34      54.66 |    100.00 
+           |     59.79      73.00 |     66.35 
+-----------+----------------------+----------
+     Total |       480        474 |       954 
+           |     50.31      49.69 |    100.00 
+           |    100.00     100.00 |    100.00 
+
+           Fisher's exact =                 0.000
+   1-sided Fisher's exact =                 0.000
+
+. 
+.     display as result _newline "--- Fisher exact (Honest standard): Baseline 
+> vs Slacker ---"
+
+--- Fisher exact (Honest standard): Baseline vs Slacker ---
+
+.     tab sig_honest treatment if inlist(treatment, 1, 3), row col exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+           |       treatment
+sig_honest |  Baseline    Slacker |     Total
+-----------+----------------------+----------
+         0 |       193        252 |       445 
+           |     43.37      56.63 |    100.00 
+           |     40.21      51.53 |     45.92 
+-----------+----------------------+----------
+         1 |       287        237 |       524 
+           |     54.77      45.23 |    100.00 
+           |     59.79      48.47 |     54.08 
+-----------+----------------------+----------
+     Total |       480        489 |       969 
+           |     49.54      50.46 |    100.00 
+           |    100.00     100.00 |    100.00 
+
+           Fisher's exact =                 0.000
+   1-sided Fisher's exact =                 0.000
+
+. 
+.     * ── Fisher exact: % HONEST BROAD (incl. No One to both) ────────────────
+> ──
+.     display as result _newline "--- Fisher exact (Honest broad): Baseline vs 
+> Public ---"
+
+--- Fisher exact (Honest broad): Baseline vs Public ---
+
+.     tab sig_honest_broad treatment if inlist(treatment, 1, 2), row col exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+sig_honest |       treatment
+    _broad |  Baseline     Public |     Total
+-----------+----------------------+----------
+         0 |       177        105 |       282 
+           |     62.77      37.23 |    100.00 
+           |     36.88      22.15 |     29.56 
+-----------+----------------------+----------
+         1 |       303        369 |       672 
+           |     45.09      54.91 |    100.00 
+           |     63.12      77.85 |     70.44 
+-----------+----------------------+----------
+     Total |       480        474 |       954 
+           |     50.31      49.69 |    100.00 
+           |    100.00     100.00 |    100.00 
+
+           Fisher's exact =                 0.000
+   1-sided Fisher's exact =                 0.000
+
+. 
+.     display as result _newline "--- Fisher exact (Honest broad): Baseline vs 
+> Slacker ---"
+
+--- Fisher exact (Honest broad): Baseline vs Slacker ---
+
+.     tab sig_honest_broad treatment if inlist(treatment, 1, 3), row col exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+sig_honest |       treatment
+    _broad |  Baseline    Slacker |     Total
+-----------+----------------------+----------
+         0 |       177        227 |       404 
+           |     43.81      56.19 |    100.00 
+           |     36.88      46.42 |     41.69 
+-----------+----------------------+----------
+         1 |       303        262 |       565 
+           |     53.63      46.37 |    100.00 
+           |     63.12      53.58 |     58.31 
+-----------+----------------------+----------
+     Total |       480        489 |       969 
+           |     49.54      50.46 |    100.00 
+           |    100.00     100.00 |    100.00 
+
+           Fisher's exact =                 0.003
+   1-sided Fisher's exact =                 0.002
+
+. 
+.     * ── Fisher exact: % DECEPTIVE ──────────────────────────────────────────
+> ──
+.     display as result _newline "--- Fisher exact (Deceptive): Baseline vs Pub
+> lic ---"
+
+--- Fisher exact (Deceptive): Baseline vs Public ---
+
+.     tab sig_deceptive treatment if inlist(treatment, 1, 2), row col exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+sig_decept |       treatment
+       ive |  Baseline     Public |     Total
+-----------+----------------------+----------
+         0 |       348        401 |       749 
+           |     46.46      53.54 |    100.00 
+           |     72.50      84.60 |     78.51 
+-----------+----------------------+----------
+         1 |       132         73 |       205 
+           |     64.39      35.61 |    100.00 
+           |     27.50      15.40 |     21.49 
+-----------+----------------------+----------
+     Total |       480        474 |       954 
+           |     50.31      49.69 |    100.00 
+           |    100.00     100.00 |    100.00 
+
+           Fisher's exact =                 0.000
+   1-sided Fisher's exact =                 0.000
+
+. 
+.     display as result _newline "--- Fisher exact (Deceptive): Baseline vs Sla
+> cker ---"
+
+--- Fisher exact (Deceptive): Baseline vs Slacker ---
+
+.     tab sig_deceptive treatment if inlist(treatment, 1, 3), row col exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+sig_decept |       treatment
+       ive |  Baseline    Slacker |     Total
+-----------+----------------------+----------
+         0 |       348        330 |       678 
+           |     51.33      48.67 |    100.00 
+           |     72.50      67.48 |     69.97 
+-----------+----------------------+----------
+         1 |       132        159 |       291 
+           |     45.36      54.64 |    100.00 
+           |     27.50      32.52 |     30.03 
+-----------+----------------------+----------
+     Total |       480        489 |       969 
+           |     49.54      50.46 |    100.00 
+           |    100.00     100.00 |    100.00 
+
+           Fisher's exact =                 0.093
+   1-sided Fisher's exact =                 0.051
+
+. 
+.     * ── Fisher exact: % OTHER ──────────────────────────────────────────────
+> ──
+.     display as result _newline "--- Fisher exact (Other): Baseline vs Public 
+> ---"
+
+--- Fisher exact (Other): Baseline vs Public ---
+
+.     tab sig_other treatment if inlist(treatment, 1, 2), row col exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+           |       treatment
+ sig_other |  Baseline     Public |     Total
+-----------+----------------------+----------
+         0 |       419        419 |       838 
+           |     50.00      50.00 |    100.00 
+           |     87.29      88.40 |     87.84 
+-----------+----------------------+----------
+         1 |        61         55 |       116 
+           |     52.59      47.41 |    100.00 
+           |     12.71      11.60 |     12.16 
+-----------+----------------------+----------
+     Total |       480        474 |       954 
+           |     50.31      49.69 |    100.00 
+           |    100.00     100.00 |    100.00 
+
+           Fisher's exact =                 0.621
+   1-sided Fisher's exact =                 0.336
+
+. 
+.     display as result _newline "--- Fisher exact (Other): Baseline vs Slacker
+>  ---"
+
+--- Fisher exact (Other): Baseline vs Slacker ---
+
+.     tab sig_other treatment if inlist(treatment, 1, 3), row col exact
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+           |       treatment
+ sig_other |  Baseline    Slacker |     Total
+-----------+----------------------+----------
+         0 |       419        396 |       815 
+           |     51.41      48.59 |    100.00 
+           |     87.29      80.98 |     84.11 
+-----------+----------------------+----------
+         1 |        61         93 |       154 
+           |     39.61      60.39 |    100.00 
+           |     12.71      19.02 |     15.89 
+-----------+----------------------+----------
+     Total |       480        489 |       969 
+           |     49.54      50.46 |    100.00 
+           |    100.00     100.00 |    100.00 
+
+           Fisher's exact =                 0.008
+   1-sided Fisher's exact =                 0.005
+
+. 
+. restore
+
+. 
+. *============================================================================
+> ==
+. * SECTION 10 -- CHOICE-SIGNAL FULL CONSISTENCY BAR CHART
+. *   Unit of analysis: PLAYER (1 row per player).
+. *   Outcome: indicator for full consistency (CC_i == 1), meaning player's fin
+> al
+. *            choice is consistent with messages sent to BOTH partners.
+. *============================================================================
+> ==
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 10. FULL CONSISTENCY BAR CHART (CC_i == 1)  (unit = playe
+> r)"
+ 10. FULL CONSISTENCY BAR CHART (CC_i == 1)  (unit = player)
+
+. display as result "========================================================"
+========================================================
+
+. 
+. preserve
+
+.     keep if group_valid == 1
+(0 observations deleted)
+
+. 
+.     * ── Keep one row per player (dataset has 2 rows per player, one per dyad
+> ) ─
+.     bysort sessioncode group_id id_in_group: keep if _n == 1
+(0 observations deleted)
+
+. 
+.     * ── Count players per treatment for x-axis labels ──────────────────────
+> ──
+.     quietly count if treatment == 1 & !missing(CC_i)
+
+.     local n_p1 = r(N)
+
+.     quietly count if treatment == 2 & !missing(CC_i)
+
+.     local n_p2 = r(N)
+
+.     quietly count if treatment == 3 & !missing(CC_i)
+
+.     local n_p3 = r(N)
+
+. 
+.     * ── Binary indicator: 1 if choice is fully consistent with both messages
+>  ──
+.     generate byte full_consistency = (CC_i == 1) if !missing(CC_i)
+
+. 
+.     * ── Descriptives by treatment ──────────────────────────────────────────
+> ──
+.     display as result _newline "--- Frequencies by treatment ---"
+
+--- Frequencies by treatment ---
+
+.     tabstat full_consistency, by(treatment) stat(n sum mean) nototal col(stat
+> )
+
+Summary for variables: full_consistency
+Group variable: treatment 
+
+treatment |         N       Sum      Mean
+----------+------------------------------
+ Baseline |       480       289  .6020833
+   Public |       474       320  .6751055
+  Slacker |       489       239  .4887526
+-----------------------------------------
+
+. 
+.     * ── Collapse to one mean (proportion) per treatment ────────────────────
+> ──
+.     collapse (mean) full_consistency, by(treatment)
+
+.     replace full_consistency = full_consistency * 100
+(3 real changes made)
+
+. 
+.     * ── Treatment labels with N players ────────────────────────────────────
+> ──
+.     label define trt_lbl10 1 `"Baseline (N=`n_p1')"' 2 `"Public (N=`n_p2')"' 
+> 3 `"Slacker (N=`n_p3')"', replace
+
+.     label values treatment trt_lbl10
+
+. 
+.     * ── Bar chart ──────────────────────────────────────────────────────────
+> ──
+.     graph bar full_consistency,                                            //
+> /
+>         over(treatment, relabel(1 `"Baseline (N=`n_p1')"' 2 `"Public (N=`n_p2
+> ')"' 3 `"Slacker (N=`n_p3')"') label(labsize(medsmall))) ///
+>         asyvars showyvars                                                  //
+> /
+>         bargap(20)                                                         //
+> /
+>         title("% Fully Consistent Choices with Messages by Treatment", size(m
+> edlarge)) ///
+>         subtitle("Final choice is consistent with messages sent to both partn
+> ers", size(small)) ///
+>         ytitle("% of players")                                             //
+> /
+>         ylabel(0(10)100, grid)                                             //
+> /
+>         blabel(bar, format(%4.1f) size(small))                             //
+> /
+>         bar(1, color(black))                                               //
+> /
+>         bar(2, color(gray))                                                //
+> /
+>         bar(3, color(dnavy))                                               //
+> /
+>         legend(off)

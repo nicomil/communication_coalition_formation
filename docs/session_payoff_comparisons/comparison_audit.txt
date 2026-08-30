@@ -1,0 +1,17 @@
+Session payoff comparison audit
+
+Input filter: participant._current_page_name == FinalResults
+Sessions: yv2jggqe, wvbg5of9, lz09lc4v
+Seed: 20260820
+
+yv2jggqe: eligible=18, groups=9, sizes=[2, 2, 2, 2, 2, 2, 2, 2, 2], output=docs\session_payoff_comparisons\yv2jggqe_comparison.txt
+yv2jggqe: unique_ids=18, paired_ids=18, exact_coverage=True
+wvbg5of9: eligible=17, groups=8, sizes=[2, 2, 2, 2, 2, 2, 2, 3], output=docs\session_payoff_comparisons\wvbg5of9_comparison.txt
+wvbg5of9: unique_ids=17, paired_ids=17, exact_coverage=True
+lz09lc4v: eligible=18, groups=9, sizes=[2, 2, 2, 2, 2, 2, 2, 2, 2], output=docs\session_payoff_comparisons\lz09lc4v_comparison.txt
+lz09lc4v: unique_ids=18, paired_ids=18, exact_coverage=True
+
+Validation failures:
+NONE
+
+PASS

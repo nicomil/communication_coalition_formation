@@ -1,0 +1,105 @@
+\ProvidesPackage{TorVergataBeamerStyle}[2025/10/15 Beamer style – Tor Vergata official colors]
+
+\mode<presentation>
+
+\newif\ifbeamer@secheader
+\beamer@secheaderfalse
+\ProcessOptionsBeamer
+
+% === Outer/Inner themes (come nel file originale) ===
+\useoutertheme[footline=authorinstitutetitle,subsection=false]{smoothbars}
+\useinnertheme{circles}
+
+\makeatletter
+\newcommand{\frameofframes}{/}
+\newcommand{\setframeofframes}[1]{\renewcommand{\frameofframes}{#1}}
+\makeatother
+
+% === Colori ufficiali e accessori (dal Manuale di Identità Visiva) ===
+% Colore istituzionale Ateneo
+\xdefinecolor{TorVergataGreen}{RGB}{0,125,52}   % HEX #007D34
+
+% Declinazioni consentite per il sigillo: verde / bianco / nero
+\definecolor{TVWhite}{RGB}{255,255,255}         % HEX #FFFFFF
+\definecolor{TVBlack}{RGB}{0,0,0}               % HEX #000000
+
+% Colori accessori consigliati dal Manuale (per grafica / sfondi leggeri)
+\xdefinecolor{TVGreyGraphic}{RGB}{127,127,127}  % HEX #7F7F7F
+\xdefinecolor{TVGreenGraphic}{RGB}{212,227,211} % HEX #D4E3D3
+
+% === Palette Beamer ===
+% Barra inferiore e titoli su colore istituzionale
+\setbeamercolor{footline}{bg=TorVergataGreen, fg=TVWhite}
+\setbeamercolor{frametitle}{bg=TorVergataGreen, fg=TVWhite}
+\setbeamercolor{title}{bg=TorVergataGreen, fg=TVWhite}
+\setbeamerfont{frametitle}{size=\large}
+
+% Bande del foot personalizzate (autore/titolo/data/paginazione)
+\setbeamercolor{section in foot}{fg=TVWhite, bg=TorVergataGreen}
+\setbeamercolor{subsection in foot}{fg=TorVergataGreen, bg=TVGreenGraphic}
+
+% Struttura (punti elenco, evidenziazioni, link interni)
+\setbeamercolor{structure}{fg=TorVergataGreen}
+
+% Palette superiore (se usata dall'outertheme)
+\setbeamercolor{palette primary}{use=structure, fg=TVWhite, bg=structure.fg}
+\setbeamercolor{palette secondary}{use=structure, fg=TVWhite, bg=structure.fg!75!black}
+\setbeamercolor{palette tertiary}{use=structure, fg=TVWhite, bg=structure.fg!50!black}
+\setbeamercolor{palette quaternary}{fg=TVWhite, bg=structure.fg!50!black}
+\setbeamercolor{titlelike}{parent=palette primary}
+
+% Blocchi
+\setbeamercolor{block title}{bg=TorVergataGreen, fg=TVWhite}
+\setbeamercolor*{block title example}{use={normal text,example text}, bg=TVWhite, fg=TorVergataGreen}
+\setbeamercolor{block body}{bg=TVWhite}
+\setbeamercolor{block body example}{bg=TVWhite}
+
+% Sidebar (se attivata da un outertheme laterale)
+\setbeamercolor{sidebar}{bg=TorVergataGreen}
+\setbeamercolor{palette sidebar primary}{use=normal text, fg=normal text.fg}
+\setbeamercolor{palette sidebar secondary}{use=structure, fg=structure.fg}
+\setbeamercolor{palette sidebar tertiary}{use=normal text, fg=normal text.fg}
+\setbeamercolor{palette sidebar quaternary}{use=structure, fg=structure.fg}
+\setbeamercolor{section in sidebar}{fg=TorVergataGreen}
+\setbeamercolor{section in sidebar shaded}{fg=TVGreyGraphic}
+\setbeamercolor{subsection in sidebar}{fg=TorVergataGreen}
+\setbeamercolor{subsection in sidebar shaded}{fg=TVGreyGraphic}
+
+% Elementi vari
+\setbeamercolor{item projected}{fg=TVWhite, bg=TorVergataGreen}
+\setbeamercolor{fine separation line}{}
+\setbeamertemplate{bibliography item}[text]
+\setbeamertemplate{caption}[numbered]
+
+% === Footline personalizzato (come nel tuo file originale) ===
+\makeatletter
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=.3\paperwidth,ht=2.25ex,dp=1ex,center]{section in foot}%
+      \usebeamerfont{author in head/foot}\insertshortauthor~~
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.4\paperwidth,ht=2.25ex,dp=1ex,center]{subsection in foot}%
+      \usebeamerfont{title in head/foot}\insertshorttitle
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.3\paperwidth,ht=2.25ex,dp=1ex,right]{section in foot}%
+      \today \hspace*{12ex} \insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
+    \end{beamercolorbox}%
+  }%
+  \vskip0pt%
+}
+\makeatother
+
+% === Sommario automatico a inizio sezione/sottosezione (come nel file originale) ===
+\AtBeginSection[]{
+  \begin{frame}
+    \tableofcontents[sectionstyle=show/shaded,subsectionstyle=show/shaded/hide,subsubsectionstyle=show/shaded/hide]
+  \end{frame}
+}
+\AtBeginSubsection[]{
+  \begin{frame}
+    \tableofcontents[sectionstyle=show/shaded,subsectionstyle=show/shaded/hide,subsubsectionstyle=show/shaded/hide]
+  \end{frame}
+}
+
+\mode<all>

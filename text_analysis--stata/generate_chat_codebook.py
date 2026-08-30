@@ -154,7 +154,9 @@ DESCRIPTIONS = {
     "chat_first_timestamp": "Timestamp Unix del primo messaggio nell’unità di conversazione.",
     "chat_last_timestamp": "Timestamp Unix dell’ultimo messaggio nell’unità di conversazione.",
     "chat_transcript_group": "Array JSON ordinato cronologicamente con tutti i messaggi della triade.",
-    "chat_transcript": "Array JSON ordinato cronologicamente con tutti i messaggi della diade.",
+    "chat_transcript": "Array JSON ordinato cronologicamente contenente esclusivamente i messaggi inviati dal focal player al partner della riga.",
+    "number_of_messages": "Numero di messaggi inviati dal focal player al partner della riga; coincide con il numero di elementi di chat_transcript.",
+    "number_of_words": "Numero di token Unicode separati da spazi nei body dei messaggi inviati dal focal player al partner della riga.",
 }
 
 

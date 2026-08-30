@@ -1,0 +1,711 @@
+
+  ___  ____  ____  ____  ____ ®
+ /__    /   ____/   /   ____/      StataNow 19.5
+___/   /   /___/   /   /___/       MP—Parallel Edition
+
+ Statistics and Data Science       Copyright 1985-2025 StataCorp LLC
+                                   StataCorp
+                                   4905 Lakeway Drive
+                                   College Station, Texas 77845 USA
+                                   800-782-8272        https://www.stata.com
+                                   979-696-4600        service@stata.com
+
+Stata license: Unlimited-user 2-core network, expiring  4 Nov 2026
+Serial number: 501909305434
+  Licensed to: Donato Pierno
+               Tor Vergata University of Rome
+
+Notes:
+      1. Stata is running in batch mode.
+      2. Unicode is supported; see help unicode_advice.
+      3. More than 2 billion observations are allowed; see help obs_advice.
+      4. Maximum number of variables is set to 5,000 but can be increased;
+          see help set_maxvar.
+
+. do 12_persuasion_regressions_NO_iteractions.do 
+
+. *============================================================================
+> ==
+. * FILE: 12_persuasion_regressions.do
+. * PURPOSE: Econometric Regressions on Persuasion: Was Player A Persuasive tow
+> ard B?
+. *
+. * DESIGN & IDENTIFICATION:
+. *   1. Sample selection: Restricted to observations where A signaled intent t
+> o
+. *      support B (S_ij == 1, i.e. signal_to_partner == "split_you").
+. *   2. Binary Dependent Variable: A_ji = 1 if partner B actually chose A in f
+> inal decision.
+. *   3. Explanatory Variables: TopicGPT categories, word count, sentiment,
+. *      emotional tone, and linguistic dimensions of the messages sent from A 
+> to B.
+. *   4. Controls: Treatment dummies, sender A characteristics, and receiver B 
+> characteristics
+. *      (demographics, economic preferences, and Dark Triad: MACH, NARC, PSYCH
+> ).
+. *   5. Inference: Clustered standard errors at the group level (group_id).
+. *
+. * UNIT OF ANALYSIS: Directed Dyad (i -> j), from ccf_dyad.dta.
+. *============================================================================
+> ==
+. 
+. clear all
+
+. set more off
+
+. capture log close
+
+. 
+. * ---------------------------------------------------------------------------
+> --
+. * 1. LOAD DYAD DATASET & MERGE RECEIVER (B) CHARACTERISTICS
+. * ---------------------------------------------------------------------------
+> --
+. use `"C:\Users\Donat\communication_coalition_formation\text_analysis--stata\c
+> cf_dyad.dta"', clear
+
+. 
+. * Keep only valid experimental groups
+. keep if group_valid == 1
+(156 observations deleted)
+
+. 
+. * ── Extract receiver (B) characteristics and merge onto dyad row ───────────
+> ──
+. preserve
+
+.     keep sessioncode group_id focal_player_id gender birth_year uni_years ///
+>          risk patience trust altruism reciprocity_positive reciprocity_negati
+> ve level_k ///
+>          MACH NARC PSYCH
+
+.     bysort sessioncode group_id focal_player_id: keep if _n == 1
+(1,443 observations deleted)
+
+.     rename focal_player_id      partner_id
+
+.     rename gender               gender_B
+
+.     rename birth_year           birth_year_B
+
+.     rename uni_years            uni_years_B
+
+.     rename risk                 risk_B
+
+.     rename patience             patience_B
+
+.     rename trust                trust_B
+
+.     rename altruism             altruism_B
+
+.     rename reciprocity_positive recip_pos_B
+
+.     rename reciprocity_negative recip_neg_B
+
+.     rename level_k              level_k_B
+
+.     rename MACH                 MACH_B
+
+.     rename NARC                 NARC_B
+
+.     rename PSYCH                PSYCH_B
+
+.     isid sessioncode group_id partner_id
+
+.     tempfile receiver_traits
+
+.     save `receiver_traits'
+file C:\Users\Donat\AppData\Local\Temp\ST_5a8_000002.tmp saved as .dta format
+
+. restore
+
+. 
+. merge m:1 sessioncode group_id partner_id using `receiver_traits', keep(match
+>  master) nogen
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                             2,886  
+    -----------------------------------------
+
+. 
+. * Rename sender (A) characteristics for symmetry and readability
+. rename gender               gender_A
+
+. rename birth_year           birth_year_A
+
+. rename uni_years            uni_years_A
+
+. rename risk                 risk_A
+
+. rename patience             patience_A
+
+. rename trust                trust_A
+
+. rename altruism             altruism_A
+
+. rename reciprocity_positive recip_pos_A
+
+. rename reciprocity_negative recip_neg_A
+
+. rename level_k              level_k_A
+
+. rename MACH                 MACH_A
+
+. rename NARC                 NARC_A
+
+. rename PSYCH                PSYCH_A
+
+. 
+. * ---------------------------------------------------------------------------
+> --
+. * 2. SAMPLE RESTRICTION, VARIABLE TRANSFORMATIONS & CONTROL MACROS
+. * ---------------------------------------------------------------------------
+> --
+. 
+. * Filter to cases where A promised support to B (S_ij == 1)
+. keep if S_ij == 1
+(1,157 observations deleted)
+
+. assert inlist(persuasion_ij, 0, 1)
+
+. 
+. * Define complete list of individual characteristics for Sender A and Receive
+> r B
+. global SENDER_CONTROLS   gender_A birth_year_A uni_years_A risk_A patience_A 
+> recip_pos_A recip_neg_A altruism_A trust_A level_k_A MACH_A NARC_A PSYCH_A
+
+. global RECEIVER_CONTROLS gender_B birth_year_B uni_years_B risk_B patience_B 
+> recip_pos_B recip_neg_B altruism_B trust_B level_k_B MACH_B NARC_B PSYCH_B
+
+. 
+. * Explicit binary dummies for treatments (Baseline = omitted reference)
+. generate byte treat_public  = (treatment == 2) if !missing(treatment)
+
+. generate byte treat_slacker = (treatment == 3) if !missing(treatment)
+
+. label variable treat_public  "Public Treatment"
+
+. label variable treat_slacker "Slacker Treatment"
+
+. global TREAT_CONTROLS treat_public treat_slacker
+
+. 
+. * Compute log of words (+1 to handle zeros)
+. generate double ln_words = ln(number_of_words + 1)
+
+. label variable ln_words "Log(Words sent A->B + 1)"
+
+. 
+. * Standardize continuous text variables for comparable effect sizes (beta z-s
+> cores)
+. quietly summarize sentiment_continuous_neg1_pos1
+
+. generate double z_sentiment = (sentiment_continuous_neg1_pos1 - r(mean)) / r(
+> sd)
+(410 missing values generated)
+
+. label variable z_sentiment "Sentiment (std)"
+
+. 
+. quietly summarize emotional_tone_continuous_0_100
+
+. generate double z_emot_tone = (emotional_tone_continuous_0_100 - r(mean)) / r
+> (sd)
+(750 missing values generated)
+
+. label variable z_emot_tone "Emotional Tone (std)"
+
+. 
+. quietly summarize authenticity_continuous_0_100
+
+. generate double z_authentic = (authenticity_continuous_0_100 - r(mean)) / r(s
+> d)
+(621 missing values generated)
+
+. label variable z_authentic "Authenticity (std)"
+
+. 
+. quietly summarize analytical_thinking_continuous_0
+
+. generate double z_analytic = (analytical_thinking_continuous_0 - r(mean)) / r
+> (sd)
+(349 missing values generated)
+
+. label variable z_analytic "Analytical Thinking (std)"
+
+. 
+. quietly summarize clout_continuous_0_100
+
+. generate double z_clout = (clout_continuous_0_100 - r(mean)) / r(sd)
+(438 missing values generated)
+
+. label variable z_clout "Clout (std)"
+
+. 
+. * ---------------------------------------------------------------------------
+> --
+. * 3. DESCRIPTIVE STATISTICS OF ESTIMATION SAMPLE
+. * ---------------------------------------------------------------------------
+> --
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " ESTIMATION SAMPLE: persuasion_ij | S_ij == 1 (N pairs whe
+> re A promised support)"
+ ESTIMATION SAMPLE: persuasion_ij | S_ij == 1 (N pairs where A promised support
+> )
+
+. display as result "========================================================"
+========================================================
+
+. 
+. tabstat persuasion_ij topic_coalition_proposal topic_commitment topic_payoff_
+> reasoning ///
+>         number_of_words number_of_messages z_sentiment z_emot_tone z_authenti
+> c z_analytic z_clout, ///
+>         stat(n mean sd min max) col(stat)
+
+    Variable |         N      Mean        SD       Min       Max
+-------------+--------------------------------------------------
+persuasion~j |      1729  .5835743  .4931085         0         1
+topic_coal~l |      1729  .4679005  .4991129         0         1
+topic_comm~t |      1729  .3146327  .4645038         0         1
+topic_payo~g |      1729  .0792366  .2701858         0         1
+number_of~ds |      1729  22.74263  30.61318         0       257
+number_of~es |      1729   3.13129  3.334132         0        34
+ z_sentiment |      1319 -6.60e-17         1 -3.858732    2.9536
+ z_emot_tone |       979  1.39e-16         1 -2.840074  2.066505
+ z_authentic |      1108  3.39e-17         1 -2.282178  1.520707
+  z_analytic |      1380  4.08e-17         1 -1.733434  2.314319
+     z_clout |      1291  1.17e-16         1 -2.013322  1.715955
+----------------------------------------------------------------
+
+. 
+. display as result _newline "--- Persuasion rate by treatment ---"
+
+--- Persuasion rate by treatment ---
+
+. tab treatment persuasion_ij, row chi2
+
++----------------+
+| Key            |
+|----------------|
+|   frequency    |
+| row percentage |
++----------------+
+
+           |     persuasion_ij
+ treatment |         0          1 |     Total
+-----------+----------------------+----------
+  Baseline |       216        374 |       590 
+           |     36.61      63.39 |    100.00 
+-----------+----------------------+----------
+    Public |       202        319 |       521 
+           |     38.77      61.23 |    100.00 
+-----------+----------------------+----------
+   Slacker |       302        316 |       618 
+           |     48.87      51.13 |    100.00 
+-----------+----------------------+----------
+     Total |       720      1,009 |     1,729 
+           |     41.64      58.36 |    100.00 
+
+          Pearson chi2(2) =  21.1895   Pr = 0.000
+
+. 
+. 
+. 
+. 
+. * ---------------------------------------------------------------------------
+> --
+. * 4. LINEAR PROBABILITY MODELS (OLS with group-clustered SE)
+. * ---------------------------------------------------------------------------
+> --
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 4. LINEAR PROBABILITY MODELS (OLS LPM, vce(cluster group_
+> id))"
+ 4. LINEAR PROBABILITY MODELS (OLS LPM, vce(cluster group_id))
+
+. display as result "========================================================"
+========================================================
+
+. 
+. * ── Model 1: TopicGPT primary indicators ───────────────────────────────────
+> ─
+. display as result _newline ">>> Model 1: TopicGPT Topics only"
+
+>>> Model 1: TopicGPT Topics only
+
+. regress persuasion_ij topic_coalition_proposal topic_commitment topic_payoff_
+> reasoning i.session, ///
+>     vce(cluster group_id)
+
+Linear regression                               Number of obs     =      1,729
+                                                F(5, 480)         =      39.42
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.1002
+                                                Root MSE          =     .46843
+
+                             (Std. err. adjusted for 481 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+topic_coal~l |    .246587   .0226249    10.90   0.000      .202131    .2910431
+topic_comm~t |   .2424658    .023702    10.23   0.000     .1958932    .2890383
+topic_payo~g |   .0413532   .0412699     1.00   0.317    -.0397388    .1224453
+             |
+     session |
+          2  |   .0126983   .0214446     0.59   0.554    -.0294386    .0548351
+          3  |   -.011059   .0237321    -0.47   0.641    -.0576906    .0355726
+             |
+       _cons |    .387637   .0205255    18.89   0.000      .347306    .4279679
+------------------------------------------------------------------------------
+
+. estimates store m1_lpm
+
+. 
+. * ── Model 2: Topics + Volume (Words & Messages) ────────────────────────────
+> ──
+. display as result _newline ">>> Model 2: Topics + Communication Volume"
+
+>>> Model 2: Topics + Communication Volume
+
+. regress persuasion_ij topic_coalition_proposal topic_commitment topic_payoff_
+> reasoning ///
+>              ln_words number_of_messages i.session, ///
+>              vce(cluster group_id)
+
+Linear regression                               Number of obs     =      1,729
+                                                F(7, 480)         =      37.92
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.1285
+                                                Root MSE          =     .46128
+
+                             (Std. err. adjusted for 481 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+topic_coal~l |   .1230986   .0300274     4.10   0.000     .0640973       .1821
+topic_comm~t |   .1547531   .0270146     5.73   0.000     .1016716    .2078345
+topic_payo~g |  -.0720201    .046268    -1.56   0.120    -.1629331    .0188928
+    ln_words |   .0603426   .0155829     3.87   0.000     .0297236    .0909617
+number_of~es |   .0109423   .0044622     2.45   0.015     .0021744    .0197101
+             |
+     session |
+          2  |   .0064726   .0225687     0.29   0.774    -.0378731    .0508183
+          3  |   -.024927   .0246002    -1.01   0.311    -.0732643    .0234104
+             |
+       _cons |   .3091287   .0252869    12.22   0.000     .2594421    .3588154
+------------------------------------------------------------------------------
+
+. estimates store m2_lpm
+
+. 
+. * ── Model 3: Topics + Volume + Sentiment & Linguistic Tone ─────────────────
+> ──
+. display as result _newline ">>> Model 3: Topics + Volume + Text Analysis (LIW
+> C / Tone)"
+
+>>> Model 3: Topics + Volume + Text Analysis (LIWC / Tone)
+
+. regress persuasion_ij topic_coalition_proposal topic_commitment topic_payoff_
+> reasoning ///
+>              ln_words number_of_messages ///
+>              z_sentiment z_emot_tone z_authentic z_analytic z_clout i.session
+> , ///
+>              vce(cluster group_id)
+
+Linear regression                               Number of obs     =        805
+                                                F(12, 387)        =       4.54
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0626
+                                                Root MSE          =     .44434
+
+                             (Std. err. adjusted for 388 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+topic_coal~l |   .1388189   .0376406     3.69   0.000     .0648132    .2128246
+topic_comm~t |   .0835055   .0331596     2.52   0.012     .0183101     .148701
+topic_payo~g |  -.0440334   .0540222    -0.82   0.416    -.1502471    .0621803
+    ln_words |   .0258051   .0407571     0.63   0.527    -.0543279    .1059381
+number_of~es |   .0134953   .0065733     2.05   0.041     .0005714    .0264191
+ z_sentiment |  -.0356163   .0233695    -1.52   0.128    -.0815634    .0103307
+ z_emot_tone |   .1015637    .025395     4.00   0.000     .0516343    .1514931
+ z_authentic |  -.0393835   .0201868    -1.95   0.052    -.0790731     .000306
+  z_analytic |  -.0293332   .0207605    -1.41   0.158    -.0701507    .0114843
+     z_clout |   .0072959   .0209917     0.35   0.728    -.0339763     .048568
+             |
+     session |
+          2  |  -.0113122    .038003    -0.30   0.766    -.0860304    .0634061
+          3  |  -.0765964   .0392601    -1.95   0.052    -.1537862    .0005935
+             |
+       _cons |   .4835295   .1103122     4.38   0.000     .2666433    .7004156
+------------------------------------------------------------------------------
+
+. estimates store m3_lpm
+
+. 
+. * ── Model 4: Model 3 + Treatment Dummies ───────────────────────────────────
+> ─
+. display as result _newline ">>> Model 4: Model 3 + Treatment Controls"
+
+>>> Model 4: Model 3 + Treatment Controls
+
+. regress persuasion_ij topic_coalition_proposal topic_commitment topic_payoff_
+> reasoning ///
+>              ln_words number_of_messages ///
+>              z_sentiment z_emot_tone z_authentic z_analytic z_clout ///
+>              $TREAT_CONTROLS i.session, ///
+>              vce(cluster group_id)
+
+Linear regression                               Number of obs     =        805
+                                                F(14, 387)        =       6.21
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0887
+                                                Root MSE          =     .43867
+
+                             (Std. err. adjusted for 388 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+topic_coal~l |   .1294163   .0377552     3.43   0.001     .0551854    .2036472
+topic_comm~t |   .0907681   .0327609     2.77   0.006     .0263564    .1551797
+topic_payo~g |  -.0222732   .0554322    -0.40   0.688    -.1312592    .0867128
+    ln_words |   .0099785   .0409666     0.24   0.808    -.0705665    .0905235
+number_of~es |     .01565    .006617     2.37   0.019     .0026402    .0286598
+ z_sentiment |  -.0257622   .0232447    -1.11   0.268     -.071464    .0199396
+ z_emot_tone |   .0994769   .0252021     3.95   0.000     .0499268    .1490269
+ z_authentic |  -.0503281   .0198189    -2.54   0.011    -.0892943   -.0113618
+  z_analytic |  -.0375457   .0205316    -1.83   0.068    -.0779132    .0028218
+     z_clout |   .0066448   .0205484     0.32   0.747    -.0337556    .0470452
+treat_public |  -.0015517   .0349326    -0.04   0.965    -.0702332    .0671298
+treat_slac~r |  -.1612506   .0384426    -4.19   0.000    -.2368332    -.085668
+             |
+     session |
+          2  |   -.014401   .0370955    -0.39   0.698     -.087335     .058533
+          3  |  -.0684798   .0376252    -1.82   0.070    -.1424553    .0054956
+             |
+       _cons |   .5770745    .112292     5.14   0.000     .3562957    .7978532
+------------------------------------------------------------------------------
+
+. estimates store m4_lpm
+
+. 
+. * ── Model 5: Model 4 + Sender A Characteristics (Demographics, Preferences &
+>  Dark Triad) ─
+. display as result _newline ">>> Model 5: Model 4 + Sender A Demographics, Pre
+> ferences & Dark Triad"
+
+>>> Model 5: Model 4 + Sender A Demographics, Preferences & Dark Triad
+
+. regress persuasion_ij topic_coalition_proposal topic_commitment topic_payoff_
+> reasoning ///
+>              ln_words number_of_messages ///
+>              z_sentiment z_emot_tone z_authentic z_analytic z_clout ///
+>              $TREAT_CONTROLS ///
+>              $SENDER_CONTROLS i.session, ///
+>              vce(cluster group_id)
+
+Linear regression                               Number of obs     =        804
+                                                F(27, 387)        =       3.93
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.1027
+                                                Root MSE          =     .43907
+
+                             (Std. err. adjusted for 388 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+topic_coal~l |   .1333747   .0389424     3.42   0.001     .0568096    .2099397
+topic_comm~t |   .0953535   .0334461     2.85   0.005     .0295946    .1611124
+topic_payo~g |  -.0275758   .0556269    -0.50   0.620    -.1369446    .0817929
+    ln_words |   .0033189   .0413132     0.08   0.936    -.0779075    .0845453
+number_of~es |   .0160018   .0064506     2.48   0.014     .0033191    .0286845
+ z_sentiment |  -.0289569   .0230318    -1.26   0.209    -.0742401    .0163263
+ z_emot_tone |   .0983388   .0256085     3.84   0.000     .0479896     .148688
+ z_authentic |  -.0470447   .0193704    -2.43   0.016    -.0851291   -.0089603
+  z_analytic |  -.0339177    .020902    -1.62   0.105    -.0750133    .0071779
+     z_clout |    .012283   .0208393     0.59   0.556    -.0286894    .0532554
+treat_public |   .0047078    .035483     0.13   0.895    -.0650558    .0744714
+treat_slac~r |  -.1657519   .0389948    -4.25   0.000      -.24242   -.0890838
+    gender_A |   .0013271   .0338338     0.04   0.969    -.0651939    .0678481
+birth_year_A |  -.0002486    .001309    -0.19   0.849    -.0028222     .002325
+ uni_years_A |  -.0036931   .0035879    -1.03   0.304    -.0107472    .0033611
+      risk_A |  -.0074128   .0085747    -0.86   0.388    -.0242716    .0094459
+  patience_A |   .0257844    .010743     2.40   0.017     .0046624    .0469064
+ recip_pos_A |  -.0093706   .0145016    -0.65   0.519    -.0378824    .0191413
+ recip_neg_A |  -.0015542    .009144    -0.17   0.865    -.0195324    .0164239
+  altruism_A |  -.0133655   .0080666    -1.66   0.098    -.0292254    .0024945
+     trust_A |  -.0018524   .0079311    -0.23   0.815    -.0174458    .0137409
+   level_k_A |  -.0678588   .0643303    -1.05   0.292    -.1943393    .0586218
+      MACH_A |  -.0044573   .0286998    -0.16   0.877    -.0608843    .0519698
+      NARC_A |  -.0042566   .0284416    -0.15   0.881    -.0601759    .0516627
+     PSYCH_A |  -.0211064   .0445764    -0.47   0.636    -.1087487    .0665358
+             |
+     session |
+          2  |  -.0144399   .0373109    -0.39   0.699    -.0877974    .0589176
+          3  |  -.0675417   .0374204    -1.80   0.072    -.1411144     .006031
+             |
+       _cons |   1.293375   2.599906     0.50   0.619    -3.818334    6.405084
+------------------------------------------------------------------------------
+
+. estimates store m5_lpm
+
+. 
+. * ── Model 6: Full Model (Sender A + Receiver B Characteristics) ────────────
+> ─
+. display as result _newline ">>> Model 6: Full Model (Text + Treatment + Sende
+> r A + Receiver B traits)"
+
+>>> Model 6: Full Model (Text + Treatment + Sender A + Receiver B traits)
+
+. regress persuasion_ij topic_coalition_proposal topic_commitment topic_payoff_
+> reasoning ///
+>              ln_words number_of_messages ///
+>              z_sentiment z_emot_tone z_authentic z_analytic z_clout ///
+>              $TREAT_CONTROLS ///
+>              $SENDER_CONTROLS ///
+>              $RECEIVER_CONTROLS i.session, ///
+>              vce(cluster group_id)
+
+Linear regression                               Number of obs     =        803
+                                                F(40, 387)        =       3.40
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.1257
+                                                Root MSE          =     .43726
+
+                             (Std. err. adjusted for 388 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+topic_coal~l |   .1326564   .0392103     3.38   0.001     .0555644    .2097483
+topic_comm~t |   .0945787   .0329352     2.87   0.004     .0298244    .1593329
+topic_payo~g |  -.0407098   .0563889    -0.72   0.471    -.1515768    .0701573
+    ln_words |  -.0002982   .0415649    -0.01   0.994    -.0820195    .0814232
+number_of~es |    .016807   .0065199     2.58   0.010     .0039882    .0296259
+ z_sentiment |  -.0305527    .023379    -1.31   0.192    -.0765185    .0154131
+ z_emot_tone |    .096321    .025373     3.80   0.000     .0464348    .1462072
+ z_authentic |  -.0429199   .0193961    -2.21   0.027    -.0810549   -.0047849
+  z_analytic |   -.034256    .020867    -1.64   0.101    -.0752829    .0067709
+     z_clout |   .0100633   .0214033     0.47   0.638    -.0320181    .0521446
+treat_public |   .0062897   .0356277     0.18   0.860    -.0637583    .0763377
+treat_slac~r |  -.1628938   .0384202    -4.24   0.000    -.2384322   -.0873553
+    gender_A |  -.0022727   .0335756    -0.07   0.946    -.0682861    .0637408
+birth_year_A |   .0000274   .0013062     0.02   0.983    -.0025407    .0025956
+ uni_years_A |  -.0032707   .0035897    -0.91   0.363    -.0103284    .0037871
+      risk_A |  -.0070319   .0085602    -0.82   0.412    -.0238622    .0097984
+  patience_A |   .0240994   .0106027     2.27   0.024     .0032533    .0449455
+ recip_pos_A |  -.0078626   .0145462    -0.54   0.589    -.0364621    .0207369
+ recip_neg_A |  -.0004878   .0089834    -0.05   0.957    -.0181502    .0171747
+  altruism_A |  -.0125197   .0080471    -1.56   0.121    -.0283412    .0033019
+     trust_A |  -.0017348   .0078916    -0.22   0.826    -.0172505    .0137809
+   level_k_A |  -.0631181   .0649742    -0.97   0.332    -.1908646    .0646285
+      MACH_A |  -.0006637   .0284771    -0.02   0.981     -.056653    .0553256
+      NARC_A |    -.01058   .0283864    -0.37   0.710    -.0663908    .0452308
+     PSYCH_A |  -.0309006   .0447733    -0.69   0.491    -.1189301    .0571288
+    gender_B |   -.062416   .0287259    -2.17   0.030    -.1188943   -.0059377
+birth_year_B |   .0010349   .0010819     0.96   0.339    -.0010922    .0031621
+ uni_years_B |   -.002206   .0031229    -0.71   0.480    -.0083459    .0039339
+      risk_B |  -.0228209   .0069998    -3.26   0.001    -.0365833   -.0090585
+  patience_B |    .023862   .0103592     2.30   0.022     .0034946    .0442294
+ recip_pos_B |  -.0023177   .0132433    -0.18   0.861    -.0283555    .0237201
+ recip_neg_B |  -.0077851   .0074374    -1.05   0.296    -.0224078    .0068376
+  altruism_B |   .0126704   .0088373     1.43   0.152    -.0047046    .0300455
+     trust_B |  -.0045605   .0062583    -0.73   0.467    -.0168649    .0077439
+   level_k_B |   .0667858   .0556068     1.20   0.230    -.0425434    .1761149
+      MACH_B |  -.0040383   .0239383    -0.17   0.866    -.0511037    .0430271
+      NARC_B |   .0131643   .0245371     0.54   0.592    -.0350784    .0614071
+     PSYCH_B |   .0280143   .0387061     0.72   0.470    -.0480862    .1041147
+             |
+     session |
+          2  |  -.0089821   .0372109    -0.24   0.809     -.082143    .0641787
+          3  |  -.0616613   .0375212    -1.64   0.101    -.1354322    .0121096
+             |
+       _cons |  -1.490644   3.352384    -0.44   0.657    -8.081809    5.100521
+------------------------------------------------------------------------------
+
+. estimates store m6_lpm
+
+. 
+. * ---------------------------------------------------------------------------
+> --
+. * 5. LOGISTIC REGRESSIONS (vce(cluster group_id)) & AVERAGE MARGINAL EFFECTS
+. * ---------------------------------------------------------------------------
+> --
+. display as result _newline(2) "==============================================
+> =========="
+
+
+========================================================
+
+. display as result " 5. LOGISTIC REGRESSIONS (Logit, vce(cluster group_id))"
+ 5. LOGISTIC REGRESSIONS (Logit, vce(cluster group_id))
+
+. display as result "========================================================"
+========================================================
+
+. 
+. * ── Logit Model 1: TopicGPT Topics only ────────────────────────────────────
+> ─
+. display as result _newline ">>> Logit Model 1: TopicGPT Topics only"
+
+>>> Logit Model 1: TopicGPT Topics only
+
+. logit persuasion_ij topic_coalition_proposal topic_commitment topic_payoff_re
+> asoning i.session, ///
+>     vce(cluster group_id)
+
+Iteration 0:  Log pseudolikelihood = -1174.1848  
+Iteration 1:  Log pseudolikelihood = -1083.5948  
+Iteration 2:  Log pseudolikelihood = -1083.1343  
+Iteration 3:  Log pseudolikelihood = -1083.1343  
+
+Logistic regression                                     Number of obs =  1,729
+                                                        Wald chi2(5)  = 138.32
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -1083.1343                       Pseudo R2     = 0.0775
+
+                             (Std. err. adjusted for 481 clusters in group_id)
+------------------------------------------------------------------------------
+             |               Robust
+persuasion~j | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+topic_coal~l |   1.100708   .1096022    10.04   0.000     .8858914    1.315524
+topic_comm~t |   1.119233   .1228246     9.11   0.000     .8785014    1.359965
+topic_payo~g |   .2057321   .1984188     1.04   0.300    -.1831615    .5946257
+             |
+     session |
+          2  |   .0625866    .098629     0.63   0.526    -.1307228    .2558959
+          3  |  -.0475291   .1091193    -0.44   0.663    -.2613991    .1663408
+             |
+       _cons |  -.5094448   .0953474    -5.34   0.000    -.6963223   -.3225672
+------------------------------------------------------------------------------
+
+. local m1_nclust = e(N_clust)
+
+. estimates store m1_logit
+
+. quietly margins, dydx(*) post
+
+. ereturn scalar N_clust = `m1_nclust'
+non e-class program may not set e()
+r(152);
+
+end of do-file
+r(152);
